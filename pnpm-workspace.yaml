@@ -1,0 +1,16 @@
+# pnpm settings (pnpm ≥10.16 reads config from this file).
+# Supply-chain hardening — configured before the first dependency was ever installed.
+
+# Never run dependency lifecycle scripts (postinstall etc.). The allowlist is
+# explicitly empty: any package that needs a build script must be reviewed and
+# added here by hand. `pnpm ignored-builds` shows what was blocked.
+onlyBuiltDependencies: []
+
+# Don't resolve versions published less than 4 days ago (minutes). Compromised
+# releases are typically yanked within days; this keeps us out of the blast
+# window without freezing updates.
+minimumReleaseAge: 5760
+
+# Refuse to run package.json scripts when node_modules is out of sync with the
+# lockfile — re-install instead of running against stale/tampered state.
+verifyDepsBeforeRun: install
