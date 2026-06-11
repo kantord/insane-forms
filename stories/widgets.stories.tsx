@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect } from 'storybook/test'
 import * as z from 'zod'
 import { FieldDescription } from '@/components/ui/field'
 import { ShadCheck, ShadNumber, ShadText, ShadTextarea, shadSelect } from '../examples/shadcn/fields'
@@ -9,6 +10,7 @@ import { Demo } from './harness'
  * parsed output; submit empty to see the validation path. */
 const meta: Meta = {
   title: 'Widgets',
+  tags: ['ai-generated'],
 }
 export default meta
 
@@ -126,5 +128,27 @@ export const HiddenField: StoryObj = {
       },
     )
     return <Demo title="Hidden field" schema={schema} />
+  },
+  // Proves the hidden field's default survives parse into the submitted output
+  // even though no control rendered for it — the render alone can't show this.
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(canvas.getByLabelText(/name/i), 'Evil Rabbit')
+    await userEvent.click(canvas.getByRole('button', { name: /submit/i }))
+    await expect(await canvas.findByText(/srv-000/)).toBeVisible()
+  },
+}
+
+export const CssCheck: StoryObj = {
+  render: () => {
+    const schema = insane.group({
+      name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+    })
+    return <Demo title="CSS check" schema={schema} />
+  },
+  // The submit Button uses bg-primary (--primary: oklch(0.205 0 0) in the zinc
+  // theme) — this fails if Tailwind / globals.css did not load in the preview.
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: /submit/i })
+    await expect(getComputedStyle(button).backgroundColor).toBe('oklch(0.205 0 0)')
   },
 }

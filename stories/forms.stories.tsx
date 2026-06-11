@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect } from 'storybook/test'
 import * as z from 'zod'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
 import {
@@ -14,6 +15,7 @@ import { Demo } from './harness'
 /* Full worked forms — the shapes real apps ship. */
 const meta: Meta = {
   title: 'Forms',
+  tags: ['ai-generated'],
 }
 export default meta
 
@@ -64,6 +66,14 @@ export const Profile: StoryObj = {
         submitLabel="Save changes"
       />
     )
+  },
+  // Proves the validation path: submitting empty surfaces field errors as
+  // role=alert through shadcn's FieldError, and nothing is submitted.
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /save changes/i }))
+    const alerts = await canvas.findAllByRole('alert')
+    await expect(alerts.length).toBeGreaterThanOrEqual(2)
+    await expect(canvas.queryByText(/Submitted values/)).not.toBeInTheDocument()
   },
 }
 

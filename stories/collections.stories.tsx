@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect } from 'storybook/test'
 import { ShadText, ShadcnListBox } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { Demo } from './harness'
@@ -7,6 +8,7 @@ import { Demo } from './harness'
  * the validator uses — one source of truth. */
 const meta: Meta = {
   title: 'Collections',
+  tags: ['ai-generated'],
 }
 export default meta
 
@@ -34,6 +36,14 @@ export const BoundedList: StoryObj = {
         submitLabel="Save contacts"
       />
     )
+  },
+  // Proves bounds gating: Add appends rows until .max(3), then disappears;
+  // Remove buttons appear once above .min(1).
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /^add$/i }))
+    await userEvent.click(canvas.getByRole('button', { name: /^add$/i }))
+    await expect(canvas.queryByRole('button', { name: /^add$/i })).not.toBeInTheDocument()
+    await expect(canvas.getAllByRole('button', { name: /remove/i })).toHaveLength(3)
   },
 }
 

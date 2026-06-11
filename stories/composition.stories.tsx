@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { expect } from 'storybook/test'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
 import { ShadText } from '../examples/shadcn/fields'
 import * as insane from '../src'
@@ -7,6 +8,7 @@ import { Demo } from './harness'
 /* group / wrap / nesting semantics — the composition rules under manual test. */
 const meta: Meta = {
   title: 'Composition',
+  tags: ['ai-generated'],
 }
 export default meta
 
@@ -34,6 +36,16 @@ export const SectionsStayFlat: StoryObj = {
     )
     // z.output: { email, address } — one flat object, no section keys.
     return <Demo title="Settings" schema={schema} submitLabel="Save changes" />
+  },
+  // Proves the data-flatness claim: sections render as fieldsets, yet the
+  // submitted output has email/address at the top level — no section keys.
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(canvas.getByLabelText(/email/i), 'm@example.com')
+    await userEvent.type(canvas.getByLabelText(/address/i), '129 Spruce St')
+    await userEvent.click(canvas.getByRole('button', { name: /save changes/i }))
+    const output = await canvas.findByText(/"address": "129 Spruce St"/)
+    await expect(output).toBeVisible()
+    await expect(output.textContent).not.toMatch(/"Shipping"/)
   },
 }
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
+import { expect } from 'storybook/test'
 import { FormProvider } from 'react-hook-form'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import * as insane from '../src'
  * The pinned shouldUnregister: false is what keeps off-screen steps' values. */
 const meta: Meta = {
   title: 'Multi-step',
+  tags: ['ai-generated'],
 }
 export default meta
 
@@ -139,4 +141,13 @@ function MultiStepCheckout() {
 export const Checkout_: StoryObj = {
   name: 'Checkout wizard',
   render: () => <MultiStepCheckout />,
+  // Proves per-step gating and error highlighting: Next on an empty step shows
+  // field errors and stays put (aria-current), and the step chip turns invalid.
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /next/i }))
+    await canvas.findAllByRole('alert')
+    const accountChip = canvas.getByRole('button', { name: /1.*account/i })
+    await expect(accountChip).toHaveAttribute('aria-current', 'step')
+    await expect(accountChip.className).toMatch(/destructive/)
+  },
 }
