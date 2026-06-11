@@ -28,6 +28,7 @@ jobs:
       - run: pnpm run ci
       - run: pnpm run build:docs
       - run: pnpm run build:storybook # lands in playground/dist/storybook → /storybook/ on Pages
+      - run: pnpm exec playwright test # e2e against the exact artifact being deployed
       - uses: actions/upload-pages-artifact@v3
         with:
           path: playground/dist
