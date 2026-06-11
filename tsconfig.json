@@ -22,6 +22,8 @@
     "src",
     "tests",
     "examples",
-    "playground"
+    "playground",
+    "stories",
+    ".storybook"
   ]
 }

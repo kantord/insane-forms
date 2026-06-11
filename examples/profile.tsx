@@ -21,7 +21,7 @@ const FieldShell: Shell = ({ name, label, description, required, error, children
   </div>
 );
 
-const ListBox: CollectionWrapper = ({ label, items, add, header, footer }) => (
+export const ListBox: CollectionWrapper = ({ label, items, add, header, footer }) => (
   <fieldset>
     {label !== undefined && <legend>{label}</legend>}
     {header}

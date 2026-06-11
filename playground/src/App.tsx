@@ -123,7 +123,8 @@ export function App() {
         <div className="rule-line">
           <span>filed under MIT</span>
           <a href="https://github.com/kantord/insane-forms">github.com/kantord/insane-forms</a>
-          <span>this page is the manual-testing harness — the same example drives the automated suite</span>
+          <a href="./storybook/">storybook — every piece in isolation</a>
+          <span>the same example drives the automated suite</span>
         </div>
       </footer>
     </div>

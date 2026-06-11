@@ -27,6 +27,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ci
       - run: pnpm run build:docs
+      - run: pnpm run build:storybook # lands in playground/dist/storybook → /storybook/ on Pages
       - uses: actions/upload-pages-artifact@v3
         with:
           path: playground/dist

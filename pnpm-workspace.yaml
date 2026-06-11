@@ -14,3 +14,8 @@ minimumReleaseAge: 5760
 # Refuse to run package.json scripts when node_modules is out of sync with the
 # lockfile — re-install instead of running against stale/tampered state.
 verifyDepsBeforeRun: install
+
+# esbuild reviewed: its platform binary arrives via optionalDependencies; the
+# postinstall script is only a fallback check. Works script-less — keep blocked.
+allowBuilds:
+  esbuild: false
