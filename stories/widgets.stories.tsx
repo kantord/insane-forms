@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { toast } from 'sonner'
+import { demoSubmit } from './demo'
 import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ export const Input: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -53,7 +53,7 @@ export const InputWithDescription: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -72,7 +72,7 @@ export const OptionalInput: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -91,7 +91,7 @@ export const ReadOnlyInput: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -114,7 +114,7 @@ export const NumberInput: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -137,7 +137,7 @@ export const Textarea: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -159,7 +159,7 @@ export const Checkbox: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -183,7 +183,7 @@ export const Select: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -210,7 +210,7 @@ export const HiddenField: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit
@@ -238,7 +238,7 @@ export const CssCheck: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Submit

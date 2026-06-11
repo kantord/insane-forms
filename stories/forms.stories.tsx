@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { toast } from 'sonner'
+import { demoSubmit } from './demo'
 import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -63,7 +63,7 @@ export const Profile: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save changes
@@ -96,7 +96,7 @@ export const Contacts: StoryObj = {
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save contacts
@@ -125,7 +125,7 @@ export const Categories: StoryObj = {
         schema={CategorySchema}
         className="flex flex-col gap-6"
         defaults={{ name: 'Docs', children: [{ name: 'Guides', children: [] }] }}
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save categories

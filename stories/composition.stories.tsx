@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { toast } from 'sonner'
+import { demoSubmit } from './demo'
 import { expect, within } from 'storybook/test'
 import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
@@ -40,7 +40,7 @@ export const SectionsStayFlat: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save changes
@@ -79,7 +79,7 @@ export const ExplicitNesting: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save address
@@ -104,7 +104,7 @@ export const ReusableSections: StoryObj = {
       <insane.ZodForm
         schema={schema}
         className="flex flex-col gap-6"
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Create account

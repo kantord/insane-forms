@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { toast } from 'sonner'
+import { demoSubmit } from './demo'
 import { expect } from 'storybook/test'
 import { Button } from '@/components/ui/button'
 import { FieldSetList, InputField } from '../examples/shadcn/fields'
@@ -33,7 +33,7 @@ export const BoundedList: StoryObj = {
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save contacts
@@ -65,7 +65,7 @@ export const UnboundedList: StoryObj = {
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ links: [] }}
-        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+        onSubmit={demoSubmit}
       >
         <Button type="submit" className="self-start">
           Save links

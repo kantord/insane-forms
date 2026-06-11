@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { demoSubmit } from './demo'
 import { expect } from 'storybook/test'
 import { FormProvider } from 'react-hook-form'
 import * as z from 'zod'
@@ -100,7 +100,7 @@ function MultiStepCheckout() {
           <FormProvider {...methods}>
             <form
               className="flex flex-col gap-6"
-              onSubmit={methods.handleSubmit((d) => toast(<pre>{JSON.stringify(d, null, 2)}</pre>))}
+              onSubmit={methods.handleSubmit(demoSubmit)}
             >
               <insane.Render schema={STEPS[step].schema} name="" />
               <Field orientation="horizontal">

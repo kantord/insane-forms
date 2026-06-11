@@ -28,6 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
 /* User-land meta key: `.meta({ placeholder })` reaches widgets through the
@@ -103,6 +111,100 @@ export const FieldSetList: CollectionWrapper = ({ label, items, add, header, foo
     </FieldGroup>
   </FieldSet>
 );
+
+/* ---------- table chrome: rows as <tr>, leaves as bare cells. ----------
+ * Column headers carry the labels, so the cell shell renders no label of its
+ * own and the cell widgets name themselves via aria-label. */
+
+const CellShell: Shell = ({ error, children }) => (
+  <TableCell className="align-top">
+    {children}
+    {error !== undefined && <FieldError className="mt-1" errors={[{ message: error }]} />}
+  </TableCell>
+);
+
+const CellTextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  <Input
+    id={p.name}
+    name={p.name}
+    aria-label={p.label}
+    value={p.value ?? ""}
+    placeholder={p.placeholder}
+    aria-invalid={p.error !== undefined || undefined}
+    onChange={(e) => p.onChange(e.target.value)}
+    onBlur={p.onBlur}
+  />
+);
+
+const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
+  <Input
+    id={p.name}
+    name={p.name}
+    type="number"
+    aria-label={p.label}
+    value={p.value ?? ""}
+    placeholder={p.placeholder}
+    aria-invalid={p.error !== undefined || undefined}
+    onChange={(e) => p.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+    onBlur={p.onBlur}
+  />
+);
+
+export const cellText = insane.field({ widget: CellTextWidget, shell: CellShell, props: fieldExtras });
+export const cellNumber = insane.field({
+  widget: CellNumberWidget,
+  shell: CellShell,
+  props: fieldExtras,
+});
+
+/** Rows are list items; a row group's cell fields render in column order. */
+export const tableList =
+  (headers: readonly string[]): CollectionWrapper =>
+  ({ label, items, add, header, footer }) => (
+    <FieldSet>
+      {label !== undefined && <FieldLegend>{label}</FieldLegend>}
+      {header}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {headers.map((h) => (
+              <TableHead key={h}>{h}</TableHead>
+            ))}
+            <TableHead className="w-10">
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((it) => (
+            <TableRow key={it.key}>
+              {it.node}
+              <TableCell className="align-top">
+                {it.remove && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    data-remove
+                    aria-label="Remove row"
+                    onClick={it.remove}
+                  >
+                    <XIcon />
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {add && (
+        <Button type="button" variant="outline" size="sm" className="self-start" data-add onClick={add}>
+          Add row
+        </Button>
+      )}
+      {footer}
+    </FieldSet>
+  );
 
 /* ---------- 2. Widgets: plain render functions over shadcn components. ---------- */
 

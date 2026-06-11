@@ -39,7 +39,19 @@ const preview: Preview = {
     // so a11y regressions in shells/widgets gate ci like any other test.
     a11y: { test: 'error' },
     options: {
-      storySort: { order: ['Introduction', 'Widgets', 'Composition', 'Collections', 'Forms', 'Multi-step'] },
+      storySort: {
+        order: [
+          'Introduction',
+          'Widgets',
+          'Composition',
+          'Collections',
+          'Editable table',
+          'Forms',
+          'Multi-step',
+          'Nested modals',
+          'URL state',
+        ],
+      },
     },
   },
   tags: ['autodocs'],
