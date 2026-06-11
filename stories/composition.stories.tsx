@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect } from 'storybook/test'
+import { toast } from 'sonner'
+import { expect, within } from 'storybook/test'
+import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
-import { ShadText } from '../examples/shadcn/fields'
+import { InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
-import { Demo } from './harness'
 
 /* group / wrap / nesting semantics — the composition rules under manual test. */
 const meta: Meta = {
@@ -21,7 +22,7 @@ export const SectionsStayFlat: StoryObj = {
         <FieldLegend>Account</FieldLegend>,
         <FieldDescription>How you sign in.</FieldDescription>,
         {
-          email: ShadText.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+          email: InputField.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
         },
       ),
       <FieldSeparator />,
@@ -30,21 +31,33 @@ export const SectionsStayFlat: StoryObj = {
         <FieldLegend>Shipping</FieldLegend>,
         <FieldDescription>Where orders are delivered.</FieldDescription>,
         {
-          address: ShadText.min(1).meta({ title: 'Address', placeholder: '129 Spruce St' }),
+          address: InputField.min(1).meta({ title: 'Address', placeholder: '129 Spruce St' }),
         },
       ),
     )
     // z.output: { email, address } — one flat object, no section keys.
-    return <Demo title="Settings" schema={schema} submitLabel="Save changes" />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save changes
+        </Button>
+      </insane.ZodForm>
+    )
   },
   // Proves the data-flatness claim: sections render as fieldsets, yet the
   // submitted output has email/address at the top level — no section keys.
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, canvasElement, userEvent }) => {
     await userEvent.type(canvas.getByLabelText(/email/i), 'm@example.com')
     await userEvent.type(canvas.getByLabelText(/address/i), '129 Spruce St')
     await userEvent.click(canvas.getByRole('button', { name: /save changes/i }))
-    const output = await canvas.findByText(/"address": "129 Spruce St"/)
-    await expect(output).toBeVisible()
+    const body = within(canvasElement.ownerDocument.body)
+    // findByText proves arrival; sonner is mid-animation, so don't assert visibility.
+    const output = await body.findByText(/"address": "129 Spruce St"/)
+    await expect(output).toBeInTheDocument()
     await expect(output.textContent).not.toMatch(/"Shipping"/)
   },
 }
@@ -54,15 +67,25 @@ export const ExplicitNesting: StoryObj = {
   render: () => {
     const schema = insane.group({
       shipping: insane.group({
-        city: ShadText.min(1).meta({ title: 'City', placeholder: 'Portland' }),
-        zip: ShadText.regex(/^\d{5}$/, 'Enter a 5-digit ZIP code.').meta({
+        city: InputField.min(1).meta({ title: 'City', placeholder: 'Portland' }),
+        zip: InputField.regex(/^\d{5}$/, 'Enter a 5-digit ZIP code.').meta({
           title: 'ZIP code',
           placeholder: '97201',
         }),
       }),
     })
     // z.output: { shipping: { city, zip } } — nesting is an explicit choice.
-    return <Demo title="Shipping address" schema={schema} submitLabel="Save address" />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save address
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
@@ -70,13 +93,23 @@ export const ReusableSections: StoryObj = {
   name: 'Groups compose as fragments',
   render: () => {
     const NameFields = insane.group({
-      firstName: ShadText.min(1).meta({ title: 'First name', placeholder: 'Evil' }),
-      lastName: ShadText.min(1).meta({ title: 'Last name', placeholder: 'Rabbit' }),
-    })
-    const schema = insane.group(NameFields, {
-      email: ShadText.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+      firstName: InputField.min(1).meta({ title: 'First name', placeholder: 'Evil' }),
+      lastName: InputField.min(1).meta({ title: 'Last name', placeholder: 'Rabbit' }),
     })
     // NameFields is a reusable value; its shape concatenates into this form.
-    return <Demo title="Create account" schema={schema} submitLabel="Create account" />
+    const schema = insane.group(NameFields, {
+      email: InputField.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+    })
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Create account
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }

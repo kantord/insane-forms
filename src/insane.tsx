@@ -518,17 +518,20 @@ export function ZodForm<S extends z.ZodType>({
   defaults,
   onSubmit,
   children,
+  className,
 }: {
   schema: S;
   /** Draft seed (edit-an-existing-record). Deep-partial: the draft may be looser than z.input. */
   defaults?: DeepPartial<z.input<S>> & object;
   onSubmit: (data: z.output<S>) => void;
   children?: ReactNode;
+  /** Forwarded to the <form> element — layout belongs to the consumer. */
+  className?: string;
 }) {
   const methods = useZodForm(schema, { defaults });
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit((d) => onSubmit(d as z.output<S>))}>
+      <form className={className} onSubmit={methods.handleSubmit((d) => onSubmit(d as z.output<S>))}>
         <Render schema={schema} name="" />
         {children}
       </form>

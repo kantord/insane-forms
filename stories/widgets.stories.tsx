@@ -1,13 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect } from 'storybook/test'
+import { toast } from 'sonner'
+import { expect, within } from 'storybook/test'
 import * as z from 'zod'
+import { Button } from '@/components/ui/button'
 import { FieldDescription } from '@/components/ui/field'
-import { ShadCheck, ShadNumber, ShadText, ShadTextarea, shadSelect } from '../examples/shadcn/fields'
+import {
+  CheckboxField,
+  InputField,
+  NumberField,
+  TextareaField,
+  selectField,
+} from '../examples/shadcn/fields'
 import * as insane from '../src'
-import { Demo } from './harness'
 
 /* Each widget in isolation, inside a one-field live form. Submit to see the
- * parsed output; submit empty to see the validation path. */
+ * parsed z.output as a toast; submit empty to see the validation path. */
 const meta: Meta = {
   title: 'Widgets',
   tags: ['ai-generated'],
@@ -17,36 +24,60 @@ export default meta
 export const Input: StoryObj = {
   render: () => {
     const schema = insane.group({
-      name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+      name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
     })
-    return <Demo title="Input" description="A required text field." schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
 export const InputWithDescription: StoryObj = {
   render: () => {
     const schema = insane.group({
-      email: ShadText.email().meta({
+      email: InputField.email().meta({
         title: 'Email',
         description: "We'll use this to send your receipt.",
         placeholder: 'm@example.com',
       }),
     })
-    return <Demo title="Input with description" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
 export const OptionalInput: StoryObj = {
   render: () => {
     const schema = insane.group({
-      website: ShadText.optional().meta({ title: 'Website', placeholder: 'https://example.com' }),
+      website: InputField.optional().meta({ title: 'Website', placeholder: 'https://example.com' }),
     })
     return (
-      <Demo
-        title="Optional input"
-        description="Submits without a value — optionality comes from the schema."
+      <insane.ZodForm
         schema={schema}
-      />
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
     )
   },
 }
@@ -54,63 +85,111 @@ export const OptionalInput: StoryObj = {
 export const ReadOnlyInput: StoryObj = {
   render: () => {
     const schema = insane.group({
-      apiKey: ShadText.readonly().default('sk-1a2b3c4d').meta({ title: 'API key' }),
+      apiKey: InputField.readonly().default('sk-1a2b3c4d').meta({ title: 'API key' }),
     })
-    return <Demo title="Read-only input" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
 export const NumberInput: StoryObj = {
+  name: 'Number',
   render: () => {
     const schema = insane.group({
-      seats: ShadNumber.int().min(1).max(10).default(1).meta({
+      seats: NumberField.int().min(1).max(10).default(1).meta({
         title: 'Seats',
         description: 'Between 1 and 10.',
       }),
     })
-    return <Demo title="Number" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
-export const TextareaField: StoryObj = {
-  name: 'Textarea',
+export const Textarea: StoryObj = {
   render: () => {
     const schema = insane.group({
-      bio: ShadTextarea.max(160).meta({
+      bio: TextareaField.max(160).meta({
         title: 'Bio',
         description: 'Max 160 characters.',
         placeholder: 'Tell us a little about yourself',
       }),
     })
-    return <Demo title="Textarea" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
-export const CheckboxField: StoryObj = {
-  name: 'Checkbox',
+export const Checkbox: StoryObj = {
   render: () => {
     const schema = insane.group({
-      marketing: ShadCheck.meta({
+      marketing: CheckboxField.meta({
         title: 'Email me about product updates',
         description: 'You can unsubscribe at any time.',
       }),
     })
-    return <Demo title="Checkbox" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
-export const SelectField: StoryObj = {
-  name: 'Select',
+export const Select: StoryObj = {
   render: () => {
     const schema = insane.group({
-      language: shadSelect(
+      language: selectField(
         z.enum(['English', 'French', 'German', 'Spanish']).default('English').meta({
           title: 'Language',
           description: 'Options come from the enum — nothing is declared twice.',
         }),
       ),
     })
-    return <Demo title="Select" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
 }
 
@@ -124,26 +203,48 @@ export const HiddenField: StoryObj = {
       </FieldDescription>,
       {
         id: insane.hidden(z.string().default('srv-000')),
-        name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+        name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
       },
     )
-    return <Demo title="Hidden field" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
   // Proves the hidden field's default survives parse into the submitted output
-  // even though no control rendered for it — the render alone can't show this.
-  play: async ({ canvas, userEvent }) => {
+  // even though no control rendered for it. The toast portals to document.body.
+  play: async ({ canvas, canvasElement, userEvent }) => {
     await userEvent.type(canvas.getByLabelText(/name/i), 'Evil Rabbit')
     await userEvent.click(canvas.getByRole('button', { name: /submit/i }))
-    await expect(await canvas.findByText(/srv-000/)).toBeVisible()
+    const body = within(canvasElement.ownerDocument.body)
+    // findByText proves arrival; sonner is mid-animation, so don't assert visibility.
+    await expect(await body.findByText(/srv-000/)).toBeInTheDocument()
   },
 }
 
 export const CssCheck: StoryObj = {
   render: () => {
     const schema = insane.group({
-      name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+      name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
     })
-    return <Demo title="CSS check" schema={schema} />
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </insane.ZodForm>
+    )
   },
   // The submit Button uses bg-primary (--primary: oklch(0.205 0 0) in the zinc
   // theme) — this fails if Tailwind / globals.css did not load in the preview.

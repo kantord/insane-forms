@@ -1,16 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect } from 'storybook/test'
+import { toast } from 'sonner'
+import { expect, within } from 'storybook/test'
 import * as z from 'zod'
+import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
 import {
-  ShadCheck,
-  ShadText,
-  ShadTextarea,
-  ShadcnListBox,
-  shadSelect,
+  CheckboxField,
+  FieldSetList,
+  InputField,
+  TextareaField,
+  selectField,
 } from '../examples/shadcn/fields'
 import * as insane from '../src'
-import { Demo } from './harness'
 
 /* Full worked forms — the shapes real apps ship. */
 const meta: Meta = {
@@ -29,13 +30,13 @@ export const Profile: StoryObj = {
         <FieldLegend>Profile</FieldLegend>,
         <FieldDescription>This is how others will see you on the site.</FieldDescription>,
         {
-          name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-          email: ShadText.email().meta({
+          name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+          email: InputField.email().meta({
             title: 'Email',
             description: "We'll never share your email with anyone.",
             placeholder: 'm@example.com',
           }),
-          bio: ShadTextarea.max(160).optional().meta({
+          bio: TextareaField.max(160).optional().meta({
             title: 'Bio',
             placeholder: 'Tell us a little about yourself',
           }),
@@ -46,12 +47,12 @@ export const Profile: StoryObj = {
         FieldSet,
         <FieldLegend>Notifications</FieldLegend>,
         {
-          frequency: shadSelect(
+          frequency: selectField(
             z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
               title: 'Email frequency',
             }),
           ),
-          marketing: ShadCheck.meta({
+          marketing: CheckboxField.meta({
             title: 'Email me about product updates',
             description: 'You can unsubscribe at any time.',
           }),
@@ -59,41 +60,48 @@ export const Profile: StoryObj = {
       ),
     )
     return (
-      <Demo
-        title="Settings"
-        description="Manage your profile and notification preferences."
+      <insane.ZodForm
         schema={schema}
-        submitLabel="Save changes"
-      />
+        className="flex flex-col gap-6"
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save changes
+        </Button>
+      </insane.ZodForm>
     )
   },
   // Proves the validation path: submitting empty surfaces field errors as
   // role=alert through shadcn's FieldError, and nothing is submitted.
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, canvasElement, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /save changes/i }))
     const alerts = await canvas.findAllByRole('alert')
     await expect(alerts.length).toBeGreaterThanOrEqual(2)
-    await expect(canvas.queryByText(/Submitted values/)).not.toBeInTheDocument()
+    const body = within(canvasElement.ownerDocument.body)
+    await expect(body.queryByText(/"id": "usr_1a2b3c"/)).not.toBeInTheDocument()
   },
 }
 
 export const Contacts: StoryObj = {
   render: () => {
     const Contact = insane.group({
-      name: ShadText.min(1).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-      email: ShadText.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+      name: InputField.min(1).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+      email: InputField.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
     })
     const schema = insane.group({
-      contacts: insane.list(Contact, { wrapper: ShadcnListBox }).min(1).max(3),
+      contacts: insane.list(Contact, { wrapper: FieldSetList }).min(1).max(3),
     })
     return (
-      <Demo
-        title="Emergency contacts"
-        description="Add up to three people we can reach if something goes wrong."
+      <insane.ZodForm
         schema={schema}
+        className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
-        submitLabel="Save contacts"
-      />
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save contacts
+        </Button>
+      </insane.ZodForm>
     )
   },
 }
@@ -105,21 +113,24 @@ export const Categories: StoryObj = {
   render: () => {
     const CategorySchema: z.ZodType<Category> = z.lazy(() =>
       insane.group({
-        name: ShadText.min(1).meta({ title: 'Name', placeholder: 'Documentation' }),
-        children: insane.list(CategorySchema, { wrapper: ShadcnListBox }).meta({
+        name: InputField.min(1).meta({ title: 'Name', placeholder: 'Documentation' }),
+        children: insane.list(CategorySchema, { wrapper: FieldSetList }).meta({
           title: 'Subcategories',
         }),
       }),
     )
     // z.lazy renders exactly as deep as the data goes — add rows to grow the tree.
     return (
-      <Demo
-        title="Categories"
-        description="Organize content into nested categories."
+      <insane.ZodForm
         schema={CategorySchema}
+        className="flex flex-col gap-6"
         defaults={{ name: 'Docs', children: [{ name: 'Guides', children: [] }] }}
-        submitLabel="Save categories"
-      />
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save categories
+        </Button>
+      </insane.ZodForm>
     )
   },
 }

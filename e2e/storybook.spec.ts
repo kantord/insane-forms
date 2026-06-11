@@ -31,7 +31,7 @@ test.describe('storybook', () => {
     await page.locator('#name').fill('Evil Rabbit')
     await page.locator('#email').fill('evil@rabbit.com')
     await page.getByRole('button', { name: 'Save changes' }).click()
-    const output = page.locator('pre.text-xs') // the receipt pre, not SB's error display
+    const output = page.locator('[data-sonner-toaster] pre') // submitted values toast
     await expect(output).toContainText('"id": "usr_1a2b3c"') // hidden, parse-filled
     await expect(output).toContainText('"frequency": "Daily digest"') // enum .default()
   })

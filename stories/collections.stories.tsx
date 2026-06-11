@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { toast } from 'sonner'
 import { expect } from 'storybook/test'
-import { ShadText, ShadcnListBox } from '../examples/shadcn/fields'
+import { Button } from '@/components/ui/button'
+import { FieldSetList, InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
-import { Demo } from './harness'
 
 /* Dynamic lists: the add/remove chrome is gated by the same .min()/.max()
  * the validator uses — one source of truth. */
@@ -16,25 +17,28 @@ export const BoundedList: StoryObj = {
   name: 'Bounded list',
   render: () => {
     const Contact = insane.group({
-      name: ShadText.min(1).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-      email: ShadText.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+      name: InputField.min(1).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+      email: InputField.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
     })
     const schema = insane.group({
       contacts: insane
-        .list(Contact, { wrapper: ShadcnListBox })
+        .list(Contact, { wrapper: FieldSetList })
         .min(1)
         .max(3)
         .meta({ title: 'Emergency contacts' }),
     })
     // Add disappears at 3 contacts; Remove disappears at 1 — from .min(1).max(3).
     return (
-      <Demo
-        title="Emergency contacts"
-        description="Add up to three people we can reach."
+      <insane.ZodForm
         schema={schema}
+        className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
-        submitLabel="Save contacts"
-      />
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save contacts
+        </Button>
+      </insane.ZodForm>
     )
   },
   // Proves bounds gating: Add appends rows until .max(3), then disappears;
@@ -51,19 +55,22 @@ export const UnboundedList: StoryObj = {
   name: 'Unbounded list',
   render: () => {
     const Link = insane.group({
-      url: ShadText.url().meta({ title: 'URL', placeholder: 'https://example.com' }),
+      url: InputField.url().meta({ title: 'URL', placeholder: 'https://example.com' }),
     })
     const schema = insane.group({
-      links: insane.list(Link, { wrapper: ShadcnListBox }).meta({ title: 'Links' }),
+      links: insane.list(Link, { wrapper: FieldSetList }).meta({ title: 'Links' }),
     })
     return (
-      <Demo
-        title="Links"
-        description="Add links to your website, blog, or social profiles."
+      <insane.ZodForm
         schema={schema}
+        className="flex flex-col gap-6"
         defaults={{ links: [] }}
-        submitLabel="Save links"
-      />
+        onSubmit={(data) => toast(<pre>{JSON.stringify(data, null, 2)}</pre>)}
+      >
+        <Button type="submit" className="self-start">
+          Save links
+        </Button>
+      </insane.ZodForm>
     )
   },
 }

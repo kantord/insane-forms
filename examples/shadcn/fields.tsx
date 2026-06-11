@@ -39,7 +39,7 @@ const fieldExtras = (s: z.ZodType) => ({ placeholder: resolvePlaceholder(s) });
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
-export const ShadcnShell: Shell = ({ name, label, description, required, error, children }) => (
+export const FieldShell: Shell = ({ name, label, description, required, error, children }) => (
   <Field data-invalid={error !== undefined || undefined}>
     {label !== undefined && (
       <FieldLabel htmlFor={name}>
@@ -55,7 +55,7 @@ export const ShadcnShell: Shell = ({ name, label, description, required, error, 
 
 /* Checkbox-shaped fields use shadcn's horizontal Field idiom: box first, label
  * beside it. A shell is per-binding, so this costs one constant. */
-export const ShadcnCheckShell: Shell = ({ name, label, description, required, error, children }) => (
+export const CheckboxFieldShell: Shell = ({ name, label, description, required, error, children }) => (
   <Field orientation="horizontal" data-invalid={error !== undefined || undefined}>
     {children}
     <FieldContent>
@@ -71,7 +71,7 @@ export const ShadcnCheckShell: Shell = ({ name, label, description, required, er
   </Field>
 );
 
-export const ShadcnListBox: CollectionWrapper = ({ label, items, add, header, footer }) => (
+export const FieldSetList: CollectionWrapper = ({ label, items, add, header, footer }) => (
   <FieldSet>
     {label !== undefined && <FieldLegend>{label}</FieldLegend>}
     <FieldGroup>
@@ -179,31 +179,31 @@ const enumOptions = (s: z.ZodType) => ({
 
 /* ---------- 3. Bound fields: same shapes as the bureau example. ---------- */
 
-export const ShadText = insane.field({
+export const InputField = insane.field({
   schema: z.string(),
   widget: TextWidget,
-  shell: ShadcnShell,
+  shell: FieldShell,
   props: fieldExtras,
 });
-export const ShadTextarea = insane.field({
+export const TextareaField = insane.field({
   schema: z.string(),
   widget: TextareaWidget,
-  shell: ShadcnShell,
+  shell: FieldShell,
   props: fieldExtras,
 });
-export const ShadNumber = insane.field({
+export const NumberField = insane.field({
   schema: z.number(),
   widget: NumberWidget,
-  shell: ShadcnShell,
+  shell: FieldShell,
   props: fieldExtras,
 });
-export const ShadCheck = insane.field({
+export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
   widget: CheckWidget,
-  shell: ShadcnCheckShell,
+  shell: CheckboxFieldShell,
 });
-export const shadSelect = insane.field({
+export const selectField = insane.field({
   widget: SelectWidget,
-  shell: ShadcnShell,
+  shell: FieldShell,
   props: enumOptions,
 });
