@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/react-vite'
+import { emitTransformCode, useEffect } from 'storybook/preview-api'
 /* Pure shadcn/ui default theme — the docs-page (bureau) styling is deliberately
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 import '../examples/shadcn/globals.css'
@@ -43,12 +44,21 @@ const preview: Preview = {
   },
   tags: ['autodocs'],
   decorators: [
-    (Story) => (
-      <div style={{ maxWidth: 640 }}>
-        <Story />
-        <Toaster />
-      </div>
-    ),
+    (Story, context) => {
+      // With source.type 'code' the react jsxDecorator skips snippet emission,
+      // so the canvas Code panel would show the raw CSF object. Emit the
+      // transformed source ourselves so the panel matches the docs page.
+      useEffect(() => {
+        const source = context.parameters?.docs?.source?.originalSource
+        if (source) void emitTransformCode(source, context)
+      })
+      return (
+        <div style={{ maxWidth: 640 }}>
+          <Story />
+          <Toaster />
+        </div>
+      )
+    },
   ],
 }
 
