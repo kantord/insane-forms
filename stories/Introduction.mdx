@@ -1,0 +1,62 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Introduction" />
+
+# insane-forms
+
+**The schema is the form.** insane-forms renders React forms straight from plain
+Zod schemas — no JSON dialect, no renderer registry, no match statement. Each
+schema node carries its own component in `.meta()`, and React does the traversal.
+
+```bash
+pnpm add insane-forms zod react-hook-form @hookform/resolvers
+```
+
+## Quick start
+
+Bind your design system's components once, then forms are just schemas:
+
+```tsx
+import * as z from 'zod'
+import * as insane from 'insane-forms'
+
+// One-time bindings: widget + shell per field kind (see examples/shadcn/fields.tsx)
+const Text = insane.field({ schema: z.string(), widget: TextWidget, shell: Shell })
+
+const Profile = insane.group({
+  name: Text.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+  email: Text.email().meta({ title: 'Email' }),
+})
+
+export const ProfileForm = () => (
+  <insane.ZodForm schema={Profile} onSubmit={(data) => console.log(data)}>
+    <button type="submit">Save</button>
+  </insane.ZodForm>
+)
+```
+
+The form edits the `z.input` draft; `onSubmit` receives parsed `z.output` —
+defaults filled, types exact.
+
+## What the stories show
+
+- **Widgets** — every field kind in isolation: text, textarea, number, checkbox,
+  select (options derived from the enum), read-only, optional, and a hidden field
+  whose default still lands in the output.
+- **Composition** — sections via `wrap(FieldSet, …)` keep data flat; `key: group(…)`
+  opts into nesting; groups compose as reusable fragments.
+- **Collections** — dynamic lists whose add/remove chrome is gated by the same
+  `.min()/.max()` the validator uses.
+- **Forms** — full worked forms, including a recursive `z.lazy` schema that
+  renders to data depth.
+- **Multi-step** — a checkout wizard with per-step validation and error-highlighted
+  step chips, built from the public pieces (`useZodForm` + `FormProvider` + `Render`).
+
+Every story is a **live form**: submit it and the parsed `z.output` appears below.
+The chrome here is [shadcn/ui](https://ui.shadcn.com) (Base UI) — but all widgets,
+shells, and list wrappers are user code; the core ships zero DOM.
+
+## Links
+
+- [GitHub — kantord/insane-forms](https://github.com/kantord/insane-forms)
+- [Docs page & live demo](../) — the same library under a completely different skin

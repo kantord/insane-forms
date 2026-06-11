@@ -12,6 +12,12 @@ const preview: Preview = {
       // Show the full story source (schema definitions included), not just the JSX.
       source: { type: 'code' },
     },
+    // Axe checks run per story; 'error' makes violations FAIL the vitest run,
+    // so a11y regressions in shells/widgets gate ci like any other test.
+    a11y: { test: 'error' },
+    options: {
+      storySort: { order: ['Introduction', 'Widgets', 'Composition', 'Collections', 'Forms', 'Multi-step'] },
+    },
   },
   tags: ['autodocs'],
   decorators: [
