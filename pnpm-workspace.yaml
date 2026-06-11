@@ -6,10 +6,10 @@
 # added here by hand. `pnpm ignored-builds` shows what was blocked.
 onlyBuiltDependencies: []
 
-# Don't resolve versions published less than 4 days ago (minutes). Compromised
+# Don't resolve versions published less than 7 days ago (minutes). Compromised
 # releases are typically yanked within days; this keeps us out of the blast
 # window without freezing updates.
-minimumReleaseAge: 5760
+minimumReleaseAge: 10080
 
 # Refuse to run package.json scripts when node_modules is out of sync with the
 # lockfile — re-install instead of running against stale/tampered state.

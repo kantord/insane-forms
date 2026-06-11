@@ -1,40 +1,115 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
-import { CategoryForm, ProfileForm, type Cat, type ProfileData } from '../examples/profile'
+import * as z from 'zod'
+import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
+import {
+  ShadCheck,
+  ShadText,
+  ShadTextarea,
+  ShadcnListBox,
+  shadSelect,
+} from '../examples/shadcn/fields'
+import * as insane from '../src'
+import { Demo } from './harness'
 
-/* The full worked examples — the same fixtures the automated suite renders. */
+/* Full worked forms — the shapes real apps ship. */
 const meta: Meta = {
   title: 'Forms',
 }
 export default meta
 
-const ProfileStory = () => {
-  const [out, setOut] = useState<ProfileData | null>(null)
-  return (
-    <>
-      <ProfileForm onSubmit={setOut} />
-      {out && <pre>{JSON.stringify(out, null, 2)}</pre>}
-    </>
-  )
-}
-
 export const Profile: StoryObj = {
-  render: () => <ProfileStory />,
-}
-
-const TreeStory = () => {
-  const [out, setOut] = useState<Cat | null>(null)
-  return (
-    <>
-      <CategoryForm
-        value={{ name: 'root', children: [{ name: 'docs', children: [{ name: 'api', children: [] }] }] }}
-        onSubmit={setOut}
+  render: () => {
+    const schema = insane.group(
+      // Hidden record id: never shown, parse fills it into the output.
+      { id: insane.hidden(z.string().default('usr_1a2b3c')) },
+      insane.wrap(
+        FieldSet,
+        <FieldLegend>Profile</FieldLegend>,
+        <FieldDescription>This is how others will see you on the site.</FieldDescription>,
+        {
+          name: ShadText.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+          email: ShadText.email().meta({
+            title: 'Email',
+            description: "We'll never share your email with anyone.",
+            placeholder: 'm@example.com',
+          }),
+          bio: ShadTextarea.max(160).optional().meta({
+            title: 'Bio',
+            placeholder: 'Tell us a little about yourself',
+          }),
+        },
+      ),
+      <FieldSeparator />,
+      insane.wrap(
+        FieldSet,
+        <FieldLegend>Notifications</FieldLegend>,
+        {
+          frequency: shadSelect(
+            z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
+              title: 'Email frequency',
+            }),
+          ),
+          marketing: ShadCheck.meta({
+            title: 'Email me about product updates',
+            description: 'You can unsubscribe at any time.',
+          }),
+        },
+      ),
+    )
+    return (
+      <Demo
+        title="Settings"
+        description="Manage your profile and notification preferences."
+        schema={schema}
+        submitLabel="Save changes"
       />
-      {out && <pre>{JSON.stringify(out, null, 2)}</pre>}
-    </>
-  )
+    )
+  },
 }
 
-export const RecursiveTree: StoryObj = {
-  render: () => <TreeStory />,
+export const Contacts: StoryObj = {
+  render: () => {
+    const Contact = insane.group({
+      name: ShadText.min(1).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
+      email: ShadText.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
+    })
+    const schema = insane.group({
+      contacts: insane.list(Contact, { wrapper: ShadcnListBox }).min(1).max(3),
+    })
+    return (
+      <Demo
+        title="Emergency contacts"
+        description="Add up to three people we can reach if something goes wrong."
+        schema={schema}
+        defaults={{ contacts: [{}] }}
+        submitLabel="Save contacts"
+      />
+    )
+  },
+}
+
+type Category = { name: string; children: Category[] }
+
+export const Categories: StoryObj = {
+  name: 'Categories — recursive schema',
+  render: () => {
+    const CategorySchema: z.ZodType<Category> = z.lazy(() =>
+      insane.group({
+        name: ShadText.min(1).meta({ title: 'Name', placeholder: 'Documentation' }),
+        children: insane.list(CategorySchema, { wrapper: ShadcnListBox }).meta({
+          title: 'Subcategories',
+        }),
+      }),
+    )
+    // z.lazy renders exactly as deep as the data goes — add rows to grow the tree.
+    return (
+      <Demo
+        title="Categories"
+        description="Organize content into nested categories."
+        schema={CategorySchema}
+        defaults={{ name: 'Docs', children: [{ name: 'Guides', children: [] }] }}
+        submitLabel="Save categories"
+      />
+    )
+  },
 }

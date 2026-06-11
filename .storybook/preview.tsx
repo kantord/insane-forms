@@ -1,27 +1,25 @@
 import type { Preview } from '@storybook/react-vite'
-import '../playground/src/style.css'
+/* Pure shadcn/ui default theme — the docs-page (bureau) styling is deliberately
+ * NOT loaded here. Storybook shows the library through stock shadcn only. */
+import '../examples/shadcn/globals.css'
 
-/* Stories render inside .demo-pane so they pick up the same bureau-paper form
- * chrome as the docs page — one design system, two harnesses. Stories that
- * bring their own design system (shadcn) opt out via `parameters.bureau`. */
 const preview: Preview = {
   parameters: {
     layout: 'padded',
+    docs: {
+      // Built-in code panel below the canvas — the schema IS the story, show it.
+      codePanel: true,
+      // Show the full story source (schema definitions included), not just the JSX.
+      source: { type: 'code' },
+    },
   },
+  tags: ['autodocs'],
   decorators: [
-    (Story, ctx) =>
-      ctx.parameters.bureau === false ? (
-        // Own design system (shadcn): full-bleed neutral canvas over the bureau body.
-        <div style={{ minHeight: '100vh', background: '#ffffff', padding: '2rem' }}>
-          <div style={{ maxWidth: 560 }}>
-            <Story />
-          </div>
-        </div>
-      ) : (
-        <div className="demo-pane" style={{ maxWidth: 560, borderLeft: 'none' }}>
-          <Story />
-        </div>
-      ),
+    (Story) => (
+      <div style={{ maxWidth: 640 }}>
+        <Story />
+      </div>
+    ),
   ],
 }
 

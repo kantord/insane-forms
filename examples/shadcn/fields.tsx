@@ -7,15 +7,18 @@ import * as insane from "../../src";
 import { resolveInner } from "../../src";
 import type { CollectionWrapper, FieldProps, Shell } from "../../src";
 
+import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldContent,
   FieldDescription,
   FieldError,
+  FieldGroup,
   FieldLabel,
+  FieldLegend,
+  FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+/* User-land meta key: `.meta({ placeholder })` reaches widgets through the
+ * props mapper — a one-line resolver on the library's `resolve` primitive. */
+const resolvePlaceholder = insane.resolve<string>(
+  (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
+);
+const fieldExtras = (s: z.ZodType) => ({ placeholder: resolvePlaceholder(s) });
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -61,17 +72,13 @@ export const ShadcnCheckShell: Shell = ({ name, label, description, required, er
 );
 
 export const ShadcnListBox: CollectionWrapper = ({ label, items, add, header, footer }) => (
-  <Card>
-    {label !== undefined && (
-      <CardHeader>
-        <CardTitle>{label}</CardTitle>
-      </CardHeader>
-    )}
-    <CardContent className="flex flex-col gap-4">
+  <FieldSet>
+    {label !== undefined && <FieldLegend>{label}</FieldLegend>}
+    <FieldGroup>
       {header}
       {items.map((it) => (
-        <div key={it.key} className="relative flex flex-col gap-4 rounded-lg border p-4 pr-14">
-          {it.node}
+        <div key={it.key} className="relative rounded-lg border p-4 pr-12">
+          <FieldGroup>{it.node}</FieldGroup>
           {it.remove && (
             <Button
               type="button"
@@ -79,31 +86,32 @@ export const ShadcnListBox: CollectionWrapper = ({ label, items, add, header, fo
               size="icon"
               className="absolute top-2 right-2"
               data-remove
-              aria-label="Remove item"
+              aria-label="Remove"
               onClick={it.remove}
             >
-              −
+              <XIcon />
             </Button>
           )}
         </div>
       ))}
       {add && (
         <Button type="button" variant="outline" data-add onClick={add}>
-          ＋ Add
+          Add
         </Button>
       )}
       {footer}
-    </CardContent>
-  </Card>
+    </FieldGroup>
+  </FieldSet>
 );
 
 /* ---------- 2. Widgets: plain render functions over shadcn components. ---------- */
 
-const TextWidget = (p: FieldProps<string | undefined>) => (
+const TextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
   <Input
     id={p.name}
     name={p.name}
     value={p.value ?? ""}
+    placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
     readOnly={p.readonly}
     onChange={(e) => p.onChange(e.target.value)}
@@ -111,12 +119,26 @@ const TextWidget = (p: FieldProps<string | undefined>) => (
   />
 );
 
-const NumberWidget = (p: FieldProps<number | undefined>) => (
+const TextareaWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  <Textarea
+    id={p.name}
+    name={p.name}
+    value={p.value ?? ""}
+    placeholder={p.placeholder}
+    aria-invalid={p.error !== undefined || undefined}
+    readOnly={p.readonly}
+    onChange={(e) => p.onChange(e.target.value)}
+    onBlur={p.onBlur}
+  />
+);
+
+const NumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
   <Input
     id={p.name}
     name={p.name}
     type="number"
     value={p.value ?? ""}
+    placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
     onBlur={p.onBlur}
@@ -138,7 +160,7 @@ const CheckWidget = (p: FieldProps<boolean>) => (
  * the `props` mapper — same mechanism as the bureau example. */
 const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
   <Select value={p.value} onValueChange={(v) => p.onChange(v as string)}>
-    <SelectTrigger id={p.name} className="w-full">
+    <SelectTrigger id={p.name}>
       <SelectValue />
     </SelectTrigger>
     <SelectContent>
@@ -157,11 +179,23 @@ const enumOptions = (s: z.ZodType) => ({
 
 /* ---------- 3. Bound fields: same shapes as the bureau example. ---------- */
 
-export const ShadText = insane.field({ schema: z.string(), widget: TextWidget, shell: ShadcnShell });
+export const ShadText = insane.field({
+  schema: z.string(),
+  widget: TextWidget,
+  shell: ShadcnShell,
+  props: fieldExtras,
+});
+export const ShadTextarea = insane.field({
+  schema: z.string(),
+  widget: TextareaWidget,
+  shell: ShadcnShell,
+  props: fieldExtras,
+});
 export const ShadNumber = insane.field({
   schema: z.number(),
   widget: NumberWidget,
   shell: ShadcnShell,
+  props: fieldExtras,
 });
 export const ShadCheck = insane.field({
   schema: z.boolean().default(false),
