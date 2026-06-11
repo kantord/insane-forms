@@ -8,7 +8,8 @@
   "files": {
     "includes": [
       "**",
-      "!!**/dist"
+      "!!**/dist",
+      "!**/examples/shadcn/components/ui"
     ]
   },
   "formatter": {
@@ -19,6 +20,11 @@
     "enabled": true,
     "rules": {
       "recommended": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "javascript": {

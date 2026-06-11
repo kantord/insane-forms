@@ -19,3 +19,5 @@ verifyDepsBeforeRun: install
 # postinstall script is only a fallback check. Works script-less — keep blocked.
 allowBuilds:
   esbuild: false
+  # msw (via shadcn CLI): postinstall only prints a support banner — keep blocked.
+  msw: false
