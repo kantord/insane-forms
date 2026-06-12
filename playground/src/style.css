@@ -81,22 +81,26 @@ html {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .slide-enter-y,
-  .slide-enter-x {
+  /* Statement slides (pure text): full in+out transitions. */
+  .slide-enter-y {
+    animation-name: slide-in-y, slide-out-y;
     animation-fill-mode: both;
     animation-timing-function: linear, linear;
     animation-timeline: view(), view();
     animation-range:
-      entry 10% entry 70%,
-      exit 15% exit 85%;
+      entry 10% entry 55%,
+      exit 30% exit 90%;
   }
 
-  .slide-enter-y {
-    animation-name: slide-in-y, slide-out-y;
-  }
-
+  /* Code slides: ENTRY only — the pane has its own inner scroll, and an exit
+   * animation would move content the user is actively scrolling (the
+   * scrollytelling cardinal sin: never animate what the user operates). */
   .slide-enter-x {
-    animation-name: slide-in-x, slide-out-x;
+    animation-name: slide-in-x;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+    animation-timeline: view();
+    animation-range: entry 10% entry 55%;
   }
 
   @keyframes slide-in-y {
@@ -127,13 +131,15 @@ html {
       transform: none;
     }
   }
+}
 
-  @keyframes slide-out-x {
-    to {
-      opacity: 0;
-      transform: translateX(max(-14vw, -130px));
-    }
-  }
+/* WCAG 2.2.2 "Pause, Stop, Hide": on-page motion control, independent of the
+ * OS-level preference. Progress indicators stay — like a scrollbar, they only
+ * mirror the user's own scrolling. */
+html.no-motion .slide-enter-y,
+html.no-motion .slide-enter-x,
+html.no-motion .motion-safe\:animate-rise {
+  animation-name: none;
 }
 
 /* Chapter progress: a thin track at the slide's bottom edge whose fill tracks

@@ -95,7 +95,11 @@ const PRINCIPLES = [
 /* One fullscreen slide: the biome class makes it a full-width color section;
  * content sits in the usual measure, vertically centered. `fixed` slides pin
  * to exactly one viewport — oversized code/forms scroll internally. Within a
- * biome's sub-slideshow, follow-up slides enter on the X axis. */
+ * biome's sub-slideshow, code slides enter on the X axis; demo slides hold
+ * STILL (`enter="none"`) — never animate the element the user operates.
+ * dvh units: 100vh lies on mobile while the URL bar collapses. */
+const ENTER_CLASS = { x: 'slide-enter-x', y: 'slide-enter-y', none: '' } as const
+
 const Slide = ({
   refCb,
   id,
@@ -107,7 +111,7 @@ const Slide = ({
   refCb: (el: HTMLElement | null) => void
   id: string
   biome: Biome
-  enter?: 'x' | 'y'
+  enter?: keyof typeof ENTER_CLASS
   fixed?: boolean
   children: ReactNode
 }) => (
@@ -115,13 +119,13 @@ const Slide = ({
     ref={refCb}
     id={id}
     className={`slide biome-${biome} relative w-full snap-start bg-paper text-ink ${
-      fixed ? 'h-screen overflow-hidden' : 'min-h-screen'
+      fixed ? 'h-dvh overflow-hidden' : 'min-h-dvh'
     }`}
   >
     <div
       className={`mx-auto flex max-w-[1180px] flex-col justify-center px-6 py-14 ${
-        fixed ? 'h-full' : 'min-h-screen'
-      } ${enter === 'x' ? 'slide-enter-x' : 'slide-enter-y'}`}
+        fixed ? 'h-full' : 'min-h-dvh'
+      } ${ENTER_CLASS[enter]}`}
     >
       {children}
     </div>
@@ -131,6 +135,28 @@ const Slide = ({
     </div>
   </section>
 )
+
+/* WCAG 2.2.2: an on-page control to stop the slide animations, independent of
+ * the OS reduced-motion setting. Persisted across visits. */
+const MOTION_KEY = 'insane-forms:motion'
+
+const MotionToggle = () => {
+  const [enabled, setEnabled] = useState(() => localStorage.getItem(MOTION_KEY) !== 'off')
+  useEffect(() => {
+    document.documentElement.classList.toggle('no-motion', !enabled)
+    localStorage.setItem(MOTION_KEY, enabled ? 'on' : 'off')
+  }, [enabled])
+  return (
+    <button
+      type="button"
+      aria-pressed={!enabled}
+      onClick={() => setEnabled(!enabled)}
+      className="fixed bottom-4 left-4 z-20 border border-dim bg-paper px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.14em] text-dim hover:border-pop hover:text-pop"
+    >
+      motion: {enabled ? 'on' : 'off'}
+    </button>
+  )
+}
 
 const SlideKicker = ({ children }: { children: ReactNode }) => (
   <span className="text-[0.78rem] font-bold uppercase tracking-[0.2em] text-pop">{children}</span>
@@ -162,6 +188,7 @@ export function App() {
     <div className="min-h-screen bg-paper font-mono text-[15px] leading-relaxed text-ink">
       {/* constant scroll feedback: CSS scroll-driven progress bar */}
       <div className="scroll-progress" aria-hidden="true" />
+      <MotionToggle />
 
       {/* slide progress — visible only while the slideshow is on screen */}
       <nav
@@ -254,7 +281,7 @@ export function App() {
         <CodePane biome="bureau" />
       </Slide>
 
-      <Slide refCb={slideRef(2)} id="bureau-demo" biome="bureau" enter="x" fixed>
+      <Slide refCb={slideRef(2)} id="bureau-demo" biome="bureau" enter="none" fixed>
         <SlideKicker>01 · bureau — alive</SlideKicker>
         <p className="mt-2 mb-4 max-w-2xl text-[0.9rem] text-dim">
           The same schema, rendered. Submit to see the parsed, typed output.
@@ -290,7 +317,7 @@ export function App() {
         <CodePane biome="terminal" />
       </Slide>
 
-      <Slide refCb={slideRef(5)} id="terminal-demo" biome="terminal" enter="x" fixed>
+      <Slide refCb={slideRef(5)} id="terminal-demo" biome="terminal" enter="none" fixed>
         <SlideKicker>02 · terminal — alive</SlideKicker>
         <p className="mt-2 mb-4 max-w-2xl text-[0.9rem] text-dim">
           Add nodes — the form renders exactly as deep as the data goes, and stops.
@@ -325,7 +352,7 @@ export function App() {
         <CodePane biome="meadow" />
       </Slide>
 
-      <Slide refCb={slideRef(8)} id="meadow-demo" biome="meadow" enter="x" fixed>
+      <Slide refCb={slideRef(8)} id="meadow-demo" biome="meadow" enter="none" fixed>
         <SlideKicker>03 · meadow — alive</SlideKicker>
         <p className="mt-2 mb-4 max-w-2xl text-[0.9rem] text-dim">
           The RSVP, live. Defaults seeded from the schema; output parsed on submit.
