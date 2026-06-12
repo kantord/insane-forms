@@ -103,10 +103,11 @@ html {
     animation-range: entry 10% entry 55%;
   }
 
+  /* translate+opacity only — scaling viewport-sized layers is GPU-expensive */
   @keyframes slide-in-y {
     from {
       opacity: 0;
-      transform: translateY(56px) scale(0.985);
+      transform: translateY(56px);
     }
     to {
       opacity: 1;
@@ -117,7 +118,7 @@ html {
   @keyframes slide-out-y {
     to {
       opacity: 0;
-      transform: translateY(-56px) scale(0.985);
+      transform: translateY(-56px);
     }
   }
 
@@ -185,13 +186,23 @@ html.no-motion .motion-safe\:animate-rise {
   overflow-x: auto;
 }
 
-/* paper grain — atmosphere, applied once */
+/* paper grain — atmosphere, applied once. Plain translucency, NO blend mode:
+ * mix-blend-mode on a fixed full-viewport layer forces the browser to
+ * re-blend the entire page every scrolled frame. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: multiply;
+  opacity: 0.35;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.52 0 0 0 0 0.45 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Offscreen heavy panes (Shiki HTML, live forms) skip layout & paint until
+ * approached. Applied to the INNER panes, not the slides themselves — slides
+ * are scroll-snap targets and view-timeline subjects, which must stay live. */
+.carbon,
+.demo-pane {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }

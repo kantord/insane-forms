@@ -1,5 +1,5 @@
 import snippets from 'virtual:snippets'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useEffect, useRef, useState } from 'react'
 import { MeadowForm, type RsvpData } from '../../examples/meadow'
 import { type ProfileData, ProfileForm } from '../../examples/profile'
 import { TerminalTreeForm, type TreeNode } from '../../examples/terminal'
@@ -26,16 +26,24 @@ const useActiveSlide = () => {
     const id = window.location.hash.slice(1)
     if (id) document.getElementById(id)?.scrollIntoView()
   }, [])
+  // One observer for the page's lifetime (empty deps): recreating it per
+  // render made every scroll tick tear down and re-register all slides.
+  // The current index lives in a ref so the callback never goes stale.
+  const activeRef = useRef(-1)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const index = refs.current.indexOf(entry.target as HTMLElement)
           if (entry.intersectionRatio > 0.55) {
-            setActive(index)
-            const id = SLIDE_IDS[index]
-            if (id !== undefined) history.replaceState(null, '', `#${id}`)
-          } else if (index === active && entry.intersectionRatio < 0.2) {
+            if (activeRef.current !== index) {
+              activeRef.current = index
+              setActive(index)
+              const id = SLIDE_IDS[index]
+              if (id !== undefined) history.replaceState(null, '', `#${id}`)
+            }
+          } else if (index === activeRef.current && entry.intersectionRatio < 0.2) {
+            activeRef.current = -1
             setActive(-1)
           }
         }
@@ -44,17 +52,19 @@ const useActiveSlide = () => {
     )
     for (const el of refs.current) if (el) observer.observe(el)
     return () => observer.disconnect()
-  })
+  }, [])
   return { refs, active }
 }
 
-const CodePane = ({ biome }: { biome: Biome }) => (
+/* memo: the big pre-rendered HTML panes must not re-render when App's
+ * active-slide state changes. */
+const CodePane = memo(({ biome }: { biome: Biome }) => (
   <div
     className="carbon min-h-0 flex-1 overflow-auto border border-ink font-code text-[0.8rem] leading-relaxed"
     // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
     dangerouslySetInnerHTML={{ __html: snippets[biome] }}
   />
-)
+))
 
 const Receipt = ({ data }: { data: unknown }) => (
   <div
@@ -136,6 +146,43 @@ const Slide = ({
   </section>
 )
 
+/* Each demo owns its state: typing in a form re-renders ONLY its slide,
+ * never the whole page. */
+const BureauDemo = memo(() => {
+  const [profile, setProfile] = useState<ProfileData | null>(null)
+  return (
+    <>
+      <ProfileForm onSubmit={setProfile} />
+      {profile && <Receipt data={profile} />}
+    </>
+  )
+})
+
+const INITIAL_TREE: TreeNode = {
+  name: 'root',
+  children: [{ name: 'docs', children: [{ name: 'api', children: [] }] }],
+}
+
+const TerminalDemo = memo(() => {
+  const [tree, setTree] = useState<TreeNode | null>(null)
+  return (
+    <>
+      <TerminalTreeForm value={INITIAL_TREE} onSubmit={setTree} />
+      {tree && <Receipt data={tree} />}
+    </>
+  )
+})
+
+const MeadowDemo = memo(() => {
+  const [rsvp, setRsvp] = useState<RsvpData | null>(null)
+  return (
+    <>
+      <MeadowForm onSubmit={setRsvp} />
+      {rsvp && <Receipt data={rsvp} />}
+    </>
+  )
+})
+
 /* WCAG 2.2.2: an on-page control to stop the slide animations, independent of
  * the OS reduced-motion setting. Persisted across visits. */
 const MOTION_KEY = 'insane-forms:motion'
@@ -172,16 +219,9 @@ const StoryLink = ({ story }: { story: string }) => (
 )
 
 export function App() {
-  const [profile, setProfile] = useState<ProfileData | null>(null)
-  const [tree, setTree] = useState<TreeNode | null>(null)
-  const [rsvp, setRsvp] = useState<RsvpData | null>(null)
   const { refs, active } = useActiveSlide()
   const slideRef = (i: number) => (el: HTMLElement | null) => {
     refs.current[i] = el
-  }
-  const initialTree: TreeNode = {
-    name: 'root',
-    children: [{ name: 'docs', children: [{ name: 'api', children: [] }] }],
   }
 
   return (
@@ -287,8 +327,7 @@ export function App() {
           The same schema, rendered. Submit to see the parsed, typed output.
         </p>
         <div className="demo-pane min-h-0 flex-1 overflow-auto border border-ink bg-paper p-7">
-          <ProfileForm onSubmit={setProfile} />
-          {profile && <Receipt data={profile} />}
+          <BureauDemo />
         </div>
         <StoryLink story="design-biomes--bureau" />
       </Slide>
@@ -323,8 +362,7 @@ export function App() {
           Add nodes — the form renders exactly as deep as the data goes, and stops.
         </p>
         <div className="demo-pane min-h-0 flex-1 overflow-auto border border-ink bg-paper p-7">
-          <TerminalTreeForm value={initialTree} onSubmit={setTree} />
-          {tree && <Receipt data={tree} />}
+          <TerminalDemo />
         </div>
         <StoryLink story="design-biomes--terminal" />
       </Slide>
@@ -358,8 +396,7 @@ export function App() {
           The RSVP, live. Defaults seeded from the schema; output parsed on submit.
         </p>
         <div className="demo-pane min-h-0 flex-1 overflow-auto rounded-3xl border border-rule bg-paper-deep p-7">
-          <MeadowForm onSubmit={setRsvp} />
-          {rsvp && <Receipt data={rsvp} />}
+          <MeadowDemo />
         </div>
         <StoryLink story="design-biomes--meadow" />
       </Slide>
