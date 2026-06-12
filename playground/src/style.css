@@ -81,25 +81,28 @@ html {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Statement slides (pure text): full in+out transitions. */
-  .slide-enter-y {
+  /* Transitions belong to the SEQUENCE (group node): its data-axis decides
+   * how child slides' content enters. Driven by the slide's own NAMED
+   * view-timeline (--slide) — anonymous view() would resolve against the
+   * slide itself once slides are overflow-hidden scroll containers. */
+  [data-axis="y"] .slide-content {
     animation-name: slide-in-y, slide-out-y;
     animation-fill-mode: both;
     animation-timing-function: linear, linear;
-    animation-timeline: view(), view();
+    animation-timeline: --slide, --slide;
     animation-range:
       entry 10% entry 55%,
       exit 30% exit 90%;
   }
 
-  /* Code slides: ENTRY only — the pane has its own inner scroll, and an exit
-   * animation would move content the user is actively scrolling (the
+  /* X axis: ENTRY only — x-sequences hold panes with inner scroll, and an
+   * exit animation would move content the user is actively scrolling (the
    * scrollytelling cardinal sin: never animate what the user operates). */
-  .slide-enter-x {
+  [data-axis="x"] .slide-content {
     animation-name: slide-in-x;
     animation-fill-mode: both;
     animation-timing-function: linear;
-    animation-timeline: view();
+    animation-timeline: --slide;
     animation-range: entry 10% entry 55%;
   }
 
@@ -137,8 +140,7 @@ html {
 /* WCAG 2.2.2 "Pause, Stop, Hide": on-page motion control, independent of the
  * OS-level preference. Progress indicators stay — like a scrollbar, they only
  * mirror the user's own scrolling. */
-html.no-motion .slide-enter-y,
-html.no-motion .slide-enter-x,
+html.no-motion [data-axis] .slide-content,
 html.no-motion .motion-safe\:animate-rise {
   animation-name: none;
 }
@@ -184,6 +186,46 @@ html.no-motion .motion-safe\:animate-rise {
   min-height: 100%;
   padding: 1.5rem;
   overflow-x: auto;
+}
+
+/* Code annotations: `// @note(...)` comments in the example files become
+ * these spans at build time — dotted-underlined, keyboard-focusable, with
+ * the explanation in a popover on hover/focus (also exposed as aria-label). */
+.code-note {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted var(--color-pop);
+}
+
+.code-note:focus-visible {
+  outline: 2px solid var(--color-pop);
+  outline-offset: 2px;
+}
+
+.code-note::after {
+  content: attr(data-note);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: min(32rem, 70vw);
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  white-space: normal;
+  color: var(--color-paper);
+  background: var(--color-ink);
+  border: 1px solid var(--color-pop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+
+.code-note:hover::after,
+.code-note:focus-visible::after {
+  opacity: 1;
 }
 
 /* paper grain — atmosphere, applied once. Plain translucency, NO blend mode:

@@ -94,10 +94,10 @@ export const Rsvp = insane.group({
   guests: number(
     z.number().int().min(1).max(6).default(1).meta({
       title: 'Guests',
-      description: 'Including you — up to six.',
+      description: 'Including you — up to six.', // @note(description) Shell copy lives in .meta() — the schema stays parseable, inferable, plain Zod.
     }),
   ),
-  menu: select(z.enum(['Garden', 'Sea', 'Earth']).default('Garden').meta({ title: 'Menu' })),
+  menu: select(z.enum(['Garden', 'Sea', 'Earth']).default('Garden').meta({ title: 'Menu' })), // @note(z.enum) The widget's options come from the enum itself — nothing is declared twice.
   updates: check(z.boolean().default(true).meta({ title: 'Email me updates' })),
 })
 

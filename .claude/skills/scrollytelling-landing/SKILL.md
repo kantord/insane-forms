@@ -1,0 +1,100 @@
+---
+name: scrollytelling-landing
+description: Rules for the landing page (playground/) — slide layout tree, scroll patterns, transitions, motion accessibility, and the performance constraints. Use whenever editing playground/src (App, slides, style.css) or adding landing sections.
+---
+
+# Scrollytelling landing page
+
+The landing is **hybrid scrollytelling** (decided via deep research, June 2026):
+plain flow for hero/principles/showcases · sticky-stepper for the schema-morph
+narrative · fullscreen scroll-snap ONLY for non-interactive statement slides.
+
+## The slideshow is a tree
+
+`playground/src/slides.tsx` is the only place slide geometry lives.
+
+- **Sequence** (group node) owns: the biome (design-token scope, `biome-*`
+  class) and the transition axis (`data-axis`) for ALL its child slides.
+  Transitions are a group concern — slides never choose their own.
+- **Slide** (leaf) picks a layout from a small fixed set (`statement`, `fill`).
+  Every slide is exactly one viewport (`h-svh`, `overflow-clip`). Layouts
+  force fixed geometry; **content adapts to the card, never the reverse** —
+  this is what makes layout shift impossible by construction.
+- **Slot layouts** (`Duplex`, `Stack`) are fixed splits whose slots clip and
+  scroll internally (`min-h-0` + `overflow-auto`); slots may nest further slot
+  layouts. Used both inside slides and in plain flow (give an explicit height
+  in flow).
+
+Do not add ad-hoc slide markup in App.tsx; extend the layout set in slides.tsx
+instead, keeping it small.
+
+## Scroll-pattern rules (non-negotiable defaults)
+
+- **Never animate the element the user operates.** Operable forms live in
+  plain flow or hold still; panes with inner scroll get ENTRY-only animation.
+- **Discrete content → discrete triggers** (IntersectionObserver state), never
+  scroll-scrubbed. Scroll-linked (scrubbed) animation is for cosmetics only.
+- No scroll hijacking: `scroll-snap-type: y proximity` on `html`, nothing else.
+- Viewport units: `svh` for fixed slides/panels (`dvh` reflows mid-scroll as
+  mobile chrome collapses — the one documented downside that directly hurts
+  a snapped deck); never `vh`. Slides clip with `overflow: clip`, not
+  `hidden` (hidden makes a scroll container; clip preserves SDA seeking and
+  a11y order).
+- Transitions use the slide's NAMED view-timeline (`--slide`) — anonymous
+  `view()` breaks once slides are `overflow-hidden` (they become scroll
+  containers and the timeline resolves against themselves).
+- Hash sync writes from the SETTLED scroll position (`scrollend`, debounced
+  scroll fallback) — never from IO thresholds, since snap adjusts the offset
+  after scrolling ends. `history.scrollRestoration = 'manual'`; position is
+  re-derived from the hash after mount. The slide rail offers prev/next
+  buttons for scroll-averse readers.
+
+## Motion accessibility
+
+- All motion sits inside `@media (prefers-reduced-motion: no-preference)`.
+- The on-page WCAG 2.2.2 toggle (`MotionToggle`, `html.no-motion`) must keep
+  working for any new animation; JS-driven animation reads `useMotionOff()`
+  (OS preference OR toggle). Progress indicators are exempt (scrollbar-like).
+
+## Performance constraints (each fixed a measured regression)
+
+- ONE IntersectionObserver per concern, created with `[]` deps; current index
+  in a ref. Never recreate observers per render.
+- Form/demo state lives in small memoized components, never in `App`.
+- No `mix-blend-mode` on fixed full-viewport layers.
+- Animate `transform`/`opacity` only; no scaling of viewport-sized layers.
+- `content-visibility: auto` + `contain-intrinsic-size` on heavy INNER panes
+  (`.carbon`, `.demo-pane`) — never on snap targets or view-timeline subjects.
+- Budget check: full-deck programmatic scroll must hold ~60fps (worst frame
+  ≤ ~17ms, rAF counting in headless Chrome), and `pnpm run perf` (Lighthouse
+  budget: LCP ≤ 2.5s, TBT ≤ 300ms, CLS ≤ 0.1) gates CI on the built page.
+- Full-React rendering is kept under a MEASURE-FIRST decision (signed off):
+  `pnpm run analyze` reports bundle composition; revisit an islands build
+  only if framework runtime exceeds ~50% of the bundle.
+
+## Fonts (explicit decision, June 2026)
+
+The full six-family set is INTENTIONAL — per-biome typography is part of the
+design. Do not trim families for budget; the budget is met by delivery order
+(user sign-off exists for this; research flagged it as a contradiction):
+
+- Preload ONLY above-the-fold faces (serif 400 + italic, body mono latin) via
+  `playground/fonts.plugin.ts` — `crossorigin` is mandatory on font preloads
+  or they're double-fetched.
+- The same plugin injects metric-matched local fallbacks (capsize metrics →
+  `size-adjust`/`ascent`/`descent`/`line-gap` overrides) so swap-CLS ≈ 0;
+  fallback families are in the `--font-serif`/`--font-mono` stacks.
+- Coding fonts are NEVER preloaded or render-blocking: `useLazyCodeFonts`
+  warms each biome's face via `document.fonts.load()` half a viewport before
+  its section (explicit, because browsers defer below-fold font kickoff
+  unreliably). Verify the waterfall: load = 3 hero faces (+morph's font),
+  others only on approach; latin subsets only.
+- All self-hosted via Fontsource (GDPR) — verify zero external URLs in dist.
+
+## Changing these decisions
+
+These are settled, evidence-backed decisions. If you find clear contradicting
+evidence, or the user explicitly asks for behavior that conflicts with this
+skill: do NOT silently comply or quietly adapt. State the conflict, get
+explicit confirmation via the AskUserQuestion tool, and update this skill in
+the same change so it stays the source of truth.

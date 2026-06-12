@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { codeToKeyedTokens, createMagicMoveMachine } from '@shikijs/magic-move/core'
 import { createHighlighter, type ThemeRegistrationAny } from 'shiki'
 import type { Plugin } from 'vite'
 
@@ -106,6 +107,65 @@ const SNIPPETS = [
   },
 ] as const
 
+/* `// @note(target) text` comments in example files become hoverable
+ * explanations: stripped from the displayed code, attached to the first
+ * occurrence of `target` (whole line without a target) as a Shiki decoration.
+ * Trailing notes annotate their own line; standalone note lines (Biome moves
+ * long trailing comments up) annotate the NEXT code line. */
+// Target may itself contain one level of parens: @note(.min(1).max(3))
+const NOTE_RE = /[ \t]*\/\/ @note(?:\(((?:[^()]|\([^()]*\))*)\))? (.*)$/
+
+type Note = { line: number; target: string | undefined; text: string }
+
+const extractNotes = (source: string) => {
+  const notes: Note[] = []
+  const cleaned: string[] = []
+  const pending: Omit<Note, 'line'>[] = []
+  for (const raw of source.split('\n')) {
+    const match = raw.match(NOTE_RE)
+    if (!match) {
+      for (const note of pending) notes.push({ line: cleaned.length, ...note })
+      pending.length = 0
+      cleaned.push(raw)
+      continue
+    }
+    const note = { target: match[1] || undefined, text: (match[2] ?? '').trim() }
+    const stripped = raw.replace(NOTE_RE, '')
+    if (stripped.trim() === '') {
+      pending.push(note)
+    } else {
+      notes.push({ line: cleaned.length, ...note })
+      cleaned.push(stripped)
+    }
+  }
+  const decorations = notes.flatMap((note) => {
+    const lineText = cleaned[note.line] ?? ''
+    if (lineText.trim() === '') return []
+    let start = lineText.length - lineText.trimStart().length
+    let end = lineText.trimEnd().length
+    if (note.target !== undefined) {
+      const at = lineText.indexOf(note.target)
+      if (at !== -1) {
+        start = at
+        end = at + note.target.length
+      }
+    }
+    return [
+      {
+        start: { line: note.line, character: start },
+        end: { line: note.line, character: end },
+        properties: {
+          class: 'code-note',
+          'data-note': note.text,
+          tabindex: '0',
+          'aria-label': `Note: ${note.text}`,
+        },
+      },
+    ]
+  })
+  return { code: cleaned.join('\n'), decorations }
+}
+
 const VIRTUAL_ID = 'virtual:snippets'
 const RESOLVED_ID = `\0${VIRTUAL_ID}`
 
@@ -127,11 +187,40 @@ export function snippetsPlugin(): Plugin {
         const source = readFileSync(file, 'utf8')
         const a = source.indexOf(s.from)
         const b = source.indexOf(s.to)
-        const code = a !== -1 && b !== -1 && b > a ? source.slice(a, b).trimEnd() : source
-        const html = highlighter.codeToHtml(code, { lang: 'tsx', theme: s.theme.name ?? s.id })
+        const sliced = a !== -1 && b !== -1 && b > a ? source.slice(a, b).trimEnd() : source
+        const { code, decorations } = extractNotes(sliced)
+        const html = highlighter.codeToHtml(code, {
+          lang: 'tsx',
+          theme: s.theme.name ?? s.id,
+          decorations,
+        })
         return [s.id, html]
       })
-      return `export default ${JSON.stringify(Object.fromEntries(entries))}`
+
+      // Magic Move steps: slice examples/morph.tsx at its step markers and
+      // precompile keyed tokens (bureau theme), so the runtime ships the
+      // renderer only — zero Shiki in the browser.
+      const morphFile = path.resolve(import.meta.dirname, '..', 'examples/morph.tsx')
+      this.addWatchFile(morphFile)
+      const morphBlocks = readFileSync(morphFile, 'utf8')
+        .split(/\/\* step:\d[^*]*\*\//)
+        .slice(1)
+        // notes are stripped here too (keyed tokens can't carry decorations)
+        .map((block) => extractNotes(block.trim()).code)
+        .map((block) => block.replace(/export const Step\d/, 'const Profile'))
+      // (matchAlgorithm isn't exposed in @shikijs/magic-move 4.2.0's options —
+      // revisit when upgrading to the shiki-monorepo line.)
+      const machine = createMagicMoveMachine((code) =>
+        codeToKeyedTokens(highlighter, code, { lang: 'tsx', theme: 'bureau' }),
+      )
+      const morphSteps = morphBlocks.map((code) => structuredClone(machine.commit(code).current))
+
+      return [
+        `export default ${JSON.stringify(Object.fromEntries(entries))}`,
+        // JSON.parse of a string literal parses ~1.7x faster than an equivalent
+        // JS object literal (V8 guidance) — these arrays are large.
+        `export const morphSteps = JSON.parse(${JSON.stringify(JSON.stringify(morphSteps))})`,
+      ].join('\n')
     },
   }
 }

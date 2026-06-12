@@ -141,7 +141,7 @@ const Contact = insane.group({
  * as FRAGMENTS: their shapes concatenate flat (no key nesting), their decorations
  * render in place. `key: group(...)` is how you opt into data nesting instead. */
 const Account = insane.group(<h3>Account</h3>, {
-  id: insane.hidden(z.string().default('srv-000')), // kept + submitted, never shown
+  id: insane.hidden(z.string().default('srv-000')), // @note(insane.hidden) Renders no UI at all — yet the value is kept in form state, and parse fills the default into the submitted output.
   name: TextField.min(2).meta({ title: 'Name' }),
   email: TextField.email().meta({ title: 'Email', description: 'We never share it' }),
 })
@@ -150,12 +150,12 @@ const Details = insane.group(<h3>Profile</h3>, {
   age: NumberField.int().min(18).default(18).meta({ title: 'Age' }),
   role: select(z.enum(['admin', 'user', 'guest']).default('user').meta({ title: 'Role' })),
   newsletter: CheckField.meta({ title: 'Newsletter' }),
-  nickname: TextField.optional(), // optional + label-less: both first-class
+  nickname: TextField.optional(), // @note(.optional()) Optionality is plain Zod — and a field without .meta({ title }) renders label-less, on purpose.
   address: insane.group({
     city: TextField.min(1).meta({ title: 'City' }),
     zip: TextField.regex(/^\d{5}$/, '5 digits').meta({ title: 'ZIP' }),
   }),
-  contacts: insane.list(Contact, { wrapper: ListBox }).min(1).max(3).meta({ title: 'Contacts' }),
+  contacts: insane.list(Contact, { wrapper: ListBox }).min(1).max(3).meta({ title: 'Contacts' }), // @note(.min(1).max(3)) One source of truth: the same bounds validate the array AND gate the add/remove buttons.
 })
 
 export const Profile = insane.group(Account, <hr />, Details)

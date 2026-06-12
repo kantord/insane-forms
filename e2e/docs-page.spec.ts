@@ -16,7 +16,7 @@ test.describe('docs page', () => {
 
   test('valid submit shows the parsed z.output including the hidden id', async ({ page }) => {
     await page.goto('/')
-    const specimenA = page.locator('.demo-pane').first()
+    const specimenA = page.locator('#showcase-bureau .demo-pane')
     await specimenA.locator('input[id="name"]').fill('Ada Lovelace')
     await specimenA.locator('input[id="email"]').first().fill('ada@example.com')
     await specimenA.locator('input[id="address.city"]').fill('London')
@@ -34,14 +34,15 @@ test.describe('docs page', () => {
 
   test('invalid submit shows field errors and no receipt', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'SAVE' }).first().click()
-    await expect(page.locator('em[role="alert"]').first()).toBeVisible()
-    await expect(page.locator('.receipt')).toHaveCount(0)
+    const specimenA = page.locator('#showcase-bureau .demo-pane')
+    await specimenA.getByRole('button', { name: 'SAVE' }).click()
+    await expect(specimenA.locator('em[role="alert"]').first()).toBeVisible()
+    await expect(specimenA.locator('.receipt')).toHaveCount(0)
   })
 
   test('contact list bounds gate the add/remove chrome', async ({ page }) => {
     await page.goto('/')
-    const specimenA = page.locator('.demo-pane').first()
+    const specimenA = page.locator('#showcase-bureau .demo-pane')
     const add = specimenA.locator('button[data-add]')
     // Seeded with 1 row (min 1): no remove button yet.
     await expect(specimenA.locator('button[data-remove]')).toHaveCount(0)
@@ -52,9 +53,18 @@ test.describe('docs page', () => {
     await expect(specimenA.locator('button[data-remove]')).toHaveCount(3)
   })
 
+  test('code notes annotate confusing parts, stripped from display', async ({ page }) => {
+    await page.goto('/')
+    const pane = page.locator('#showcase-bureau .carbon')
+    await expect(pane).not.toContainText('@note') // the comment itself never shows
+    const note = pane.locator('.code-note').first()
+    await expect(note).toHaveAttribute('data-note', /.+/)
+    await expect(note).toHaveAttribute('tabindex', '0') // keyboard-reachable
+  })
+
   test('recursive tree renders to data depth and grows', async ({ page }) => {
     await page.goto('/')
-    const specimenB = page.locator('.demo-pane').nth(1)
+    const specimenB = page.locator('#showcase-terminal .demo-pane')
     await expect(specimenB.locator('input[id="name"]')).toHaveValue('root')
     await expect(specimenB.locator('input[id="children.0.name"]')).toHaveValue('docs')
     await expect(specimenB.locator('input[id="children.0.children.0.name"]')).toHaveValue('api')

@@ -101,6 +101,7 @@ const preview: Preview = {
           'Forms',
           'Multi-step',
           'Nested modals',
+          'Schema morph',
           'URL state',
         ],
       },

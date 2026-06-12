@@ -72,9 +72,10 @@ const text = insane.field({ widget: TextWidget, shell: TerminalShell })
 export type TreeNode = { name: string; children: TreeNode[] }
 
 export const Tree: z.ZodType<TreeNode> = z.lazy(() =>
+  // @note(z.lazy) Recursion is just Zod: each level defers, so the form renders exactly as deep as the data goes.
   insane.group({
     name: text(z.string().min(1).meta({ title: 'name' })),
-    children: insane.list(Tree, { wrapper: TreeBox }),
+    children: insane.list(Tree, { wrapper: TreeBox }), // @note(TreeBox) All list chrome is user code — this wrapper decides what add/remove even look like.
   }),
 )
 

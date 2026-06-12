@@ -13,8 +13,8 @@
   --color-rule: #d4ccb8;
   --color-pop: #c93f21;
 
-  --font-serif: "Instrument Serif", georgia, serif;
-  --font-mono: "Spline Sans Mono Variable", ui-monospace, monospace;
+  --font-serif: "Instrument Serif", "Instrument Serif Fallback", georgia, serif;
+  --font-mono: "Spline Sans Mono Variable", "Spline Sans Mono Fallback", ui-monospace, monospace;
   /* Code panes get a coding font per biome. */
   --font-code: "IBM Plex Mono", ui-monospace, monospace;
 }
