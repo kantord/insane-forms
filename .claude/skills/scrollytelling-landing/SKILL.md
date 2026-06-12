@@ -20,9 +20,17 @@ narrative · fullscreen scroll-snap ONLY for non-interactive statement slides.
   Every slide is exactly one viewport (`h-svh`, `overflow-clip`). Layouts
   force fixed geometry; **content adapts to the card, never the reverse** —
   this is what makes layout shift impossible by construction.
+- **Screen unit** (`.screen` class): the smallest fullscreen building block —
+  deck slides AND each morph step. Every unit is a snap target
+  (`scroll-snap-align: start` lives in the class, not in markup), names its
+  own view-timeline (`--screen`), and carries a `.screen-progress` vertical
+  fill on its left edge (per-UNIT progress, user decision — the global top
+  bar was removed because it read as a loading bar). Anything that occupies
+  a full viewport must be a `.screen`, or snap alignment breaks there.
 - **Slot layouts** (`Duplex`, `Stack`) are fixed splits whose slots clip and
-  scroll internally (`min-h-0` + `overflow-auto`); slots may nest further slot
-  layouts. Used both inside slides and in plain flow (give an explicit height
+  scroll internally (`min-h-0 min-w-0` + inner `overflow-auto` — BOTH axes,
+  or long code lines blow the grid track out past the viewport); slots may
+  nest further slot layouts. Used both inside slides and in plain flow (give an explicit height
   in flow).
 
 Do not add ad-hoc slide markup in App.tsx; extend the layout set in slides.tsx

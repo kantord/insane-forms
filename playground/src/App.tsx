@@ -289,11 +289,15 @@ const SchemaMorph = () => {
               ref={(el) => {
                 refs.current[i] = el
               }}
-              className="flex min-h-[70vh] flex-col justify-center py-10 lg:min-h-svh"
+              className="screen relative flex h-svh flex-col justify-center py-10 pl-5"
             >
               <SlideKicker>{s.kicker}</SlideKicker>
               <h3 className="mt-2 mb-3 font-serif text-3xl font-normal">{s.title}</h3>
               <p className="m-0 max-w-md text-[0.95rem] text-dim">{s.body}</p>
+              {/* per-unit progress — the smallest fullscreen unit, morph steps included */}
+              <div className="screen-progress" aria-hidden="true">
+                <span />
+              </div>
             </div>
           ))}
         </div>
@@ -415,8 +419,6 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-paper font-mono text-[15px] leading-relaxed text-ink">
-      {/* constant scroll feedback: CSS scroll-driven progress bar */}
-      <div className="scroll-progress" aria-hidden="true" />
       <MotionToggle />
 
       {/* slide rail: prev/next for scroll-averse readers + progress dots —

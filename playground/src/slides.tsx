@@ -48,7 +48,7 @@ export const Slide = ({
   <section
     ref={refCb}
     id={id}
-    className="slide relative h-svh w-full snap-start overflow-clip bg-paper text-ink"
+    className="slide screen relative h-svh w-full overflow-clip bg-paper text-ink"
   >
     <div
       className={`slide-content mx-auto flex h-full max-w-[1180px] flex-col px-6 py-12 ${
@@ -57,8 +57,8 @@ export const Slide = ({
     >
       {children}
     </div>
-    {/* chapter progress — fills as you scroll through this slide */}
-    <div className="slide-progress" aria-hidden="true">
+    {/* per-unit progress — fills as you scroll through this screen */}
+    <div className="screen-progress" aria-hidden="true">
       <span />
     </div>
   </section>

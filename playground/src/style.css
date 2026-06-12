@@ -42,54 +42,24 @@ html {
   scroll-snap-type: y proximity;
 }
 
-/* Constant scroll feedback: a thin bar at the top driven by the scroll
- * position itself (CSS scroll-driven animation; hidden where unsupported). */
-.scroll-progress {
-  display: none;
-}
-
-@supports (animation-timeline: scroll()) {
-  .scroll-progress {
-    position: fixed;
-    inset: 0 0 auto 0;
-    z-index: 40;
-    display: block;
-    height: 3px;
-    transform-origin: 0 50%;
-    background: var(--color-pop);
-    animation: scroll-progress linear both;
-    animation-timeline: scroll();
-  }
-
-  @keyframes scroll-progress {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
-    }
-  }
-}
-
-/* Slide transitions, driven by the slide's own position in the viewport
- * (scrollytelling): content animates IN while the slide enters and OUT while
- * it leaves — both directions, fully reversible, no JS. Statement slides move
- * on the Y axis; within a biome's sub-slideshow, code/demo slides move on X.
- * Each slide also names its own view timeline for the chapter progress bar. */
-.slide {
-  view-timeline-name: --slide;
+/* A SCREEN UNIT is the smallest fullscreen building block — a deck slide or
+ * a single morph step. Every unit is a snap target, names its own view
+ * timeline, and carries its own progress indicator. */
+.screen {
+  scroll-snap-align: start;
+  view-timeline-name: --screen;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   /* Transitions belong to the SEQUENCE (group node): its data-axis decides
-   * how child slides' content enters. Driven by the slide's own NAMED
-   * view-timeline (--slide) — anonymous view() would resolve against the
-   * slide itself once slides are overflow-hidden scroll containers. */
+   * how child slides' content enters. Driven by the unit's NAMED
+   * view-timeline (--screen) — anonymous view() would resolve against the
+   * unit itself if it ever becomes a scroll container. */
   [data-axis="y"] .slide-content {
     animation-name: slide-in-y, slide-out-y;
     animation-fill-mode: both;
     animation-timing-function: linear, linear;
-    animation-timeline: --slide, --slide;
+    animation-timeline: --screen, --screen;
     animation-range:
       entry 10% entry 55%,
       exit 30% exit 90%;
@@ -102,7 +72,7 @@ html {
     animation-name: slide-in-x;
     animation-fill-mode: both;
     animation-timing-function: linear;
-    animation-timeline: --slide;
+    animation-timeline: --screen;
     animation-range: entry 10% entry 55%;
   }
 
@@ -145,37 +115,38 @@ html.no-motion .motion-safe\:animate-rise {
   animation-name: none;
 }
 
-/* Chapter progress: a thin track at the slide's bottom edge whose fill tracks
- * how far you've scrolled THROUGH this slide (its cover range) — the classic
- * scrollytelling per-section indicator, in the biome's own colors. */
-.slide-progress {
+/* Per-unit progress: a vertical line on the unit's left edge fills top→bottom
+ * as you scroll through THAT unit (its cover range) — scroll-direction-shaped,
+ * per the smallest fullscreen unit, in the biome's own colors. */
+.screen-progress {
   position: absolute;
-  inset: auto 0 0 0;
-  height: 2px;
-  background: color-mix(in oklab, var(--color-rule) 60%, transparent);
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: color-mix(in oklab, var(--color-rule) 35%, transparent);
 }
 
-.slide-progress > span {
+.screen-progress > span {
   display: block;
+  width: 100%;
   height: 100%;
-  transform-origin: 0 50%;
-  transform: scaleX(0);
+  transform-origin: 50% 0;
+  transform: scaleY(0);
   background: var(--color-pop);
 }
 
 @supports (animation-timeline: view()) {
-  .slide-progress > span {
-    animation: chapter-fill linear both;
-    animation-timeline: --slide;
+  .screen-progress > span {
+    animation: screen-fill linear both;
+    animation-timeline: --screen;
     animation-range: cover 0% cover 100%;
   }
 
-  @keyframes chapter-fill {
+  @keyframes screen-fill {
     from {
-      transform: scaleX(0);
+      transform: scaleY(0);
     }
     to {
-      transform: scaleX(1);
+      transform: scaleY(1);
     }
   }
 }
