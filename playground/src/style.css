@@ -71,30 +71,38 @@ html {
   }
 }
 
-/* Slide entrances, driven by the slide's own position in the viewport:
- * statement slides rise on the Y axis; within a biome's sub-slideshow the
- * code/demo slides come in from X. Degrades to no animation gracefully. */
+/* Slide transitions, driven by the slide's own position in the viewport
+ * (scrollytelling): content animates IN while the slide enters and OUT while
+ * it leaves — both directions, fully reversible, no JS. Statement slides move
+ * on the Y axis; within a biome's sub-slideshow, code/demo slides move on X.
+ * Each slide also names its own view timeline for the chapter progress bar. */
+.slide {
+  view-timeline-name: --slide;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .slide-enter-y,
   .slide-enter-x {
     animation-fill-mode: both;
-    animation-timing-function: linear;
-    animation-timeline: view();
-    animation-range: entry 10% entry 65%;
+    animation-timing-function: linear, linear;
+    animation-timeline: view(), view();
+    animation-range:
+      entry 10% entry 70%,
+      exit 15% exit 85%;
   }
 
   .slide-enter-y {
-    animation-name: slide-y;
+    animation-name: slide-in-y, slide-out-y;
   }
 
   .slide-enter-x {
-    animation-name: slide-x;
+    animation-name: slide-in-x, slide-out-x;
   }
 
-  @keyframes slide-y {
+  @keyframes slide-in-y {
     from {
       opacity: 0;
-      transform: translateY(48px);
+      transform: translateY(56px) scale(0.985);
     }
     to {
       opacity: 1;
@@ -102,14 +110,63 @@ html {
     }
   }
 
-  @keyframes slide-x {
+  @keyframes slide-out-y {
+    to {
+      opacity: 0;
+      transform: translateY(-56px) scale(0.985);
+    }
+  }
+
+  @keyframes slide-in-x {
     from {
       opacity: 0;
-      transform: translateX(min(12vw, 110px));
+      transform: translateX(min(14vw, 130px));
     }
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes slide-out-x {
+    to {
+      opacity: 0;
+      transform: translateX(max(-14vw, -130px));
+    }
+  }
+}
+
+/* Chapter progress: a thin track at the slide's bottom edge whose fill tracks
+ * how far you've scrolled THROUGH this slide (its cover range) — the classic
+ * scrollytelling per-section indicator, in the biome's own colors. */
+.slide-progress {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: color-mix(in oklab, var(--color-rule) 60%, transparent);
+}
+
+.slide-progress > span {
+  display: block;
+  height: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: var(--color-pop);
+}
+
+@supports (animation-timeline: view()) {
+  .slide-progress > span {
+    animation: chapter-fill linear both;
+    animation-timeline: --slide;
+    animation-range: cover 0% cover 100%;
+  }
+
+  @keyframes chapter-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
     }
   }
 }

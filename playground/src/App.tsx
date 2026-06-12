@@ -114,7 +114,7 @@ const Slide = ({
   <section
     ref={refCb}
     id={id}
-    className={`biome-${biome} w-full snap-start bg-paper text-ink ${
+    className={`slide biome-${biome} relative w-full snap-start bg-paper text-ink ${
       fixed ? 'h-screen overflow-hidden' : 'min-h-screen'
     }`}
   >
@@ -124,6 +124,10 @@ const Slide = ({
       } ${enter === 'x' ? 'slide-enter-x' : 'slide-enter-y'}`}
     >
       {children}
+    </div>
+    {/* chapter progress — fills as you scroll through this slide */}
+    <div className="slide-progress" aria-hidden="true">
+      <span />
     </div>
   </section>
 )
