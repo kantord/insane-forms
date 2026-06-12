@@ -303,7 +303,7 @@ const SchemaMorph = () => {
             rows="1.15fr 1fr"
             className="h-[84svh] w-full"
             top={
-              <div className="h-full overflow-auto border border-ink font-code text-[0.8rem] leading-relaxed [&_.shiki-magic-move-container]:m-0 [&_.shiki-magic-move-container]:p-6">
+              <div className="h-full overflow-auto border border-ink bg-carbon font-code text-[0.8rem] leading-relaxed [&_.shiki-magic-move-container]:m-0 [&_.shiki-magic-move-container]:p-6">
                 <ShikiMagicMovePrecompiled
                   steps={morphSteps}
                   step={step}
@@ -423,7 +423,7 @@ export function App() {
           visible only while the deck is on screen */}
       <nav
         aria-label="Slides"
-        className={`fixed top-1/2 right-4 z-10 flex -translate-y-1/2 flex-col items-center gap-2 transition-opacity duration-300 ${
+        className={`fixed top-1/2 right-4 z-10 flex -translate-y-1/2 flex-col items-center gap-2 mix-blend-difference transition-opacity duration-300 ${
           active === -1 ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
@@ -432,7 +432,7 @@ export function App() {
           aria-label="Previous slide"
           disabled={active <= 0}
           onClick={() => goToSlide(active - 1)}
-          className="mb-1 flex size-7 items-center justify-center border border-ink bg-paper/80 text-ink transition-colors hover:border-pop hover:text-pop disabled:pointer-events-none disabled:opacity-30"
+          className="mb-1 flex size-7 items-center justify-center border border-white text-white transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:opacity-30"
         >
           ↑
         </button>
@@ -440,8 +440,8 @@ export function App() {
           <a
             key={id}
             href={`#${id}`}
-            className={`size-2.5 rounded-full border border-ink transition-colors ${
-              active === i ? 'border-pop bg-pop' : 'bg-transparent'
+            className={`size-2.5 rounded-full border border-white transition-colors ${
+              active === i ? 'bg-white' : 'bg-transparent'
             }`}
           >
             <span className="sr-only">{id}</span>
@@ -452,7 +452,7 @@ export function App() {
           aria-label="Next slide"
           disabled={active >= BIOMES.length - 1}
           onClick={() => goToSlide(active + 1)}
-          className="mt-1 flex size-7 items-center justify-center border border-ink bg-paper/80 text-ink transition-colors hover:border-pop hover:text-pop disabled:pointer-events-none disabled:opacity-30"
+          className="mt-1 flex size-7 items-center justify-center border border-white text-white transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:opacity-30"
         >
           ↓
         </button>

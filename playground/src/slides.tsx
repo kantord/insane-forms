@@ -78,8 +78,8 @@ export const Duplex = ({
   <div
     className={`grid min-h-0 grid-cols-1 grid-rows-2 border border-ink lg:grid-cols-[1.15fr_1fr] lg:grid-rows-1 ${className}`}
   >
-    <div className="flex min-h-0 flex-col overflow-clip">{left}</div>
-    <div className="flex min-h-0 flex-col overflow-clip border-t border-ink lg:border-t-0 lg:border-l">
+    <div className="flex min-h-0 min-w-0 flex-col overflow-clip">{left}</div>
+    <div className="flex min-h-0 min-w-0 flex-col overflow-clip border-t border-ink lg:border-t-0 lg:border-l">
       {right}
     </div>
   </div>
@@ -98,7 +98,7 @@ export const Stack = ({
   bottom: ReactNode
 }) => (
   <div className={`grid min-h-0 gap-4 ${className}`} style={{ gridTemplateRows: rows }}>
-    <div className="flex min-h-0 flex-col overflow-clip">{top}</div>
-    <div className="flex min-h-0 flex-col overflow-clip">{bottom}</div>
+    <div className="flex min-h-0 min-w-0 flex-col overflow-clip">{top}</div>
+    <div className="flex min-h-0 min-w-0 flex-col overflow-clip">{bottom}</div>
   </div>
 )
