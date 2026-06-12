@@ -9,10 +9,9 @@ test.describe('docs page', () => {
       page.getByRole('heading', { name: /nested groups, hidden field, dynamic list/i }),
     ).toBeVisible()
     await expect(page.getByRole('heading', { name: /recursive tree/i })).toBeVisible()
-    await expect(page.getByRole('link', { name: /storybook/i })).toHaveAttribute(
-      'href',
-      './storybook/',
-    )
+    await expect(
+      page.getByRole('link', { name: /storybook — every piece in isolation/i }),
+    ).toHaveAttribute('href', './storybook/')
   })
 
   test('valid submit shows the parsed z.output including the hidden id', async ({ page }) => {

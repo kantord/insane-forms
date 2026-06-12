@@ -97,6 +97,7 @@ const preview: Preview = {
           'Composition',
           'Collections',
           'Editable table',
+          'Design biomes',
           'Forms',
           'Multi-step',
           'Nested modals',

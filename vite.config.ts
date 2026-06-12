@@ -5,11 +5,12 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vite'
+import { snippetsPlugin } from './playground/snippets.plugin'
 
 export default defineConfig({
   root: './playground', // `pnpm run play` — the dev harness importing src directly
   base: './', // relative URLs: the static build works at any GitHub Pages path
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), snippetsPlugin()],
   test: {
     projects: [
       {

@@ -54,6 +54,7 @@ const TextWidget = (p: FieldProps<string | undefined>) => (
     id={p.name}
     name={p.name}
     value={p.value ?? ''}
+    aria-label={p.label === undefined ? p.name : undefined} // label-less ≠ nameless
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
     readOnly={p.readonly}
