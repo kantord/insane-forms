@@ -1,7 +1,8 @@
 /** Real interaction — what SSR could never exercise: clicks, typing, submit. */
-import { describe, it, expect, vi } from 'vitest'
+
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 import { ProfileForm } from '../examples/profile'
 
 const fillValid = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -27,7 +28,8 @@ describe('dynamic collection interaction', () => {
 
     await user.click(container.querySelectorAll('[data-remove]')[0]!)
     await waitFor(() =>
-      expect(container.querySelectorAll('[name$=".email"][name^="contacts"]').length).toBe(1))
+      expect(container.querySelectorAll('[name$=".email"][name^="contacts"]').length).toBe(1),
+    )
     expect(container.querySelector('[data-remove]')).not.toBeInTheDocument() // back at min
   })
 
@@ -50,11 +52,11 @@ describe('submit: the draft/output split end to end', () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     const data = onSubmit.mock.calls[0]![0]
     expect(data).toMatchObject({
-      id: 'srv-000',        // hidden: never shown, still submitted
+      id: 'srv-000', // hidden: never shown, still submitted
       name: 'Ada Lovelace',
-      age: 18,              // declared default, untouched
+      age: 18, // declared default, untouched
       role: 'user',
-      newsletter: false,    // checkbox default(false), untouched
+      newsletter: false, // checkbox default(false), untouched
       address: { city: 'Barcelona', zip: '08001' },
       contacts: [{ email: 'team@example.com', primary: false }],
     })

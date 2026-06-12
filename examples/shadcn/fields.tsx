@@ -2,14 +2,10 @@
  * Mirrors examples/profile.tsx: widgets, a shell, and a list wrapper are all user
  * code, so swapping the bureau chrome for shadcn touches zero library lines. */
 
-import * as z from "zod";
-import * as insane from "../../src";
-import { resolveInner } from "../../src";
-import type { CollectionWrapper, FieldProps, Shell } from "../../src";
-
-import { XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { XIcon } from 'lucide-react'
+import * as z from 'zod'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Field,
   FieldContent,
@@ -19,15 +15,15 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -35,15 +31,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
+import type { CollectionWrapper, FieldProps, Shell } from '../../src'
+import * as insane from '../../src'
+import { resolveInner } from '../../src'
 
 /* User-land meta key: `.meta({ placeholder })` reaches widgets through the
  * props mapper — a one-line resolver on the library's `resolve` primitive. */
 const resolvePlaceholder = insane.resolve<string>(
   (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
-);
-const fieldExtras = (s: z.ZodType) => ({ placeholder: resolvePlaceholder(s) });
+)
+const fieldExtras = (s: z.ZodType) => ({ placeholder: resolvePlaceholder(s) })
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -59,11 +58,18 @@ export const FieldShell: Shell = ({ name, label, description, required, error, c
     {description !== undefined && <FieldDescription>{description}</FieldDescription>}
     {error !== undefined && <FieldError errors={[{ message: error }]} />}
   </Field>
-);
+)
 
 /* Checkbox-shaped fields use shadcn's horizontal Field idiom: box first, label
  * beside it. A shell is per-binding, so this costs one constant. */
-export const CheckboxFieldShell: Shell = ({ name, label, description, required, error, children }) => (
+export const CheckboxFieldShell: Shell = ({
+  name,
+  label,
+  description,
+  required,
+  error,
+  children,
+}) => (
   <Field orientation="horizontal" data-invalid={error !== undefined || undefined}>
     {children}
     <FieldContent>
@@ -77,7 +83,7 @@ export const CheckboxFieldShell: Shell = ({ name, label, description, required, 
       {error !== undefined && <FieldError errors={[{ message: error }]} />}
     </FieldContent>
   </Field>
-);
+)
 
 export const FieldSetList: CollectionWrapper = ({ label, items, add, header, footer }) => (
   <FieldSet>
@@ -110,7 +116,7 @@ export const FieldSetList: CollectionWrapper = ({ label, items, add, header, foo
       {footer}
     </FieldGroup>
   </FieldSet>
-);
+)
 
 /* ---------- table chrome: rows as <tr>, leaves as bare cells. ----------
  * Column headers carry the labels, so the cell shell renders no label of its
@@ -121,20 +127,20 @@ const CellShell: Shell = ({ error, children }) => (
     {children}
     {error !== undefined && <FieldError className="mt-1" errors={[{ message: error }]} />}
   </TableCell>
-);
+)
 
 const CellTextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
   <Input
     id={p.name}
     name={p.name}
     aria-label={p.label}
-    value={p.value ?? ""}
+    value={p.value ?? ''}
     placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   />
-);
+)
 
 const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
   <Input
@@ -142,20 +148,24 @@ const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: st
     name={p.name}
     type="number"
     aria-label={p.label}
-    value={p.value ?? ""}
+    value={p.value ?? ''}
     placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
-    onChange={(e) => p.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+    onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
     onBlur={p.onBlur}
   />
-);
+)
 
-export const cellText = insane.field({ widget: CellTextWidget, shell: CellShell, props: fieldExtras });
+export const cellText = insane.field({
+  widget: CellTextWidget,
+  shell: CellShell,
+  props: fieldExtras,
+})
 export const cellNumber = insane.field({
   widget: CellNumberWidget,
   shell: CellShell,
   props: fieldExtras,
-});
+})
 
 /** Rows are list items; a row group's cell fields render in column order. */
 export const tableList =
@@ -198,13 +208,20 @@ export const tableList =
         </TableBody>
       </Table>
       {add && (
-        <Button type="button" variant="outline" size="sm" className="self-start" data-add onClick={add}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-start"
+          data-add
+          onClick={add}
+        >
           Add row
         </Button>
       )}
       {footer}
     </FieldSet>
-  );
+  )
 
 /* ---------- 2. Widgets: plain render functions over shadcn components. ---------- */
 
@@ -212,40 +229,40 @@ const TextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }
   <Input
     id={p.name}
     name={p.name}
-    value={p.value ?? ""}
+    value={p.value ?? ''}
     placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
     readOnly={p.readonly}
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   />
-);
+)
 
 const TextareaWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
   <Textarea
     id={p.name}
     name={p.name}
-    value={p.value ?? ""}
+    value={p.value ?? ''}
     placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
     readOnly={p.readonly}
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   />
-);
+)
 
 const NumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
   <Input
     id={p.name}
     name={p.name}
     type="number"
-    value={p.value ?? ""}
+    value={p.value ?? ''}
     placeholder={p.placeholder}
     aria-invalid={p.error !== undefined || undefined}
-    onChange={(e) => p.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+    onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
     onBlur={p.onBlur}
   />
-);
+)
 
 /* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
 const CheckWidget = (p: FieldProps<boolean>) => (
@@ -256,7 +273,7 @@ const CheckWidget = (p: FieldProps<boolean>) => (
     aria-invalid={p.error !== undefined || undefined}
     onCheckedChange={(checked) => p.onChange(checked === true)}
   />
-);
+)
 
 /* Strict select: schema must carry .default(v). Options come from the schema via
  * the `props` mapper — same mechanism as the bureau example. */
@@ -273,11 +290,11 @@ const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) =
       ))}
     </SelectContent>
   </Select>
-);
+)
 
 const enumOptions = (s: z.ZodType) => ({
   options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
-});
+})
 
 /* ---------- 3. Bound fields: same shapes as the bureau example. ---------- */
 
@@ -286,26 +303,26 @@ export const InputField = insane.field({
   widget: TextWidget,
   shell: FieldShell,
   props: fieldExtras,
-});
+})
 export const TextareaField = insane.field({
   schema: z.string(),
   widget: TextareaWidget,
   shell: FieldShell,
   props: fieldExtras,
-});
+})
 export const NumberField = insane.field({
   schema: z.number(),
   widget: NumberWidget,
   shell: FieldShell,
   props: fieldExtras,
-});
+})
 export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
   widget: CheckWidget,
   shell: CheckboxFieldShell,
-});
+})
 export const selectField = insane.field({
   widget: SelectWidget,
   shell: FieldShell,
   props: enumOptions,
-});
+})

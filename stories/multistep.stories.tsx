@@ -1,21 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { demoSubmit } from './demo'
-import { expect } from 'storybook/test'
 import { FormProvider } from 'react-hook-form'
+import { expect } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { CheckboxField, InputField, selectField } from '../examples/shadcn/fields'
 import * as insane from '../src'
+import { demoSubmit } from './demo'
 
 /* A wizard is plain user code over the public pieces: useZodForm + FormProvider
  * + Render. One schema validates everything; each step renders one section.
@@ -98,10 +92,7 @@ function MultiStepCheckout() {
             ))}
           </nav>
           <FormProvider {...methods}>
-            <form
-              className="flex flex-col gap-6"
-              onSubmit={methods.handleSubmit(demoSubmit)}
-            >
+            <form className="flex flex-col gap-6" onSubmit={methods.handleSubmit(demoSubmit)}>
               <insane.Render schema={STEPS[step].schema} name="" />
               <Field orientation="horizontal">
                 <Button

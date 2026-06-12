@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { demoSubmit } from './demo'
 import { expect, waitFor, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -18,6 +17,7 @@ import { FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
+import { demoSubmit } from './demo'
 
 /* Recursive editing via STACKED DIALOGS: every nesting level opens in its own
  * modal, and "Done" only closes a modal once THAT item's subtree validates —
@@ -42,10 +42,12 @@ function ItemModal({ name, children }: { name: string; children: ReactNode }) {
   const label = useWatch({ name: `${name}.label` }) as string | undefined
   // Fresh items (no label yet) open their editor immediately.
   const [open, setOpen] = useState(label === undefined || label === '')
-  const subtreeError = name.split('.').reduce<unknown>(
-    (acc, key) => (acc as Record<string, unknown> | undefined)?.[key],
-    formState.errors,
-  )
+  const subtreeError = name
+    .split('.')
+    .reduce<unknown>(
+      (acc, key) => (acc as Record<string, unknown> | undefined)?.[key],
+      formState.errors,
+    )
 
   // The only way out is a valid item: Done, Esc, and outside clicks all
   // validate THIS item's subtree first and keep the dialog open on failure.
@@ -55,7 +57,9 @@ function ItemModal({ name, children }: { name: string; children: ReactNode }) {
 
   return (
     <>
-      <span className={cn('flex-1 truncate text-sm', subtreeError !== undefined && 'text-destructive')}>
+      <span
+        className={cn('flex-1 truncate text-sm', subtreeError !== undefined && 'text-destructive')}
+      >
         {label || <span className="text-muted-foreground italic">Untitled item</span>}
       </span>
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
@@ -143,7 +147,10 @@ export const NavigationMenu: StoryObj = {
   name: 'Navigation menu builder',
   render: () => {
     const schema = insane.group({
-      items: insane.list(MenuItemSchema, { wrapper: MenuList }).min(1).meta({ title: 'Menu items' }),
+      items: insane
+        .list(MenuItemSchema, { wrapper: MenuList })
+        .min(1)
+        .meta({ title: 'Menu items' }),
     })
     return (
       <insane.ZodForm

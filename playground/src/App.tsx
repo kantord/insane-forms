@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CategoryForm, ProfileForm, type Cat, type ProfileData } from '../../examples/profile'
+import { type Cat, CategoryForm, type ProfileData, ProfileForm } from '../../examples/profile'
 import profileSource from '../../examples/profile.tsx?raw'
 
 /* The code panes are sliced from the REAL example file (imported ?raw), so the
@@ -38,10 +38,22 @@ const Receipt = ({ data }: { data: unknown }) => (
 )
 
 const PRINCIPLES = [
-  ['matchless rendering', 'Every node carries its renderer in .meta({ component }). The core never switches on schema type.'],
-  ['zero DOM in core', 'Shells, list chrome, widgets — all user code. The library ships behavior, you ship the looks.'],
-  ['draft vs submit', 'The form edits the z.input draft; onSubmit receives parsed z.output. Hidden defaults fill at parse.'],
-  ['tree-shakeable', 'Named exports only. Import the resolve toolkit alone: ~0.7 kB, zero react-hook-form in the bundle.'],
+  [
+    'matchless rendering',
+    'Every node carries its renderer in .meta({ component }). The core never switches on schema type.',
+  ],
+  [
+    'zero DOM in core',
+    'Shells, list chrome, widgets — all user code. The library ships behavior, you ship the looks.',
+  ],
+  [
+    'draft vs submit',
+    'The form edits the z.input draft; onSubmit receives parsed z.output. Hidden defaults fill at parse.',
+  ],
+  [
+    'tree-shakeable',
+    'Named exports only. Import the resolve toolkit alone: ~0.7 kB, zero react-hook-form in the bundle.',
+  ],
 ] as const
 
 export function App() {
@@ -64,9 +76,9 @@ export function App() {
           the schema <em>is</em> the form.
         </h1>
         <p className="lede">
-          <strong>insane-forms</strong> renders React forms straight from plain Zod schemas. No JSON dialect, no
-          renderer registry, no match statement — each schema node carries its own component, and React does the
-          traversal.
+          <strong>insane-forms</strong> renders React forms straight from plain Zod schemas. No JSON
+          dialect, no renderer registry, no match statement — each schema node carries its own
+          component, and React does the traversal.
         </p>
         <div className="masthead-row">
           <span className="stamp">zod 4 · react 19 · mit</span>
@@ -88,8 +100,9 @@ export function App() {
           <span className="spec-tag">specimen a</span>
           <h2>Nested groups, hidden field, dynamic list</h2>
           <p>
-            Sections compose as fragments — shapes concatenate flat, decorations render in place. The contact list
-            reads its add/remove bounds from the schema's own <code>.min(1).max(3)</code>.
+            Sections compose as fragments — shapes concatenate flat, decorations render in place.
+            The contact list reads its add/remove bounds from the schema's own{' '}
+            <code>.min(1).max(3)</code>.
           </p>
         </header>
         <div className="duplex">
@@ -106,8 +119,8 @@ export function App() {
           <span className="spec-tag">specimen b</span>
           <h2>Recursive tree — z.lazy renders to data depth</h2>
           <p>
-            A self-referential schema renders exactly as deep as the data goes, and stops. Add a child to grow the
-            form.
+            A self-referential schema renders exactly as deep as the data goes, and stops. Add a
+            child to grow the form.
           </p>
         </header>
         <div className="duplex">

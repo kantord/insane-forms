@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { demoSubmit } from './demo'
 import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -8,10 +7,11 @@ import {
   CheckboxField,
   FieldSetList,
   InputField,
-  TextareaField,
   selectField,
+  TextareaField,
 } from '../examples/shadcn/fields'
 import * as insane from '../src'
+import { demoSubmit } from './demo'
 
 /* Full worked forms — the shapes real apps ship. */
 const meta: Meta = {
@@ -43,28 +43,20 @@ export const Profile: StoryObj = {
         },
       ),
       <FieldSeparator />,
-      insane.wrap(
-        FieldSet,
-        <FieldLegend>Notifications</FieldLegend>,
-        {
-          frequency: selectField(
-            z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
-              title: 'Email frequency',
-            }),
-          ),
-          marketing: CheckboxField.meta({
-            title: 'Email me about product updates',
-            description: 'You can unsubscribe at any time.',
+      insane.wrap(FieldSet, <FieldLegend>Notifications</FieldLegend>, {
+        frequency: selectField(
+          z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
+            title: 'Email frequency',
           }),
-        },
-      ),
+        ),
+        marketing: CheckboxField.meta({
+          title: 'Email me about product updates',
+          description: 'You can unsubscribe at any time.',
+        }),
+      }),
     )
     return (
-      <insane.ZodForm
-        schema={schema}
-        className="flex flex-col gap-6"
-        onSubmit={demoSubmit}
-      >
+      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Save changes
         </Button>

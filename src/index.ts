@@ -1,2 +1,2 @@
-'use client';
-export * from './insane';
+'use client'
+export * from './insane'

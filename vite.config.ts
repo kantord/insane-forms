@@ -2,8 +2,8 @@
 import path from 'node:path'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import tailwindcss from '@tailwindcss/vite'
-import { playwright } from '@vitest/browser-playwright'
 import react from '@vitejs/plugin-react'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -26,9 +26,7 @@ export default defineConfig({
         // Absolute paths: the top-level `root: './playground'` (for the docs
         // playground) must not leak into where this project resolves from.
         extends: path.join(import.meta.dirname, '.storybook/vite.config.ts'),
-        plugins: [
-          storybookTest({ configDir: path.join(import.meta.dirname, '.storybook') }),
-        ],
+        plugins: [storybookTest({ configDir: path.join(import.meta.dirname, '.storybook') })],
         test: {
           name: 'storybook',
           root: import.meta.dirname,

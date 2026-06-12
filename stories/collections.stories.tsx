@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { demoSubmit } from './demo'
 import { expect } from 'storybook/test'
 import { Button } from '@/components/ui/button'
 import { FieldSetList, InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
+import { demoSubmit } from './demo'
 
 /* Dynamic lists: the add/remove chrome is gated by the same .min()/.max()
  * the validator uses — one source of truth. */

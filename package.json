@@ -36,10 +36,11 @@
     "test:watch": "vitest",
     "test:e2e": "pnpm run build:docs && pnpm run build:storybook && playwright test",
     "typecheck": "tsc --noEmit",
-    "lint": "biome lint .",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "build": "tsdown",
     "check:package": "publint && attw --pack . --profile esm-only",
-    "ci": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package"
+    "ci": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package"
   },
   "peerDependencies": {
     "@hookform/resolvers": "^5.0.0",

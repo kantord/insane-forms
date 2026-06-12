@@ -1,10 +1,11 @@
 /** Rendering semantics: decorations, paths, defaults, composition, recursion. */
-import { describe, it, expect, vi } from 'vitest'
+
 import { render, screen } from '@testing-library/react'
 import type * as React from 'react'
+import { describe, expect, it, vi } from 'vitest'
 import * as z from 'zod'
+import { type Cat, CategoryForm, Profile, ProfileForm, text } from '../examples/profile'
 import * as insane from '../src'
-import { Profile, ProfileForm, CategoryForm, text, type Cat } from '../examples/profile'
 
 describe('a form rendered from the schema', () => {
   it('interleaves decorations in authored order, around real fields', () => {
@@ -28,7 +29,9 @@ describe('a form rendered from the schema', () => {
 
   it('required * and optional label-less fields', () => {
     const { container } = render(<ProfileForm onSubmit={() => {}} />)
-    expect(screen.getByText((_, el) => el?.tagName === 'LABEL' && el.textContent === 'Name *')).toBeInTheDocument()
+    expect(
+      screen.getByText((_, el) => el?.tagName === 'LABEL' && el.textContent === 'Name *'),
+    ).toBeInTheDocument()
     expect(container.querySelector('[name="nickname"]')).toBeInTheDocument()
     expect(screen.queryByText(/nickname/i)).not.toBeInTheDocument()
   })
@@ -37,8 +40,13 @@ describe('a form rendered from the schema', () => {
     const { container } = render(<ProfileForm onSubmit={() => {}} />)
     expect(container.innerHTML).not.toContain('srv-000')
     const parsed = Profile.parse({
-      name: 'Ada', email: 'ada@x.io', age: 30, role: 'admin', newsletter: true,
-      address: { city: 'BCN', zip: '08001' }, contacts: [{ email: 'a@b.co', primary: true }],
+      name: 'Ada',
+      email: 'ada@x.io',
+      age: 30,
+      role: 'admin',
+      newsletter: true,
+      address: { city: 'BCN', zip: '08001' },
+      contacts: [{ email: 'a@b.co', primary: true }],
     })
     expect(parsed.id).toBe('srv-000')
   })
@@ -55,9 +63,7 @@ describe('composition', () => {
     const A = insane.group(<em>secA</em>, { x: text(z.string()) })
     const B = insane.group({ y: text(z.string()) })
     const AB = insane.group(A, B)
-    const { container } = render(
-      <insane.ZodForm schema={AB} onSubmit={() => {}} />,
-    )
+    const { container } = render(<insane.ZodForm schema={AB} onSubmit={() => {}} />)
     expect(container.querySelector('em')).toHaveTextContent('secA')
     expect(container.querySelector('[name="x"]')).toBeInTheDocument()
     expect(container.querySelector('[name="y"]')).toBeInTheDocument()
@@ -65,7 +71,9 @@ describe('composition', () => {
   })
 
   it('wrap(): DOM around a segment, data stays flat', () => {
-    const Card = ({ children }: { children?: React.ReactNode }) => <section data-card>{children}</section>
+    const Card = ({ children }: { children?: React.ReactNode }) => (
+      <section data-card>{children}</section>
+    )
     const W = insane.group(insane.wrap(Card, { a: text(z.string()) }), { b: text(z.string()) })
     const { container } = render(<insane.ZodForm schema={W} onSubmit={() => {}} />)
     expect(container.querySelector('[data-card] [name="a"]')).toBeInTheDocument()
@@ -89,11 +97,16 @@ describe('build-time enforcement', () => {
 describe('recursion (z.lazy)', () => {
   const tree: Cat = {
     name: 'root',
-    children: [{ name: 'a', children: [{ name: 'a1', children: [] }] }, { name: 'b', children: [] }],
+    children: [
+      { name: 'a', children: [{ name: 'a1', children: [] }] },
+      { name: 'b', children: [] },
+    ],
   }
   it('renders to the data depth and stops', () => {
     const { container } = render(<CategoryForm value={tree} onSubmit={() => {}} />)
     expect(container.querySelector('[name="children.0.children.0.name"]')).toBeInTheDocument()
-    expect(container.querySelector('[name^="children.0.children.0.children"]')).not.toBeInTheDocument()
+    expect(
+      container.querySelector('[name^="children.0.children.0.children"]'),
+    ).not.toBeInTheDocument()
   })
 })
