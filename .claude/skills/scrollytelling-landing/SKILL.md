@@ -17,8 +17,9 @@ chapter per biome). At most TWO scroll blocks (morph + biome tour).
 
 - **ScrollyBlock** (region root) — a self-contained scrollytelling region.
   The page holds AT MOST TWO, separated by substantial free-flow content
-  (user decision). It OWNS the region's state and logic: active-unit IO, the
-  dots/arrows rail, prev/next wizard navigation (`useScrolly()` context),
+  (user decision). It OWNS the region's state and logic: active-unit tracking
+  (midpoint scroll handler, below), the dots/arrows rail, prev/next wizard
+  navigation (`useScrolly()` context),
   and settled hash sync for ITS units only — so reload/deep-links land on
   the exact screen. Every block declares `exitId` (the next header after
   it): the last NEXT becomes "Continue ↓" and scrolls OUT of the block —
@@ -74,9 +75,9 @@ instead, keeping it small.
   a snapped deck); never `vh`. Slides clip with `overflow: clip`, not
   `hidden` (hidden makes a scroll container; clip preserves SDA seeking and
   a11y order).
-- Transitions use the slide's NAMED view-timeline (`--slide`) — anonymous
-  `view()` breaks once slides are `overflow-hidden` (they become scroll
-  containers and the timeline resolves against themselves).
+- Slide content transitions use the unit's NAMED view-timeline (`--screen`,
+  on `.screen`) — anonymous `view()` breaks once a unit is `overflow-clip`
+  (it becomes a scroll container and the timeline resolves against itself).
 - Hash sync writes from the SETTLED scroll position (`scrollend`, debounced
   scroll fallback) — never from IO thresholds, since snap adjusts the offset
   after scrolling ends. `history.scrollRestoration = 'manual'`; position is
@@ -122,11 +123,11 @@ design. Do not trim families for budget; the budget is met by delivery order
 - The same plugin injects metric-matched local fallbacks (capsize metrics →
   `size-adjust`/`ascent`/`descent`/`line-gap` overrides) so swap-CLS ≈ 0;
   fallback families are in the `--font-serif`/`--font-mono` stacks.
-- Coding fonts are NEVER preloaded or render-blocking: `useLazyCodeFonts`
-  warms each biome's face via `document.fonts.load()` half a viewport before
-  its section (explicit, because browsers defer below-fold font kickoff
-  unreliably). Verify the waterfall: load = 3 hero faces (+morph's font),
-  others only on approach; latin subsets only.
+- Coding fonts are NEVER preloaded or render-blocking. `useChapterAssets`
+  (App.tsx) reads each biome's declared `data-fonts`, loads the font of the
+  chapter the URL hash points at FIRST (visible-first), then
+  `requestIdleCallback`-loads the rest. Verify: hero faces load eagerly;
+  coding fonts only after first paint / on the active chapter; latin subsets.
 - All self-hosted via Fontsource (GDPR) — verify zero external URLs in dist.
 
 ## Changing these decisions

@@ -31,15 +31,17 @@ from a real, compiled, tested module — so docs cannot drift from working code.
 
 ## Code annotations (hover explanations)
 
-Confusing parts of displayed code get `// @note(target) explanation` TRAILING
-comments in the example file itself (single source of truth — the explanation
-lives next to the code it explains). The build plugin strips them from display
-and attaches the text to the first occurrence of `target` on that line (whole
-line if no target) as a Shiki decoration: a `.code-note` span — dotted
-underline, `tabindex="0"`, popover on hover/focus, `aria-label` for screen
-readers. Trailing position only; Magic Move panes strip notes without
-rendering them (keyed tokens can't carry decorations). The e2e suite asserts
-notes exist and `@note` never leaks into display.
+Confusing parts of displayed code get `// @note(target) explanation` comments
+in the example file itself (single source of truth — the explanation lives
+next to the code it explains). The build plugin strips them from display and
+attaches the text to the first occurrence of `target` (whole line if no
+target) as a Shiki decoration: a `.code-note` span — dotted underline,
+`tabindex="0"`, popover on hover/focus, `aria-label` for screen readers. A
+trailing note annotates its own line; a standalone note line annotates the
+NEXT code line (Biome relocates long trailing comments, so both are handled).
+`target` may contain one level of parens (e.g. `@note(.min(1).max(3))`). Magic
+Move panes strip notes without rendering them (keyed tokens can't carry
+decorations). The e2e suite asserts notes exist and `@note` never leaks.
 
 ## Authoring rules
 
