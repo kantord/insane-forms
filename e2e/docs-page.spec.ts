@@ -62,6 +62,48 @@ test.describe('docs page', () => {
     await expect(note).toHaveAttribute('tabindex', '0') // keyboard-reachable
   })
 
+  test('biome content is co-located per chapter (statements then showcase)', async ({ page }) => {
+    await page.goto('/')
+    const ids = await page.evaluate(() =>
+      [...document.querySelectorAll('[id]')]
+        .map((e) => e.id)
+        .filter((id) => /^(bureau|terminal|meadow|showcase)/.test(id)),
+    )
+    expect(ids).toEqual([
+      'bureau',
+      'bureau-2',
+      'showcase-bureau',
+      'terminal',
+      'terminal-2',
+      'showcase-terminal',
+      'meadow',
+      'meadow-2',
+      'showcase-meadow',
+    ])
+  })
+
+  test('Next button fills with scroll progress through the active screen', async ({ page }) => {
+    await page.goto('/#bureau')
+    const navProgress = () =>
+      page.evaluate(() => {
+        const wrap = [...document.querySelectorAll<HTMLElement>('div.fixed')].find(
+          (d) => d.querySelector('button') && getComputedStyle(d).opacity !== '0',
+        )
+        return Number.parseFloat(wrap?.style.getPropertyValue('--nav-progress') || '-1')
+      })
+    await page.evaluate(() => document.getElementById('bureau')?.scrollIntoView())
+    await expect.poll(navProgress).toBeLessThan(0.1)
+    await page.evaluate(() => {
+      const el = document.getElementById('bureau')
+      if (el)
+        window.scrollTo(
+          0,
+          el.getBoundingClientRect().top + window.scrollY + window.innerHeight * 0.45,
+        )
+    })
+    await expect.poll(navProgress).toBeGreaterThan(0.25)
+  })
+
   test('recursive tree renders to data depth and grows', async ({ page }) => {
     await page.goto('/')
     const specimenB = page.locator('#showcase-terminal .demo-pane')

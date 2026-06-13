@@ -24,21 +24,25 @@ import {
  *     plain flow; slots clip on BOTH axes and may nest further slot layouts.
  */
 
-export type Biome = 'bureau' | 'terminal' | 'meadow'
+export type BiomeName = 'bureau' | 'terminal' | 'meadow'
 export type Axis = 'x' | 'y' | 'none'
 export type SlideLayout = 'statement' | 'fill'
 
-/** Group node: scopes design tokens and owns its children's transition axis. */
-export const Sequence = ({
-  biome,
+/** Biome wrapper: scopes design tokens (`biome-*`), owns its child slides'
+ * transition axis, and DECLARES the chapter's asset needs (fonts) via
+ * `data-fonts` so the loader can prioritize the active chapter first. */
+export const Biome = ({
+  name,
   axis = 'y',
+  fonts = [],
   children,
 }: {
-  biome: Biome
+  name: BiomeName
   axis?: Axis
+  fonts?: string[]
   children: ReactNode
 }) => (
-  <div className={`biome-${biome}`} data-axis={axis}>
+  <div className={`biome-${name}`} data-biome={name} data-fonts={fonts.join('|')} data-axis={axis}>
     {children}
   </div>
 )
@@ -67,10 +71,6 @@ export const Slide = ({
       }`}
     >
       {children}
-    </div>
-    {/* per-unit progress — fills as you scroll through this screen */}
-    <div className="screen-progress" aria-hidden="true">
-      <span />
     </div>
   </section>
 )
@@ -172,30 +172,52 @@ export const ScrollyBlock = ({
   children: ReactNode
 }) => {
   const [index, setIndex] = useState(-1)
+  const [unitBiome, setUnitBiome] = useState('')
   const indexRef = useRef(-1)
+  const navRef = useRef<HTMLDivElement>(null)
 
-  // Active-unit tracking: one observer per block lifetime.
+  // Active unit + Next-button progress, midpoint-based so it's robust for
+  // units of ANY height. One rAF-throttled passive scroll handler — no
+  // observer churn. Progress = how far the active unit has scrolled toward
+  // the next, exposed as --nav-progress for the button fill.
   useEffect(() => {
-    const elements = units.map((id) => document.getElementById(id))
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const i = elements.indexOf(entry.target as HTMLElement)
-          if (entry.intersectionRatio > 0.55) {
-            if (indexRef.current !== i) {
-              indexRef.current = i
-              setIndex(i)
-            }
-          } else if (i === indexRef.current && entry.intersectionRatio < 0.2) {
-            indexRef.current = -1
-            setIndex(-1)
-          }
+    let raf = 0
+    const measure = () => {
+      raf = 0
+      const mid = window.innerHeight / 2
+      let active = -1
+      for (let i = 0; i < units.length; i++) {
+        const el = document.getElementById(units[i] ?? '')
+        if (!el) continue
+        const rect = el.getBoundingClientRect()
+        if (rect.top <= mid && rect.bottom >= mid) {
+          active = i
+          const progress = Math.min(1, Math.max(0, -rect.top / el.offsetHeight))
+          navRef.current?.style.setProperty('--nav-progress', String(progress))
+          break
         }
-      },
-      { threshold: [0.2, 0.55] },
-    )
-    for (const el of elements) if (el) observer.observe(el)
-    return () => observer.disconnect()
+      }
+      if (active !== indexRef.current) {
+        indexRef.current = active
+        setIndex(active)
+        const host =
+          active === -1
+            ? null
+            : document.getElementById(units[active] ?? '')?.closest('[class*="biome-"]')
+        setUnitBiome(host ? ([...host.classList].find((c) => c.startsWith('biome-')) ?? '') : '')
+      }
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
   }, [units])
 
   // Settled hash sync for THIS block's units only (the block under the
@@ -238,17 +260,6 @@ export const ScrollyBlock = ({
     [units],
   )
 
-  // The active unit's biome class — so the fixed corner buttons render in
-  // the LOCAL style while keeping a globally consistent position.
-  const [unitBiome, setUnitBiome] = useState('')
-  useEffect(() => {
-    const id = units[index]
-    if (id === undefined) return
-    const host = document.getElementById(id)?.closest('[class*="biome-"]')
-    const cls = host ? [...host.classList].find((c) => c.startsWith('biome-')) : undefined
-    setUnitBiome(cls ?? '')
-  }, [index, units])
-
   const state = useMemo<ScrollyState>(() => {
     const atEnd = index >= units.length - 1
     return {
@@ -279,6 +290,7 @@ export const ScrollyBlock = ({
           The wrapper carries the active unit's biome class, so the styling is
           still local. Visible only while one of this block's units is seated. */}
       <div
+        ref={navRef}
         className={`${unitBiome} pointer-events-none fixed inset-x-0 bottom-0 z-10 flex items-end justify-between px-6 pb-6 transition-opacity duration-300 ${
           index === -1 ? 'opacity-0' : 'opacity-100'
         }`}
@@ -295,9 +307,16 @@ export const ScrollyBlock = ({
           type="button"
           disabled={(state.atEnd && !state.hasExit) || index === -1}
           onClick={state.next}
-          className="pointer-events-auto border border-ink bg-ink px-6 py-2 font-mono text-[0.78rem] font-bold uppercase tracking-[0.18em] text-paper transition-colors hover:border-pop hover:bg-pop disabled:pointer-events-none disabled:opacity-30"
+          className="pointer-events-auto relative overflow-clip border border-ink bg-ink px-6 py-2 font-mono text-[0.78rem] font-bold uppercase tracking-[0.18em] text-paper transition-colors hover:border-pop disabled:pointer-events-none disabled:opacity-30"
         >
-          {exiting ? 'Continue ↓' : 'Next'}
+          {/* scroll-progress fill toward the next screen — the buttons double
+              as the per-screen progress indicator (replaces the edge pills) */}
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 w-full origin-left bg-pop"
+            style={{ transform: 'scaleX(var(--nav-progress, 0))' }}
+          />
+          <span className="relative">{exiting ? 'Continue ↓' : 'Next'}</span>
         </button>
       </div>
       {/* region rail: dots + prev/next, readable on any biome (blend), visible

@@ -115,49 +115,6 @@ html.no-motion .motion-safe\:animate-rise {
   animation-name: none;
 }
 
-/* Per-unit progress: a vertical line on the unit's left edge fills top→bottom
- * as THAT screen arrives (entry range), and sits full while you're on it.
- * Entry — not cover — because a fullscreen unit's cover range spans two
- * viewports: at rest it reads a meaningless 50%, and during transitions TWO
- * lines animate at once (looks like dueling scrollbars). With entry, exactly
- * one line moves at any moment: the incoming screen's. */
-.screen-progress {
-  position: absolute;
-  /* 80% of the unit's height, inset from top and bottom: the gaps between
-   * consecutive pills delineate the pages. Fully rounded. */
-  inset: 10% auto 10% 0;
-  width: 3px;
-  overflow: clip;
-  border-radius: 9999px;
-  background: color-mix(in oklab, var(--color-rule) 35%, transparent);
-}
-
-.screen-progress > span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 0;
-  transform: scaleY(0);
-  background: var(--color-pop);
-}
-
-@supports (animation-timeline: view()) {
-  .screen-progress > span {
-    animation: screen-fill linear both;
-    animation-timeline: --screen;
-    animation-range: entry 0% entry 100%;
-  }
-
-  @keyframes screen-fill {
-    from {
-      transform: scaleY(0);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
-}
-
 /* shiki output: the pre carries inline biome colors; size it here */
 .carbon > pre {
   margin: 0;

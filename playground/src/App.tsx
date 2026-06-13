@@ -7,7 +7,7 @@ import { Step2, Step3, Step4 } from '../../examples/morph'
 import { type ProfileData, ProfileForm } from '../../examples/profile'
 import { TerminalTreeForm, type TreeNode } from '../../examples/terminal'
 import { ZodForm } from '../../src'
-import { type Biome, Duplex, motionOffNow, ScrollyBlock, Sequence, Slide, Stack } from './slides'
+import { Biome, type BiomeName, Duplex, motionOffNow, ScrollyBlock, Slide, Stack } from './slides'
 
 /* Page structure (hybrid scrollytelling — see research):
  *  - hero + principles: plain flow
@@ -20,7 +20,7 @@ import { type Biome, Duplex, motionOffNow, ScrollyBlock, Sequence, Slide, Stack 
 
 /* memo: the big pre-rendered HTML panes must not re-render when App's
  * active-slide state changes. */
-const CodePane = memo(({ biome }: { biome: Biome }) => (
+const CodePane = memo(({ biome }: { biome: BiomeName }) => (
   <div
     className="carbon h-full min-h-0 overflow-auto font-code text-[0.8rem] leading-relaxed"
     // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
@@ -75,34 +75,38 @@ const SlideKicker = ({ children }: { children: ReactNode }) => (
 const MOTION_KEY = 'insane-forms:motion'
 const MOTION_EVENT = 'insane:motion'
 
-/* Coding fonts activate lazily: each biome's face starts loading when its
- * section approaches (half a viewport early), never in the critical path.
- * Explicit fonts.load() — browsers defer below-fold font kickoff unreliably. */
-const CODE_FONTS: [string, string][] = [
-  ['morph', '1rem "IBM Plex Mono"'],
-  ['showcase-bureau', '1rem "IBM Plex Mono"'],
-  ['showcase-terminal', '1rem "JetBrains Mono Variable"'],
-  ['showcase-meadow', '1rem "Fira Code Variable"'],
-]
+/* Each biome declares its code font; the `Biome` wrapper / showcase stamps it
+ * as `data-fonts`. */
+const BIOME_FONT: Record<BiomeName, string> = {
+  bureau: '1rem "IBM Plex Mono"',
+  terminal: '1rem "JetBrains Mono Variable"',
+  meadow: '1rem "Fira Code Variable"',
+}
 
-const useLazyCodeFonts = () => {
+/* Chapter-prioritized asset loading: the biome whose chapter the URL hash
+ * points at loads FIRST (visible content), everything else is preloaded after
+ * first paint via requestIdleCallback — present but deprioritized. Reads the
+ * `data-fonts` each Biome/showcase declares, so adding a biome needs no edit
+ * here. */
+const useChapterAssets = () => {
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue
-          const font = CODE_FONTS.find(([id]) => id === entry.target.id)?.[1]
-          if (font !== undefined) void document.fonts.load(font)
-          observer.unobserve(entry.target)
-        }
-      },
-      { rootMargin: '50% 0px' },
-    )
-    for (const [id] of CODE_FONTS) {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
+    const hosts = [...document.querySelectorAll<HTMLElement>('[data-fonts]')]
+    const fontsOf = (el: HTMLElement | null | undefined) =>
+      (el?.dataset.fonts ?? '').split('|').filter(Boolean)
+    const load = (fonts: string[]) => {
+      for (const f of fonts) void document.fonts.load(f)
     }
-    return () => observer.disconnect()
+    const hashId = window.location.hash.slice(1)
+    const activeHost = hashId
+      ? (document.getElementById(hashId)?.closest('[data-fonts]') as HTMLElement | null)
+      : null
+    load(fontsOf(activeHost)) // active chapter first
+    const rest = () => {
+      for (const el of hosts) if (el !== activeHost) load(fontsOf(el))
+    }
+    if ('requestIdleCallback' in window)
+      (window as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(rest)
+    else setTimeout(rest, 200)
   }, [])
 }
 
@@ -194,7 +198,11 @@ const SchemaMorph = () => {
   const schema = MORPH_STEPS[step]?.schema ?? null
 
   return (
-    <section id="morph" className="biome-bureau w-full bg-paper-deep/40 text-ink">
+    <section
+      id="morph"
+      className="biome-bureau w-full bg-paper-deep/40 text-ink"
+      data-fonts={BIOME_FONT.bureau}
+    >
       <ScrollyBlock units={MORPH_UNIT_IDS} exitId="interlude">
         <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-x-12 px-6 lg:grid-cols-[1fr_1.2fr]">
           <div>
@@ -207,10 +215,6 @@ const SchemaMorph = () => {
                 <SlideKicker>{s.kicker}</SlideKicker>
                 <h3 className="mt-2 mb-3 font-serif text-3xl font-normal">{s.title}</h3>
                 <p className="m-0 max-w-md text-[0.95rem] text-dim">{s.body}</p>
-                {/* per-unit progress — the smallest fullscreen unit, morph steps included */}
-                <div className="screen-progress" aria-hidden="true">
-                  <span />
-                </div>
               </div>
             ))}
           </div>
@@ -299,13 +303,17 @@ const Showcase = ({
   children,
 }: {
   id: string
-  biome: Biome
+  biome: BiomeName
   title: string
   blurb: ReactNode
   story: string
   children: ReactNode
 }) => (
-  <section id={id} className={`biome-${biome} w-full bg-paper py-16 text-ink`}>
+  <section
+    id={id}
+    className={`biome-${biome} w-full bg-paper py-16 text-ink`}
+    data-fonts={BIOME_FONT[biome]}
+  >
     <div className="mx-auto flex max-w-[1180px] flex-col px-6">
       <h2 className="mb-1.5 font-serif text-3xl font-normal">{title}</h2>
       <p className="m-0 mb-6 max-w-2xl text-[0.9rem] text-dim">{blurb}</p>
@@ -325,7 +333,7 @@ const Showcase = ({
 )
 
 export function App() {
-  useLazyCodeFonts()
+  useChapterAssets()
   // Reload/back-forward: we re-derive position from the hash ourselves, so
   // the browser's restoration (which races snap + content-visibility sizing)
   // is disabled. ScrollyBlocks own the per-region hash writes.
@@ -442,12 +450,15 @@ export function App() {
         </p>
       </section>
 
-      {/* ---- snap deck: one ScrollyBlock, two slides per biome ---- */}
+      {/* ---- biome tour: ONE ScrollyBlock. The 6 statement slides are the
+              navigable snap units (dots = slide X of Y); each biome's live
+              showcase sits in plain flow right after its statements, so the
+              content order reads as one contiguous chapter per biome. ---- */}
       <ScrollyBlock
         units={['bureau', 'bureau-2', 'terminal', 'terminal-2', 'meadow', 'meadow-2']}
-        exitId="showcase-bureau"
+        exitId="site-footer"
       >
-        <Sequence biome="bureau" axis="y">
+        <Biome name="bureau" fonts={[BIOME_FONT.bureau]}>
           <Slide id="bureau">
             <SlideKicker>01 · bureau</SlideKicker>
             <h2 className="mt-2 mb-6 max-w-4xl font-serif text-[clamp(2.2rem,5vw,3.8rem)] leading-[1.08] font-normal">
@@ -469,9 +480,24 @@ export function App() {
               declared twice — disagreement is impossible.
             </p>
           </Slide>
-        </Sequence>
+        </Biome>
+        <Showcase
+          id="showcase-bureau"
+          biome="bureau"
+          title="Nested groups, hidden field, dynamic list"
+          story="design-biomes--bureau"
+          blurb={
+            <>
+              The contact list reads its add/remove bounds from the schema's own{' '}
+              <code className="bg-paper-deep px-1 text-ink">.min(1).max(3)</code>. Submit to see the
+              parsed, typed output.
+            </>
+          }
+        >
+          <BureauDemo />
+        </Showcase>
 
-        <Sequence biome="terminal" axis="y">
+        <Biome name="terminal" fonts={[BIOME_FONT.terminal]}>
           <Slide id="terminal">
             <SlideKicker>02 · terminal</SlideKicker>
             <h2 className="mt-2 mb-6 max-w-4xl font-serif text-[clamp(2.2rem,5vw,3.8rem)] leading-[1.08] font-normal">
@@ -493,9 +519,18 @@ export function App() {
               special cases anywhere.
             </p>
           </Slide>
-        </Sequence>
+        </Biome>
+        <Showcase
+          id="showcase-terminal"
+          biome="terminal"
+          title="Recursive tree — z.lazy renders to data depth"
+          story="design-biomes--terminal"
+          blurb={<>Add nodes — the form renders exactly as deep as the data goes, and stops.</>}
+        >
+          <TerminalDemo />
+        </Showcase>
 
-        <Sequence biome="meadow" axis="y">
+        <Biome name="meadow" fonts={[BIOME_FONT.meadow]}>
           <Slide id="meadow">
             <SlideKicker>03 · meadow</SlideKicker>
             <h2 className="mt-2 mb-6 max-w-4xl font-serif text-[clamp(2.2rem,5vw,3.8rem)] leading-[1.08] font-normal">
@@ -516,48 +551,20 @@ export function App() {
               is plain Zod with .meta() copy, and the parsed, typed output arrives in onSubmit.
             </p>
           </Slide>
-        </Sequence>
+        </Biome>
+        <Showcase
+          id="showcase-meadow"
+          biome="meadow"
+          title="The RSVP, live"
+          story="design-biomes--meadow"
+          blurb={<>Defaults seeded from the schema; output parsed on submit.</>}
+        >
+          <MeadowDemo />
+        </Showcase>
       </ScrollyBlock>
 
-      {/* ---- plain flow: the operable showcases ---- */}
-      <Showcase
-        id="showcase-bureau"
-        biome="bureau"
-        title="Nested groups, hidden field, dynamic list"
-        story="design-biomes--bureau"
-        blurb={
-          <>
-            The contact list reads its add/remove bounds from the schema's own{' '}
-            <code className="bg-paper-deep px-1 text-ink">.min(1).max(3)</code>. Submit to see the
-            parsed, typed output.
-          </>
-        }
-      >
-        <BureauDemo />
-      </Showcase>
-
-      <Showcase
-        id="showcase-terminal"
-        biome="terminal"
-        title="Recursive tree — z.lazy renders to data depth"
-        story="design-biomes--terminal"
-        blurb={<>Add nodes — the form renders exactly as deep as the data goes, and stops.</>}
-      >
-        <TerminalDemo />
-      </Showcase>
-
-      <Showcase
-        id="showcase-meadow"
-        biome="meadow"
-        title="The RSVP, live"
-        story="design-biomes--meadow"
-        blurb={<>Defaults seeded from the schema; output parsed on submit.</>}
-      >
-        <MeadowDemo />
-      </Showcase>
-
       {/* ---- footer ---- */}
-      <div className="mx-auto max-w-[1180px] px-6 pt-10 pb-20">
+      <div id="site-footer" className="mx-auto max-w-[1180px] px-6 pt-10 pb-20">
         <footer className="flex flex-wrap justify-between gap-4 border-y-3 border-double border-ink py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
           <a className="text-pop hover:underline" href="https://github.com/kantord/insane-forms">
             github.com/kantord/insane-forms

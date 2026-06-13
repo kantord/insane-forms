@@ -6,8 +6,10 @@ description: Rules for the landing page (playground/) — slide layout tree, scr
 # Scrollytelling landing page
 
 The landing is **hybrid scrollytelling** (decided via deep research, June 2026):
-plain flow for hero/principles/showcases · sticky-stepper for the schema-morph
-narrative · fullscreen scroll-snap ONLY for non-interactive statement slides.
+plain flow for hero/principles · sticky-stepper for the schema-morph narrative
+· fullscreen scroll-snap for biome statement slides, with each biome's live
+showcase co-located in plain flow right after its statements (one contiguous
+chapter per biome). At most TWO scroll blocks (morph + biome tour).
 
 ## The slideshow is a tree
 
@@ -33,20 +35,24 @@ narrative · fullscreen scroll-snap ONLY for non-interactive statement slides.
   position stays global. It fades in/out with block `index` (−1 = no unit
   seated). Biome sequences carry at least two slides each, statement→detail.
   The bottom-CENTER is reserved for the motion toggle (corners are buttons).
-- **Sequence** (group node) owns: the biome (design-token scope, `biome-*`
-  class) and the transition axis (`data-axis`) for ALL its child slides.
-  Transitions are a group concern — slides never choose their own.
+- **Biome** wrapper (formal; replaces the old `Sequence`) scopes the
+  design-token class (`biome-*`), owns the transition axis (`data-axis`) for
+  ALL its child slides, and DECLARES the chapter's asset needs via a `fonts`
+  prop → stamped as `data-fonts`. Each biome's content is CO-LOCATED: its two
+  statement slides, then its showcase, contiguous (a per-biome sub-story).
 - **Slide** (leaf) picks a layout from a small fixed set (`statement`, `fill`).
   Every slide is exactly one viewport (`h-svh`, `overflow-clip`). Layouts
   force fixed geometry; **content adapts to the card, never the reverse** —
   this is what makes layout shift impossible by construction.
 - **Screen unit** (`.screen` class): the smallest fullscreen building block —
   deck slides AND each morph step. Every unit is a snap target
-  (`scroll-snap-align: start` lives in the class, not in markup), names its
-  own view-timeline (`--screen`), and carries a `.screen-progress` vertical
-  fill on its left edge (per-UNIT progress, user decision — the global top
-  bar was removed because it read as a loading bar). Anything that occupies
-  a full viewport must be a `.screen`, or snap alignment breaks there.
+  (`scroll-snap-align: start` lives in the class) and names its own
+  view-timeline (`--screen`). Anything occupying a full viewport must be a
+  `.screen`, or snap alignment breaks there. Per-screen scroll progress is
+  shown by the Next button's fill (`--nav-progress`, set by the block's
+  rAF scroll handler) — the edge pills AND the global top bar were both
+  removed (user: pills went unnoticed → bad signal; top bar read as loading).
+  The dots rail is the "slide X of Y" position indicator.
 - **Slot layouts** (`Duplex`, `Stack`) are fixed splits whose slots clip and
   scroll internally (`min-h-0 min-w-0` + inner `overflow-auto` — BOTH axes,
   or long code lines blow the grid track out past the viewport); slots may
@@ -86,8 +92,12 @@ instead, keeping it small.
 
 ## Performance constraints (each fixed a measured regression)
 
-- ONE IntersectionObserver per concern, created with `[]` deps; current index
-  in a ref. Never recreate observers per render.
+- ScrollyBlock active-unit tracking is ONE rAF-throttled passive scroll
+  handler using the viewport-MIDPOINT (not IO ratios) — robust for units of
+  any height (snap slides + tall plain-flow showcases coexist in one block).
+  Current index in a ref; never recreate listeners per render. Showcases are
+  co-located in DOM but are NOT block units (forms stay plain flow, research),
+  so the corner buttons fade over them.
 - Form/demo state lives in small memoized components, never in `App`.
 - No `mix-blend-mode` on fixed full-viewport layers.
 - Animate `transform`/`opacity` only; no scaling of viewport-sized layers.
