@@ -23,6 +23,8 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
  *  - initial — `initial` on a field spec. Draft layer only; never alters parsing.
  *  - a widget's tolerance is its TYPE: value `T | undefined` means "I render the unset
  *    state"; a bare `T` makes the compiler demand `.default()` or `initial` at use site.
+ *
+ * The type surface lives in `./types` (compile-time only — emits nothing).
  */
 import type * as React from 'react'
 import { Fragment, isValidElement, type ReactElement, type ReactNode, useEffect } from 'react'
@@ -35,35 +37,30 @@ import {
   useForm,
 } from 'react-hook-form'
 import * as z from 'zod'
+import type {
+  CollectionItem,
+  CollectionWrapper,
+  CurriedGuard,
+  Def,
+  FieldGroup,
+  FieldMeta,
+  FieldProps,
+  FieldSpec,
+  ListOpts,
+  NodeProps,
+  OneGoGuard,
+  Part,
+  QueryParam,
+  ShapeOf,
+  Shell,
+  Widget,
+} from './types'
 
 /* ------------------------------------------------------------------ */
 /* Introspection. One typed boundary into Zod internals, one walk.     */
 /* ------------------------------------------------------------------ */
 
-/**
- * The slice of Zod's internal def we read, layered on Zod's own base def type.
- * Zod types its internals but exposes no per-type union for them, so the
- * optional fields are declared here — one assertion, one place to fix.
- */
-export type Def = z.core.$ZodTypeDef & {
-  type: string
-  innerType?: z.ZodType
-  getter?: () => z.ZodType
-  defaultValue?: unknown
-  shape?: Record<string, z.ZodType>
-  element?: z.ZodType
-  checks?: ReadonlyArray<{
-    _zod?: { def?: { check?: string; minimum?: unknown; maximum?: unknown } }
-  }>
-}
 const def = (s: z.ZodType): Def => (s as unknown as { _zod: { def: Def } })._zod.def
-
-/** Metadata an insane node may carry (stored via Zod's standard `.meta()`). */
-export type FieldMeta = {
-  component?: React.ComponentType<NodeProps>
-  title?: string
-  description?: string
-}
 
 /**
  * The introspection primitive. Curried: give it a visitor, get back a resolver.
@@ -122,13 +119,6 @@ export const isRequired = (s: z.ZodType): boolean => !isOptional(s)
 /* `useQueryStates`.                                                   */
 /* ------------------------------------------------------------------ */
 
-export type QueryParam<T> = {
-  parse: (raw: string) => T | null
-  serialize: (value: T) => string
-  eq: (a: T, b: T) => boolean
-  defaultValue: T
-}
-
 /** A URL codec for one field: parse = coerce by kind + schema-validate;
  *  default = the schema's own `.default()`. A default is REQUIRED — a URL
  *  without the param must still map to a value (this is also what lets
@@ -182,16 +172,6 @@ export function useQueryParamsSync<Push extends (values: never) => unknown>(
 /* Matchless render runtime. The core adds no DOM.                     */
 /* ------------------------------------------------------------------ */
 
-export type NodeProps = {
-  /** The original (possibly wrapped) schema — renderers resolve their own keys off it. */
-  schema: z.ZodType
-  /** The unwrapped structural schema (object shape / array element / leaf type). */
-  inner: z.ZodType
-  name: string
-  required: boolean
-  readonly: boolean
-}
-
 /*
  * "Every node carries a renderer" is enforced STRUCTURALLY at build time, not by a
  * separate audit: `.meta()` doesn't change a schema's TypeScript type, so the rule
@@ -241,79 +221,8 @@ export function Render({ schema, name }: { schema: z.ZodType; name: string }) {
 /* a props mapper, in one named-argument spec.                         */
 /* ------------------------------------------------------------------ */
 
-/** Everything a leaf knows — handed to widget and shell alike. This is the
- *  engine-neutral contract: flat on purpose, so widgets depend on insane's
- *  shape, never on whatever the form engine nests its state into. */
-export type FieldProps<T> = {
-  name: string
-  value: T
-  onChange: (v: T) => void
-  onBlur: () => void
-  label?: string
-  description?: string
-  error?: string
-  required: boolean
-  readonly: boolean
-}
-
-/** A widget is just a render function. Its value type IS its self-init declaration.
- *  Widgets may declare EXTRA props beyond FieldProps (e.g. options) — a field's
- *  `props` mapper derives them from the schema. */
-export type Widget<T> = (p: FieldProps<T>) => ReactNode
-/* Constraint used in signatures: bottom-typed param so ANY widget matches (contravariance-safe). */
-type AnyWidget = (p: never) => ReactNode
-
-/** A shell arranges chrome around one widget: same knowledge + the rendered widget. */
-export type ShellProps = FieldProps<unknown> & { children: ReactNode }
-export type Shell = React.ComponentType<ShellProps>
 /** No-op shell: renders the widget bare. The default — the core owns no chrome. */
 const BareShell: Shell = ({ children }) => <Fragment>{children}</Fragment>
-
-/** Maps schema facts → extra widget props (anything a widget's signature declares
- *  beyond FieldProps, e.g. `options`). Receives the MATERIAL schema — the one at
- *  the render site, after per-use derivations and wrappers — not the base the
- *  field was declared with. The resolve toolkit is the access it composes from. */
-export type PropsMapper = (schema: z.ZodType) => object
-
-export type FieldSpec = {
-  schema?: z.ZodType
-  widget: AnyWidget
-  shell?: Shell
-  initial?: unknown
-  props?: PropsMapper
-}
-
-/* Compile-time guard — evaluated where field() meets a schema (the form / field-
- * constant definition site), never inside the widget. Every field must be able
- * to render from blank: (a) widget value type admits undefined, or (b) the
- * schema carries .default(value), or (c) an explicit `initial` is in the spec. */
-type ValueOf<R> = R extends (p: infer P) => ReactNode
-  ? P extends { value: infer V }
-    ? V
-    : never
-  : never
-type SelfInitializing<R> = undefined extends ValueOf<R> ? true : false
-type HasDefault<S> = S extends z.ZodDefault<z.ZodType> ? true : false
-type Initialized<S, R, Sp> =
-  SelfInitializing<R> extends true
-    ? true
-    : HasDefault<S> extends true
-      ? true
-      : Sp extends { initial: ValueOf<R> }
-        ? true
-        : false
-type GuardMsg =
-  '⛔ this widget cannot render the unset state — add .default(value) to the schema or pass `initial` in the spec'
-type OneGoGuard<Sp> = Sp extends { schema: infer S extends z.ZodType; widget: infer R }
-  ? Initialized<S, R, Sp> extends true
-    ? unknown
-    : { schema: GuardMsg }
-  : never
-type CurriedGuard<S extends z.ZodType, Sp> = Sp extends { widget: infer R }
-  ? Initialized<S, R, Sp> extends true
-    ? unknown
-    : GuardMsg
-  : never
 
 /* Two call shapes, one name. The first two `function field` lines are overload
  * SIGNATURES — types only, no bodies; the third is the single implementation. */
@@ -380,20 +289,6 @@ export const hidden = <S extends z.ZodType>(s: S): S =>
 /* at that point the shared mechanics below graduate into the          */
 /* collection(ctor) higher-order builder.                              */
 /* ------------------------------------------------------------------ */
-
-type FieldGroup = Record<string, z.ZodType>
-/** A part is a key→schema record, a decoration, or a BUILT group used as a
- *  fragment — its shape concatenates flat into the parent (no key nesting). */
-type Part = FieldGroup | ReactElement | z.ZodObject<z.core.$ZodShape>
-
-type U2I<U> = (U extends unknown ? (x: U) => void : never) extends (x: infer I) => void ? I : never
-type ShapeOfPart<P> = P extends z.ZodObject<infer Sh> ? Sh : P extends ReactElement ? never : P
-type Merged<A extends readonly Part[]> = U2I<ShapeOfPart<A[number]>>
-type CleanShape<T> = {
-  [K in keyof T as T[K] extends z.ZodType ? K : never]: T[K] extends z.ZodType ? T[K] : never
-}
-type ShapeOf<A extends readonly Part[]> =
-  CleanShape<Merged<A>> extends z.core.$ZodShape ? CleanShape<Merged<A>> : never
 
 /**
  * Static container. Args are fragments (key→schema records) and decorations
@@ -477,22 +372,6 @@ export function wrap<const A extends readonly Part[]>(
   } satisfies FieldMeta) as typeof g
 }
 
-export type CollectionItem = {
-  key: string
-  node: ReactNode
-  /** Bound per-item handler; absent when removal would violate minItems. */
-  remove?: () => void
-}
-export type CollectionProps = {
-  label?: string
-  items: CollectionItem[]
-  /** Absent when adding would violate maxItems. */
-  add?: () => void
-  header?: ReactNode
-  footer?: ReactNode
-}
-export type CollectionWrapper = React.ComponentType<CollectionProps>
-
 /** Headless default: items in order, zero DOM, no controls. Supply a wrapper for chrome. */
 const BareItems: CollectionWrapper = ({ items, header, footer }) => (
   <Fragment>
@@ -523,15 +402,6 @@ export const boundsOf = (arr: z.ZodType): { min: number; max: number } => {
  *  .default() if any, else a bare row whose leaves then self-seed on mount. */
 const seedFor = (element: z.ZodType): unknown =>
   resolveDefault(element) ?? (def(resolveInner(element)).type === 'object' ? {} : undefined)
-
-export type ListOpts = {
-  wrapper?: CollectionWrapper
-  header?: ReactElement
-  footer?: ReactElement
-  /** Override the append template (e.g. a prefilled row). Default: the element's
-   *  declared .default(), else a bare row whose leaves self-seed on mount. */
-  seed?: () => unknown
-}
 
 /**
  * Dynamic container. Decorations are named slots (header/footer) rather than
