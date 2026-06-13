@@ -51,6 +51,15 @@ const biomeTheme = (name: string, c: Palette): ThemeRegistrationAny => ({
 
 const SNIPPETS = [
   {
+    id: 'tokens',
+    file: 'examples/biomes.css',
+    from: '.biome-terminal {',
+    to: '.biome-meadow {',
+    lang: 'css' as const,
+    themeName: 'terminal',
+    theme: null,
+  },
+  {
     id: 'bureau',
     file: 'examples/profile.tsx',
     from: 'const Contact',
@@ -178,8 +187,8 @@ export function snippetsPlugin(): Plugin {
     async load(id) {
       if (id !== RESOLVED_ID) return undefined
       const highlighter = await createHighlighter({
-        langs: ['tsx'],
-        themes: SNIPPETS.map((s) => s.theme),
+        langs: ['tsx', 'css'],
+        themes: SNIPPETS.flatMap((s) => (s.theme === null ? [] : [s.theme])),
       })
       const entries = SNIPPETS.map((s) => {
         const file = path.resolve(import.meta.dirname, '..', s.file)
@@ -190,8 +199,8 @@ export function snippetsPlugin(): Plugin {
         const sliced = a !== -1 && b !== -1 && b > a ? source.slice(a, b).trimEnd() : source
         const { code, decorations } = extractNotes(sliced)
         const html = highlighter.codeToHtml(code, {
-          lang: 'tsx',
-          theme: s.theme.name ?? s.id,
+          lang: 'lang' in s && s.lang === 'css' ? 'css' : 'tsx',
+          theme: ('themeName' in s ? s.themeName : undefined) ?? s.theme?.name ?? s.id,
           decorations,
         })
         return [s.id, html]

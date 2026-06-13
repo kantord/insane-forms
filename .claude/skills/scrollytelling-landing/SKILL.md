@@ -13,6 +13,26 @@ narrative · fullscreen scroll-snap ONLY for non-interactive statement slides.
 
 `playground/src/slides.tsx` is the only place slide geometry lives.
 
+- **ScrollyBlock** (region root) — a self-contained scrollytelling region.
+  The page holds AT MOST TWO, separated by substantial free-flow content
+  (user decision). It OWNS the region's state and logic: active-unit IO, the
+  dots/arrows rail, prev/next wizard navigation (`useScrolly()` context),
+  and settled hash sync for ITS units only — so reload/deep-links land on
+  the exact screen. Every block declares `exitId` (the next header after
+  it): the last NEXT becomes "Continue ↓" and scrolls OUT of the block —
+  users are never trapped at the end. Native scroll is observed, never
+  intercepted — buttons drive a custom rAF autoscroll (easeOutQuart,
+  380–650ms by distance, instant under no-motion) that lands exactly on
+  target so snap has nothing to adjust.
+- **Wizard buttons** are owned by the BLOCK (not the unit) and fixed to the
+  VIEWPORT's bottom corners (secondary/Back left, primary/Next right) so
+  their position never shifts with a unit's internal layout — a morph step's
+  unit is a grid column, but the buttons still anchor to the screen corners.
+  The fixed wrapper carries the ACTIVE unit's biome class (derived from the
+  DOM via `closest('[class*="biome-"]')`), so styling stays local while
+  position stays global. It fades in/out with block `index` (−1 = no unit
+  seated). Biome sequences carry at least two slides each, statement→detail.
+  The bottom-CENTER is reserved for the motion toggle (corners are buttons).
 - **Sequence** (group node) owns: the biome (design-token scope, `biome-*`
   class) and the transition axis (`data-axis`) for ALL its child slides.
   Transitions are a group concern — slides never choose their own.
