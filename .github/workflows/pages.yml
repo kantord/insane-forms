@@ -27,12 +27,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ci
       - run: pnpm run build:docs
-      - run: pnpm run build:storybook # lands in playground/dist/storybook → /storybook/ on Pages
+      - run: pnpm run build:storybook # lands in apps/landing/dist/storybook → /storybook/ on Pages
       - run: pnpm exec playwright test # e2e against the exact artifact being deployed
       - run: pnpm run perf # Lighthouse budget gate (LCP/TBT/CLS) on the built page
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: playground/dist
+          path: apps/landing/dist
 
   deploy:
     needs: build

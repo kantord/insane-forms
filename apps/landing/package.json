@@ -1,0 +1,16 @@
+{
+  "name": "@insane-forms/landing",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "play": "vite",
+    "build": "vite build",
+    "analyze": "ANALYZE=1 vite build && echo \"report: dist/stats.html\""
+  },
+  "dependencies": {
+    "insane-forms": "workspace:*",
+    "@insane-forms/ui": "workspace:*",
+    "@insane-forms/examples": "workspace:*"
+  }
+}

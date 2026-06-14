@@ -1,0 +1,40 @@
+{
+  "name": "insane-forms",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Schema-driven React forms on plain Zod: the schema is the form.",
+  "author": "Daniel Kantor",
+  "license": "MIT",
+  "homepage": "https://github.com/kantord/insane-forms#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kantord/insane-forms.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/kantord/insane-forms/issues"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsdown",
+    "check:package": "publint && attw --pack . --profile esm-only",
+    "measure": "sh scripts/measure-core.sh"
+  },
+  "peerDependencies": {
+    "@hookform/resolvers": "^5.0.0",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "react-hook-form": "^7.50.0",
+    "zod": "^4.4.0"
+  }
+}

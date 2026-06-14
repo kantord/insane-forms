@@ -1,22 +1,11 @@
 {
-  "extends": "@tsconfig/strictest/tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "jsx": "react-jsx",
-    "lib": ["es2023", "DOM"],
-    "moduleDetection": "force",
-    "module": "preserve",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "types": [],
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
     "paths": {
-      "@/*": ["./examples/shadcn/*"]
-    },
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
-    "noPropertyAccessFromIndexSignature": false
+      "insane-forms": ["./packages/core/src/index.ts"],
+      "@insane-forms/examples/*": ["./packages/examples/*"],
+      "@/*": ["./packages/ui/*"]
+    }
   },
-  "include": ["src", "tests", "examples", "playground", "stories", ".storybook", "e2e"]
+  "include": ["packages", "apps"]
 }

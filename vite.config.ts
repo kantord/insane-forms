@@ -1,58 +1,25 @@
 /// <reference types="vitest/config" />
 import path from 'node:path'
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { playwright } from '@vitest/browser-playwright'
-import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
-import { fontsPlugin } from './playground/fonts.plugin'
-import { snippetsPlugin } from './playground/snippets.plugin'
 
+const root = import.meta.dirname
+const alias = {
+  '@/': `${path.join(root, 'packages/ui')}/`,
+  'insane-forms': path.join(root, 'packages/core/src/index.ts'),
+  '@insane-forms/examples': path.join(root, 'packages/examples'),
+}
+
+// Unit/integration tests (jsdom) across the libraries. The Storybook browser
+// suite has its own config (apps/storybook/vitest.config.ts) — run via the root
+// `test` script after this.
 export default defineConfig({
-  root: './playground', // `pnpm run play` — the dev harness importing src directly
-  base: './', // relative URLs: the static build works at any GitHub Pages path
-  plugins: [
-    react(),
-    tailwindcss(),
-    snippetsPlugin(),
-    fontsPlugin(),
-    // `pnpm run analyze` — bundle composition report (islands decision is
-    // measure-first: revisit if framework runtime exceeds ~50% of the bundle).
-    ...(process.env.ANALYZE === '1'
-      ? [visualizer({ filename: 'playground/dist/stats.html', gzipSize: true, brotliSize: true })]
-      : []),
-  ],
+  resolve: { alias },
+  plugins: [react()],
   test: {
-    projects: [
-      {
-        test: {
-          name: 'unit',
-          root: '.',
-          environment: 'jsdom',
-          include: ['tests/**/*.test.{ts,tsx}'],
-          setupFiles: ['tests/setup.ts'],
-        },
-        plugins: [react()],
-      },
-      {
-        // Absolute paths: the top-level `root: './playground'` (for the docs
-        // playground) must not leak into where this project resolves from.
-        extends: path.join(import.meta.dirname, '.storybook/vite.config.ts'),
-        plugins: [storybookTest({ configDir: path.join(import.meta.dirname, '.storybook') })],
-        test: {
-          name: 'storybook',
-          root: import.meta.dirname,
-          browser: {
-            enabled: true,
-            headless: true,
-            // System Chrome via the playwright channel — no browser downloads,
-            // works locally and on GitHub Actions runners alike.
-            provider: playwright({ launchOptions: { channel: 'chrome' } }),
-            instances: [{ browser: 'chromium' }],
-          },
-        },
-      },
-    ],
+    name: 'unit',
+    environment: 'jsdom',
+    include: ['packages/*/tests/**/*.test.{ts,tsx}'],
+    setupFiles: [path.join(root, 'packages/core/tests/setup.ts')],
   },
 })

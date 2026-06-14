@@ -1,0 +1,11 @@
+{
+  "name": "@insane-forms/examples",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "insane-forms example bindings (field wrappers, engine bindings) and demo modules — shown, not published.",
+  "dependencies": {
+    "insane-forms": "workspace:*",
+    "@insane-forms/ui": "workspace:*"
+  }
+}

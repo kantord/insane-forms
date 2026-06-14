@@ -1,0 +1,12 @@
+{
+  "name": "@insane-forms/ui",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Vendored shadcn/ui (Base UI flavor) components — installed via the shadcn CLI, kept unchanged.",
+  "exports": {
+    "./globals.css": "./globals.css",
+    "./components/*": "./components/*",
+    "./lib/*": "./lib/*"
+  }
+}

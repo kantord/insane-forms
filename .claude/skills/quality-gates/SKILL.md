@@ -5,18 +5,42 @@ description: The verification chain, supply-chain policy, and repo conventions f
 
 # Quality gates & conventions
 
+## Monorepo layout (pnpm workspaces, plain — no Turborepo)
+
+Root is a private workspace; the gate scripts at the root orchestrate across it.
+- `packages/core` — **the only publishable package** (`insane-forms`): `src/`
+  (insane.tsx, types.ts, index.ts), `tsdown.config.ts`, `tests/` (core-only:
+  inference.check, zod-interop), `scripts/measure-core.sh`, `SIZE.md`.
+- `packages/ui` — `@insane-forms/ui` (private): UNCHANGED shadcn (Base UI) via
+  CLI under `components/`, `lib/utils`, `globals.css`, `components.json`.
+- `packages/examples` — `@insane-forms/examples` (private): our bindings
+  (`fields.tsx`), engine bindings (`react-hook-form.tsx`, `create-form-renderer.tsx`),
+  demo modules (`profile/terminal/meadow/morph.tsx`), `biomes.css`,
+  `demo-themes.css`, and integration tests (`tests/`: render, interact, resolve,
+  types.check). Depends on core + ui.
+- `apps/storybook` — `@insane-forms/storybook`: `stories/`, `.storybook/`,
+  `vitest.config.ts` (browser project), `e2e/storybook.spec.ts`.
+- `apps/landing` — `@insane-forms/landing`: `src/`, `index.html`,
+  `vite.config.ts`, `snippets.plugin.ts`, `fonts.plugin.ts`, `e2e/docs-page.spec.ts`.
+
+Cross-package imports use specifiers: `insane-forms` (core), `@/…` (→ ui, the
+shadcn alias), `@insane-forms/examples/…`. Resolution is source-based via vite
+`resolve.alias` (per app) + root tsconfig `paths` (one repo-wide `tsc --noEmit`).
+Build/dev/test configs are per-app; typecheck/lint/measure are root-orchestrated.
+
 ## The gate chain — green before "done"
 
 1. `pnpm run format` then `pnpm run lint` (Biome check: lint + format drift).
-2. `pnpm run typecheck` (tsc strict). Also where TYPE proofs run:
-   `tests/types.check.tsx` (`@ts-expect-error` field-guard suite) and
-   `tests/inference.check.tsx` (an insane schema's `z.input`/`z.output`/`z.infer`
-   asserted EXACTLY equal to the bare-Zod equivalent). Runtime Zod-interop
-   (parse/safeParse/.pick/.extend/toJSONSchema behave as plain Zod) is proven in
-   `tests/zod-interop.test.ts`.
-3. `pnpm run test` — TWO vitest projects: `unit` (jsdom, `tests/`) and
-   `storybook` (browser mode, real Chrome via playwright `chrome` channel —
-   no browser downloads). Story tests include the axe gate
+2. `pnpm run typecheck` (one root `tsc --noEmit` over the workspace). Also where
+   TYPE proofs run: `packages/examples/tests/types.check.tsx` (`@ts-expect-error`
+   field-guard suite) and `packages/core/tests/inference.check.tsx` (an insane
+   schema's `z.input`/`z.output`/`z.infer` asserted EXACTLY equal to the bare-Zod
+   equivalent). Runtime Zod-interop (parse/safeParse/.pick/.extend/toJSONSchema
+   behave as plain Zod) is proven in `packages/core/tests/zod-interop.test.ts`.
+3. `pnpm run test` — runs TWO suites: the root `unit` vitest (jsdom, the
+   `packages/*/tests` files) then the storybook app's own browser vitest
+   (`apps/storybook/vitest.config.ts`, real Chrome via playwright `chrome`
+   channel — no browser downloads). Story tests include the axe gate
    (`a11y: { test: 'error' }`): a11y violations FAIL the run. Green means
    checked — when adding a11y-sensitive chrome, prove the gate fires (canary).
 4. `pnpm run ci` additionally builds (tsdown — `"use client"` must be line 1
@@ -45,7 +69,7 @@ description: The verification chain, supply-chain policy, and repo conventions f
 
 - The user runs `git commit` themselves — suggest a validated message
   (commit-msg skill), stage, stop.
-- Library core: `src/insane.tsx` (+ `src/types.ts`, `src/index.ts`), named
+- Library core: `packages/core/src/insane.tsx` (+ `types.ts`, `index.ts`), named
   exports only, tree-shakeable; no DOM in core; new introspection helpers are
   partial applications of `resolve`.
 - The core is ENGINE-AGNOSTIC: it imports no form library and holds no
@@ -53,11 +77,12 @@ description: The verification chain, supply-chain policy, and repo conventions f
   down the render tree via `<Render schema engine={…}>`. The form-library
   bindings (`reactHookFormEngine`), the `createFormRenderer` sugar, and form
   wrappers (`ZodForm`/`useZodForm`, the TanStack adapter) are USERLAND examples
-  under `examples/` — shown, not shipped. The published entry is core-only
+  in `packages/examples` — shown, not shipped. The published entry is core-only
   (single tsdown entry; no engine subpath).
 - shadcn bindings are named `<Component>Field` (`InputField`, `CheckboxField`,
-  curried `selectField`); shadcn components stay CLI-managed under
-  `examples/shadcn/components/ui` (lint-excluded, vendored).
+  curried `selectField`) and live in `packages/examples/fields.tsx`; the
+  UNCHANGED shadcn components stay CLI-managed under `packages/ui/components`
+  (lint-excluded, vendored) and are imported via the `@/` alias.
 - No external network requests from any shipped page (fonts self-hosted).
 
 ## Changing these decisions

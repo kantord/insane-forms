@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!**/dist", "!**/examples/shadcn/components/ui"]
+    "includes": ["**", "!!**/dist", "!**/storybook-static", "!**/packages/ui/components"]
   },
   "formatter": {
     "enabled": true,
@@ -41,7 +41,7 @@
   },
   "overrides": [
     {
-      "includes": ["tests/**"],
+      "includes": ["**/tests/**"],
       "linter": {
         "rules": {
           "style": {

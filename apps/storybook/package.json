@@ -1,0 +1,16 @@
+{
+  "name": "@insane-forms/storybook",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build:storybook": "storybook build -o ../landing/dist/storybook",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "insane-forms": "workspace:*",
+    "@insane-forms/ui": "workspace:*",
+    "@insane-forms/examples": "workspace:*"
+  }
+}

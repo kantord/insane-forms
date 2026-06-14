@@ -7,13 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      sonner:
-        specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.18.3
@@ -123,6 +116,9 @@ importers:
       lucide-react:
         specifier: ^1.17.0
         version: 1.17.0(react@19.2.7)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       nuqs:
         specifier: ^2.8.9
         version: 2.8.9(react@19.2.7)
@@ -153,6 +149,9 @@ importers:
       shiki:
         specifier: ^4.2.0
         version: 4.2.0
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       storybook:
         specifier: ^10.4.2
         version: 10.4.2(@testing-library/dom@10.4.1)(@types/react@19.2.16)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -180,6 +179,59 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+
+  apps/landing:
+    dependencies:
+      '@insane-forms/examples':
+        specifier: workspace:*
+        version: link:../../packages/examples
+      '@insane-forms/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      insane-forms:
+        specifier: workspace:*
+        version: link:../../packages/core
+
+  apps/storybook:
+    dependencies:
+      '@insane-forms/examples':
+        specifier: workspace:*
+        version: link:../../packages/examples
+      '@insane-forms/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      insane-forms:
+        specifier: workspace:*
+        version: link:../../packages/core
+
+  packages/core:
+    dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.0.0
+        version: 5.4.0(react-hook-form@7.77.0(react@19.2.7))
+      react:
+        specifier: '>=18'
+        version: 19.2.7
+      react-dom:
+        specifier: '>=18'
+        version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: ^7.50.0
+        version: 7.77.0(react@19.2.7)
+      zod:
+        specifier: ^4.4.0
+        version: 4.4.3
+
+  packages/examples:
+    dependencies:
+      '@insane-forms/ui':
+        specifier: workspace:*
+        version: link:../ui
+      insane-forms:
+        specifier: workspace:*
+        version: link:../core
+
+  packages/ui: {}
 
 packages:
 

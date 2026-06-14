@@ -10,19 +10,21 @@ from a real, compiled, tested module — so docs cannot drift from working code.
 
 ## The pipeline
 
-- **Source modules** live in `examples/` (`profile.tsx`, `terminal.tsx`,
-  `meadow.tsx`, `morph.tsx`, `shadcn/`). Each is rendered by Storybook stories
-  (with the axe a11y gate) and/or the vitest suites.
-- **Landing snippets**: `playground/snippets.plugin.ts` slices marked regions
-  from those files at build time and highlights them with Shiki using custom
-  per-biome themes. Zero highlighting JS ships to the browser.
-- **Magic Move morph steps**: the same plugin splits `examples/morph.tsx` at
-  `/* step:N */` markers, precompiles keyed tokens
+- **Source modules** live in `packages/examples/` (`profile.tsx`, `terminal.tsx`,
+  `meadow.tsx`, `morph.tsx`, `fields.tsx`); the UNCHANGED shadcn components are in
+  `packages/ui/components`. Each module is rendered by Storybook stories
+  (`apps/storybook/stories/`, with the axe a11y gate) and/or the vitest suites.
+- **Landing snippets**: `apps/landing/snippets.plugin.ts` slices marked regions
+  from those files (resolved at `../../packages/examples`) at build time and
+  highlights them with Shiki using custom per-biome themes. Zero highlighting JS
+  ships to the browser.
+- **Magic Move morph steps**: the same plugin splits `packages/examples/morph.tsx`
+  at `/* step:N */` markers, precompiles keyed tokens
   (`codeToKeyedTokens` + `createMagicMoveMachine`, bureau theme), and the
   runtime ships ONLY `ShikiMagicMovePrecompiled` — verify zero Shiki in the
   bundle (no `oniguruma`/`grammar` strings in dist). The only allowed display
   transform is identifier renaming (`export const StepN` → `const Profile`).
-- **Storybook code panels**: `.storybook/preview.tsx` shows each story's
+- **Storybook code panels**: `apps/storybook/.storybook/preview.tsx` shows each story's
   render body VERBATIM from the raw file (`import.meta.glob(..., ?raw)`,
   brace-balanced extraction) — because Storybook's `originalSource` is an AST
   re-print that drops blank lines. The canvas Code panel additionally needs
@@ -50,23 +52,23 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
   deliberate and load-bearing.
 - Stories are written as `render: () => { …schema… return <ZodForm…> }` —
   the panel shows exactly that body. Keep the interesting part inline; hide
-  boring plumbing behind one honest import from `stories/demo.tsx`
+  boring plumbing behind one honest import from `apps/storybook/stories/demo.tsx`
   (`demoSubmit`, fixtures, `ProductTable`). NOTE: `ZodForm` is a USERLAND form
-  wrapper imported from `examples/react-hook-form` (an engine binding shown, not
+  wrapper imported from `@insane-forms/examples/react-hook-form` (an engine binding shown, not
   shipped) — the core publishes no form component. The core surface is the
   schema builders + `<Render schema engine={…}>`; a form library is connected
   by implementing the 3-hook `FieldEngine` and (optionally) `createFormRenderer`.
-- Shared chrome (`examples/biomes.css`) is imported by BOTH the landing and
+- Shared chrome (`packages/examples/biomes.css`) is imported by BOTH the landing and
   Storybook so examples render identically in both harnesses.
 - New display surface? It must consume one of these mechanisms — never an
   inline string.
 
 ## Demo apps (story framing) + theming
 
-- `stories/demo-shell.tsx` holds THREE fake apps in `DEMO_APPS` (registry:
+- `apps/storybook/stories/demo-shell.tsx` holds THREE fake apps in `DEMO_APPS` (registry:
   variant → `Shell` + `themeClass` + `defaultPage`): `catering` (warm sidebar
   back-office), `dev` (cool violet tabbed console, monospace), `store` (emerald
-  top-bar admin). Applied as a DECORATOR (in `.storybook/preview.tsx`) via
+  top-bar admin). Applied as a DECORATOR (in `apps/storybook/.storybook/preview.tsx`) via
   `parameters.demo`, so chrome NEVER reaches the code panel. Pure chrome — no
   inputs of their own (can't collide with a11y queries), responsive (md:
   breakpoints), nav labels avoid every play's button regexes.
@@ -79,7 +81,7 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
   `theme` (light/dark → toggles `.dark` on the iframe root) and `demoApp`
   (`auto` = use the story's own variant, or force one). Switching app/theme is
   the user's; each story has a sensible default.
-- Theming is token-only (`examples/demo-themes.css`, loaded AFTER globals so the
+- Theming is token-only (`packages/examples/demo-themes.css`, loaded AFTER globals so the
   equal-specificity `.theme-*` rules win): each app remaps `--primary`/`--accent`/
   `--ring`/`--radius`/`--demo-page` (+ `--app-font`) for light AND dark. The form
   examples read these tokens, so the SAME example restyles per app with ZERO

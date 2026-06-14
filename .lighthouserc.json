@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./playground/dist",
+      "staticDistDir": "./apps/landing/dist",
       "url": ["http://localhost/index.html"],
       "numberOfRuns": 1,
       "settings": { "chromeFlags": "--no-sandbox" }

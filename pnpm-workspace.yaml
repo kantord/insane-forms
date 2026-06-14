@@ -1,3 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
 # pnpm settings (pnpm ≥10.16 reads config from this file).
 # Supply-chain hardening — configured before the first dependency was ever installed.
 

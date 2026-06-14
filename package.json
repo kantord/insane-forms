@@ -1,58 +1,30 @@
 {
-  "name": "insane-forms",
+  "name": "insane-forms-monorepo",
+  "private": true,
   "type": "module",
-  "version": "0.1.0",
-  "description": "Schema-driven React forms on plain Zod: the schema is the form.",
-  "author": "Daniel Kantor",
-  "license": "MIT",
-  "homepage": "https://github.com/kantord/insane-forms#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kantord/insane-forms.git"
-  },
-  "bugs": {
-    "url": "https://github.com/kantord/insane-forms/issues"
-  },
   "packageManager": "pnpm@11.3.0",
   "engines": {
     "node": ">=22.18"
   },
-  "exports": {
-    ".": "./dist/index.js",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
-    "play": "vite",
-    "build:docs": "vite build",
-    "storybook": "storybook dev -p 6006",
-    "build:storybook": "storybook build -o playground/dist/storybook",
-    "test": "vitest run",
+    "play": "pnpm --filter @insane-forms/landing run play",
+    "build:docs": "pnpm --filter @insane-forms/landing run build",
+    "storybook": "pnpm --filter @insane-forms/storybook run storybook",
+    "build:storybook": "pnpm --filter @insane-forms/storybook run build:storybook",
+    "test": "vitest run && pnpm --filter @insane-forms/storybook run test",
     "test:watch": "vitest",
     "test:e2e": "pnpm run build:docs && pnpm run build:storybook && playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "build": "tsdown",
-    "check:package": "publint && attw --pack . --profile esm-only",
+    "build": "pnpm --filter insane-forms run build",
+    "check:package": "pnpm --filter insane-forms run check:package",
     "ci": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package",
-    "analyze": "ANALYZE=1 vite build && echo \"report: playground/dist/stats.html\"",
+    "analyze": "pnpm --filter @insane-forms/landing run analyze",
     "perf": "lhci autorun",
-    "measure": "sh scripts/measure-core.sh"
+    "measure": "pnpm --filter insane-forms run measure",
+    "test:unit": "vitest run"
   },
-  "peerDependencies": {
-    "@hookform/resolvers": "^5.0.0",
-    "react": ">=18",
-    "react-dom": ">=18",
-    "react-hook-form": "^7.50.0",
-    "zod": "^4.4.0"
-  },
-  "sideEffects": false,
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.3",
     "@base-ui/react": "^1.5.0",
@@ -88,18 +60,20 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "input-otp": "^1.4.2",
-    "react-day-picker": "^10.0.1",
     "jsdom": "^26.1.0",
     "lucide-react": "^1.17.0",
+    "next-themes": "^0.4.6",
     "nuqs": "^2.8.9",
     "playwright": "^1.60.0",
     "publint": "^0.3.21",
     "react": "^19.2.7",
+    "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.77.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "shadcn": "^4.10.0",
     "shiki": "^4.2.0",
+    "sonner": "^2.0.7",
     "storybook": "^10.4.2",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.0",
@@ -109,9 +83,5 @@
     "vite": "^8.0.16",
     "vitest": "^4.1.8",
     "zod": "^4.4.3"
-  },
-  "dependencies": {
-    "next-themes": "^0.4.6",
-    "sonner": "^2.0.7"
   }
 }
