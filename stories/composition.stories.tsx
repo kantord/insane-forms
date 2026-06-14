@@ -14,6 +14,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Menus',
       title: 'Menu sections',
       description: 'Compose a menu from reusable, flat sections.',

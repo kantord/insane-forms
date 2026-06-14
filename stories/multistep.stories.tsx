@@ -21,6 +21,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Orders',
       title: 'New order',
       description: 'A short, guided ordering flow.',

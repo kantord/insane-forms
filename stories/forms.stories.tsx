@@ -21,6 +21,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Customers',
       title: 'Customer profile',
       description: 'Contact details, emergency contacts, and saved categories.',

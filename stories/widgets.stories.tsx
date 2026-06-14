@@ -19,6 +19,8 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Widgets',
   tags: ['ai-generated'],
+  // Low-level, single-field stories: the thin wrapper, stock shadcn (no portal).
+  parameters: { demo: { variant: 'none' } },
 }
 export default meta
 

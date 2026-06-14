@@ -19,6 +19,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Menus',
       title: 'Catalog',
       description: 'Filter and sort the catering catalog.',

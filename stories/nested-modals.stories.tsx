@@ -30,6 +30,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Menus',
       title: 'Menu builder',
       description: 'A menu of sections nested within sections.',

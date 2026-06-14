@@ -4,7 +4,7 @@ import { emitTransformCode, useEffect } from 'storybook/preview-api'
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 import '../examples/shadcn/globals.css'
 import { Toaster } from '@/components/ui/sonner'
-import { type DemoConfig, DemoShell } from '../stories/demo-shell'
+import { type DemoParam, DemoShell } from '../stories/demo-shell'
 
 /* ------------------------------------------------------------------------- */
 /* Code panel: show each story's render body VERBATIM from the source file.  */
@@ -108,6 +108,23 @@ const preview: Preview = {
       },
     },
   },
+  // Built-in light/dark switch (no addon) — toggles shadcn's `.dark` on the
+  // iframe root; see the decorator below.
+  globalTypes: {
+    theme: {
+      description: 'Theme',
+      defaultValue: 'light',
+      toolbar: {
+        title: 'Theme',
+        icon: 'circlehollow',
+        items: [
+          { value: 'light', title: 'Light', icon: 'sun' },
+          { value: 'dark', title: 'Dark', icon: 'moon' },
+        ],
+        dynamicTitle: true,
+      },
+    },
+  },
   tags: ['autodocs'],
   decorators: [
     (Story, context) => {
@@ -118,15 +135,20 @@ const preview: Preview = {
         const source = context.parameters?.docs?.source?.originalSource
         if (source) void emitTransformCode(source, context)
       })
-      // Opt-in fake-app frame: a story sets `parameters.demo` to render inside
-      // the catering portal shell. It's a decorator, so it never reaches the
-      // code panel. Low-level stories (widgets, morph, biomes) omit it.
-      const demo = context.parameters?.demo as DemoConfig | undefined
-      if (demo) {
+      // Toggle .dark on the iframe root so tokens, Tailwind dark: variants, AND
+      // portals (dialogs/toasts) all theme together.
+      useEffect(() => {
+        document.documentElement.classList.toggle('dark', context.globals.theme === 'dark')
+      }, [context.globals.theme])
+
+      // Opt-in fake-app frame, parametric per story. It's a decorator, so it
+      // never reaches the code panel.
+      const demo = context.parameters?.demo as DemoParam | undefined
+      if (demo?.variant === 'catering') {
         // A tinted, padded "page" with the app shell floating on it. The shell
         // fills the padded viewport; the max width only gates very wide monitors.
         return (
-          <div className="flex min-h-screen justify-center bg-[#efe9df] p-6">
+          <div className="flex min-h-screen justify-center bg-[#efe9df] p-6 dark:bg-neutral-950">
             <div className="h-[calc(100vh-3rem)] w-full max-w-[1760px]">
               <DemoShell {...demo}>
                 <Story />
@@ -136,9 +158,13 @@ const preview: Preview = {
           </div>
         )
       }
+      // 'none' / unwrapped: thin wrapper on stock shadcn, bg filled so dark mode
+      // covers the canvas.
       return (
-        <div style={{ maxWidth: 640 }}>
-          <Story />
+        <div className="min-h-screen bg-background p-4 text-foreground">
+          <div style={{ maxWidth: 640, margin: '0 auto' }}>
+            <Story />
+          </div>
           <Toaster />
         </div>
       )

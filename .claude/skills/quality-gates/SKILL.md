@@ -8,8 +8,12 @@ description: The verification chain, supply-chain policy, and repo conventions f
 ## The gate chain — green before "done"
 
 1. `pnpm run format` then `pnpm run lint` (Biome check: lint + format drift).
-2. `pnpm run typecheck` (tsc strict; includes the `@ts-expect-error` guard
-   suite in `tests/types.check.tsx`).
+2. `pnpm run typecheck` (tsc strict). Also where TYPE proofs run:
+   `tests/types.check.tsx` (`@ts-expect-error` field-guard suite) and
+   `tests/inference.check.tsx` (an insane schema's `z.input`/`z.output`/`z.infer`
+   asserted EXACTLY equal to the bare-Zod equivalent). Runtime Zod-interop
+   (parse/safeParse/.pick/.extend/toJSONSchema behave as plain Zod) is proven in
+   `tests/zod-interop.test.ts`.
 3. `pnpm run test` — TWO vitest projects: `unit` (jsdom, `tests/`) and
    `storybook` (browser mode, real Chrome via playwright `chrome` channel —
    no browser downloads). Story tests include the axe gate
@@ -41,9 +45,16 @@ description: The verification chain, supply-chain policy, and repo conventions f
 
 - The user runs `git commit` themselves — suggest a validated message
   (commit-msg skill), stage, stop.
-- Library core: `src/insane.tsx`, named exports only, tree-shakeable (the
-  resolve-only import stays ~0.7 kB); no DOM in core; new introspection
-  helpers are partial applications of `resolve`.
+- Library core: `src/insane.tsx` (+ `src/types.ts`, `src/index.ts`), named
+  exports only, tree-shakeable; no DOM in core; new introspection helpers are
+  partial applications of `resolve`.
+- The core is ENGINE-AGNOSTIC: it imports no form library and holds no
+  global/context. A `FieldEngine` (`useField`/`useArray`/`useWatch`) is threaded
+  down the render tree via `<Render schema engine={…}>`. The form-library
+  bindings (`reactHookFormEngine`), the `createFormRenderer` sugar, and form
+  wrappers (`ZodForm`/`useZodForm`, the TanStack adapter) are USERLAND examples
+  under `examples/` — shown, not shipped. The published entry is core-only
+  (single tsdown entry; no engine subpath).
 - shadcn bindings are named `<Component>Field` (`InputField`, `CheckboxField`,
   curried `selectField`); shadcn components stay CLI-managed under
   `examples/shadcn/components/ui` (lint-excluded, vendored).

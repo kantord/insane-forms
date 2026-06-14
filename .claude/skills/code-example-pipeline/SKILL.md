@@ -61,6 +61,24 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
 - New display surface? It must consume one of these mechanisms — never an
   inline string.
 
+## Demo shell (story framing) + theme
+
+- `stories/demo-shell.tsx` is a fake catering client-portal (`DemoShell`),
+  applied as a DECORATOR via `parameters.demo`, so it frames a form but NEVER
+  reaches the code panel (the panel still shows only the render body). It is
+  pure chrome — no inputs of its own, so it can't collide with a story's a11y
+  queries; nav labels avoid every play's button regexes.
+- The frame is parametric: `parameters.demo.variant` is `'catering'` (full
+  portal, warm accents, padded tinted page; needs `section`/`title`/`description`)
+  or `'none'` (thin wrapper, stock shadcn). Static per story for now — NOT wired
+  to a UI control. Realistic stories use `catering`; low-level ones (Widgets,
+  Morph, Biomes) stay `none`/unwrapped.
+- Light/dark: a built-in `globalTypes.theme` toolbar toggles `.dark` on the
+  iframe root (no addon); shadcn tokens + Tailwind `dark:` variants do the rest.
+  The catering frame carries `dark:` variants; keep stock shadcn for `none`.
+- The a11y gate runs in the default (light) theme — contrast-check any custom
+  accents there (amber on tint already bit once).
+
 ## Changing these decisions
 
 These are settled, evidence-backed decisions. If you find clear contradicting

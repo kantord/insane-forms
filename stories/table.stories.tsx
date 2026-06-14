@@ -15,6 +15,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Orders',
       title: 'Invoice line items',
       description: 'Quantities and pricing for this order.',

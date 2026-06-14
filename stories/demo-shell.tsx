@@ -34,6 +34,11 @@ export type DemoConfig = {
   description?: string
 }
 
+/** The `parameters.demo` value. `catering` renders this portal; `none` is a thin
+ *  wrapper on stock shadcn (handled in the preview decorator). Static per story —
+ *  not wired to a UI control. */
+export type DemoParam = ({ variant: 'catering' } & DemoConfig) | { variant: 'none' }
+
 const NAV = [
   { label: 'Dashboard', icon: LayoutDashboard },
   { label: 'Orders', icon: ClipboardList },
@@ -52,7 +57,7 @@ export function DemoShell({
   children,
 }: DemoConfig & { children: ReactNode }) {
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-xl border bg-background font-sans text-foreground shadow-sm">
+    <div className="flex h-full w-full overflow-hidden rounded-xl border bg-card font-sans text-card-foreground shadow-sm">
       <aside className="flex h-full w-60 shrink-0 flex-col border-r bg-muted/40">
         {/* h-14 matches the topbar, so this divider lines up with its bottom border. */}
         <div className="flex h-14 shrink-0 items-center gap-2.5 px-5">
@@ -111,7 +116,7 @@ export function DemoShell({
         <main className="flex-1 overflow-auto p-8">
           <div className="max-w-3xl">
             <div className="mb-6">
-              <div className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-amber-700">
+              <div className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-500">
                 {section}
               </div>
               <h1 className="mt-1 text-xl font-semibold tracking-tight">{title}</h1>

@@ -14,6 +14,7 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
+      variant: 'catering',
       section: 'Orders',
       title: 'Order details',
       description: 'The people and items attached to this order.',
