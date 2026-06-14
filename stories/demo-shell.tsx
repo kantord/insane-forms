@@ -176,7 +176,9 @@ function DevConsoleShell({ section, title, description, children }: ShellProps) 
       </header>
       <nav
         aria-label="Main"
-        className="flex h-10 shrink-0 items-center gap-1 overflow-auto border-b px-2 md:px-4"
+        // Tabs can overflow on mobile; keep them swipe-reachable but hide the
+        // scrollbar (this is a forms demo, not a real scroll surface).
+        className="flex h-10 shrink-0 items-center gap-1 overflow-x-auto border-b px-2 [-ms-overflow-style:none] [scrollbar-width:none] md:px-4 [&::-webkit-scrollbar]:hidden"
       >
         {DEV_NAV.map(({ label, icon: Icon }) => {
           const active = label === section
