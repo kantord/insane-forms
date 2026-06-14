@@ -16,7 +16,7 @@ import { demoSubmit } from './demo'
  * + Render. One schema validates everything; each step renders one section.
  * The pinned shouldUnregister: false is what keeps off-screen steps' values. */
 const meta: Meta = {
-  title: 'Multi-step',
+  title: 'Examples/Multi-step',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

@@ -9,7 +9,7 @@ import { demoSubmit } from './demo'
 /* Dynamic lists: the add/remove chrome is gated by the same .min()/.max()
  * the validator uses — one source of truth. */
 const meta: Meta = {
-  title: 'Collections',
+  title: 'Examples/Collections',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

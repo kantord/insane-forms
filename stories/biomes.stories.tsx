@@ -9,7 +9,7 @@ import { demoSubmit } from './demo'
  * rendered and tested here (axe gate included), so the slides can never
  * drift from working, accessible code. */
 const meta: Meta = {
-  title: 'Design biomes',
+  title: 'Misc/Design biomes',
   tags: ['ai-generated'],
 }
 export default meta

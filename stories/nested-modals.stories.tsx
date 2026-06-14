@@ -25,7 +25,7 @@ import { demoSubmit } from './demo'
  * `trigger(path)` scopes validation to the sub-schema. Values in closed modals
  * survive because useZodForm pins shouldUnregister: false. */
 const meta: Meta = {
-  title: 'Nested modals',
+  title: 'Examples/Nested modals',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

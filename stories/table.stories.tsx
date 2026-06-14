@@ -10,7 +10,7 @@ import { demoSubmit } from './demo'
 /* The same insane.list, table-shaped chrome: rows are items, columns are the
  * row group's fields, and add/remove gating still comes from .min()/.max(). */
 const meta: Meta = {
-  title: 'Editable table',
+  title: 'Examples/Editable table',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

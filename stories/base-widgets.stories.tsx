@@ -6,10 +6,18 @@ import { FieldDescription } from '@/components/ui/field'
 import { ZodForm } from '../examples/react-hook-form'
 import {
   CheckboxField,
+  DateField,
   InputField,
   NumberField,
+  nativeSelectField,
+  OtpField,
+  radioField,
+  SearchField,
+  SliderField,
+  SwitchField,
   selectField,
   TextareaField,
+  toggleGroupField,
 } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -17,7 +25,7 @@ import { demoSubmit } from './demo'
 /* Each widget in isolation, inside a one-field live form. Submit to see the
  * parsed z.output as a toast; submit empty to see the validation path. */
 const meta: Meta = {
-  title: 'Widgets',
+  title: 'Integration examples/Base widgets',
   tags: ['ai-generated'],
   // Low-level, single-field stories: the thin wrapper, stock shadcn (no portal).
   parameters: { demo: { variant: 'none' } },
@@ -193,6 +201,154 @@ export const HiddenField: StoryObj = {
     const body = within(canvasElement.ownerDocument.body)
     // findByText proves arrival; sonner is mid-animation, so don't assert visibility.
     await expect(await body.findByText(/srv-000/)).toBeInTheDocument()
+  },
+}
+
+export const SearchInput: StoryObj = {
+  name: 'Search',
+  render: () => {
+    const schema = insane.group({
+      q: SearchField.meta({ title: 'Search', placeholder: 'Search…' }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const NativeSelectField: StoryObj = {
+  name: 'Native select',
+  render: () => {
+    const schema = insane.group({
+      tier: nativeSelectField(
+        z.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({ title: 'Plan tier' }),
+      ),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const Radio: StoryObj = {
+  render: () => {
+    const schema = insane.group({
+      plan: radioField(
+        z.enum(['Monthly', 'Yearly', 'Lifetime']).default('Yearly').meta({
+          title: 'Billing plan',
+          description: 'Switch any time.',
+        }),
+      ),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const SwitchControl: StoryObj = {
+  name: 'Switch',
+  render: () => {
+    const schema = insane.group({
+      notifications: SwitchField.meta({
+        title: 'Push notifications',
+        description: 'Send alerts to this device.',
+      }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const SliderControl: StoryObj = {
+  name: 'Slider',
+  render: () => {
+    const schema = insane.group({
+      volume: SliderField.min(0).max(100).default(40).meta({ title: 'Volume' }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const ToggleGroupControl: StoryObj = {
+  name: 'Toggle group',
+  render: () => {
+    // Toggle groups are multi-select: an array of the chosen options.
+    const schema = insane.group({
+      days: toggleGroupField(
+        z
+          .array(z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']))
+          .default(['Mon', 'Wed'])
+          .meta({
+            title: 'Active days',
+          }),
+      ),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const Otp: StoryObj = {
+  name: 'One-time code',
+  render: () => {
+    const schema = insane.group({
+      code: OtpField.length(6).meta({
+        title: 'Verification code',
+        description: 'Check your email.',
+      }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const DatePicker: StoryObj = {
+  name: 'Calendar (date)',
+  render: () => {
+    const schema = insane.group({
+      when: DateField.meta({ title: 'Event date' }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
   },
 }
 

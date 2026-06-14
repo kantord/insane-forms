@@ -14,7 +14,7 @@ import { ProductTable, products } from './demo'
  * form writes it back — shareable, reload-safe filters. The NuqsAdapter lives
  * in a decorator; everything else is in the story. */
 const meta: Meta = {
-  title: 'URL state',
+  title: 'Examples/URL state',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

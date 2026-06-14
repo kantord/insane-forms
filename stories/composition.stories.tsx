@@ -9,17 +9,10 @@ import { demoSubmit } from './demo'
 
 /* group / wrap / nesting semantics — the composition rules under manual test. */
 const meta: Meta = {
-  title: 'Composition',
+  title: 'Tests/Composition',
   tags: ['ai-generated'],
-  parameters: {
-    layout: 'fullscreen',
-    demo: {
-      variant: 'catering',
-      section: 'Menus',
-      title: 'Menu sections',
-      description: 'Compose a menu from reusable, flat sections.',
-    },
-  },
+  // A behavior test of group/wrap/nesting semantics — bare, no demo-app frame.
+  parameters: { demo: { variant: 'none' } },
 }
 export default meta
 

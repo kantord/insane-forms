@@ -30,7 +30,7 @@ const schema = insane.group(
 const defaults = { name: '', age: 18, subscribed: false, tags: [{}] }
 
 const meta: Meta = {
-  title: 'Engine adapters',
+  title: 'Integration examples/Form engines',
   tags: ['ai-generated'],
 }
 export default meta

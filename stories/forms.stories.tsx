@@ -16,7 +16,7 @@ import { demoSubmit } from './demo'
 
 /* Full worked forms — the shapes real apps ship. */
 const meta: Meta = {
-  title: 'Forms',
+  title: 'Examples/Forms',
   tags: ['ai-generated'],
   parameters: {
     layout: 'fullscreen',

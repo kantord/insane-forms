@@ -8,7 +8,7 @@ import { demoSubmit } from './demo'
  * animation displays these exact modules' source, so the story gates them
  * (render + axe) and the narrative can't drift from working code. */
 const meta: Meta = {
-  title: 'Schema morph',
+  title: 'Misc/Schema morph',
   tags: ['ai-generated'],
 }
 export default meta

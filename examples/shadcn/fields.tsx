@@ -6,6 +6,7 @@ import { Search as SearchIcon, XIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Field,
@@ -18,6 +19,9 @@ import {
   FieldSet,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
@@ -25,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -34,6 +40,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { CollectionWrapper, FieldProps, Shell } from '../../src'
 import * as insane from '../../src'
 import { resolveInner } from '../../src'
@@ -396,4 +403,186 @@ export const selectField = insane.field({
   widget: SelectWidget,
   shell: FieldShell,
   props: enumOptions,
+})
+
+/* ---------- 4. More base shadcn controls. ---------- */
+
+/* Group shell: a fieldset+legend for composite controls that have no single
+ * labelable element (radio group, toggle group, slider) — the legend names the
+ * group, individual items carry their own labels. */
+const GroupShell: Shell = ({ label, description, required, error, children }) => (
+  <FieldSet data-invalid={error !== undefined || undefined}>
+    {label !== undefined && (
+      <FieldLegend>
+        {label}
+        {required ? <span aria-hidden="true">*</span> : null}
+      </FieldLegend>
+    )}
+    {children}
+    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
+    {error !== undefined && <FieldError errors={[{ message: error }]} />}
+  </FieldSet>
+)
+
+/* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
+const SwitchWidget = (p: FieldProps<boolean>) => (
+  <Switch
+    id={p.name}
+    name={p.name}
+    checked={p.value}
+    aria-invalid={p.error !== undefined || undefined}
+    onCheckedChange={(checked) => p.onChange(checked)}
+  />
+)
+
+/* Radio group — single choice; options come from the enum via the props mapper. */
+const RadioWidget = (p: FieldProps<string | undefined> & { options?: readonly string[] }) => (
+  <RadioGroup
+    value={p.value ?? null}
+    aria-invalid={p.error !== undefined || undefined}
+    onValueChange={(v) => p.onChange(v as string)}
+  >
+    {p.options?.map((o) => (
+      <FieldLabel key={o} className="flex items-center gap-2 font-normal">
+        <RadioGroupItem value={o} />
+        {o}
+      </FieldLabel>
+    ))}
+  </RadioGroup>
+)
+
+/* Toggle group — MULTI-select (Base UI toggle groups are array-valued). Options
+ * from the array element's enum. */
+const ToggleGroupWidget = (
+  p: FieldProps<string[] | undefined> & { options?: readonly string[] },
+) => (
+  <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
+    {p.options?.map((o) => (
+      <ToggleGroupItem key={o} value={o} aria-label={o}>
+        {o}
+      </ToggleGroupItem>
+    ))}
+  </ToggleGroup>
+)
+
+/* Slider — single-thumb number. aria-label names the thumb; the shell legend
+ * names the group. */
+const SliderWidget = (p: FieldProps<number | undefined> & { min?: number; max?: number }) => (
+  <Slider
+    value={p.value ?? p.min ?? 0}
+    min={p.min}
+    max={p.max}
+    aria-label={p.label}
+    onValueChange={(v) => p.onChange(typeof v === 'number' ? v : v[0])}
+  />
+)
+
+/* Native select — plain <select>; options from the enum. */
+const NativeSelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
+  <NativeSelect
+    id={p.name}
+    name={p.name}
+    value={p.value}
+    aria-invalid={p.error !== undefined || undefined}
+    onChange={(e) => p.onChange(e.target.value)}
+    onBlur={p.onBlur}
+  >
+    {p.options?.map((o) => (
+      <NativeSelectOption key={o} value={o}>
+        {o}
+      </NativeSelectOption>
+    ))}
+  </NativeSelect>
+)
+
+/* One-time-code — fixed-length string; `length` comes from the schema's max. */
+const OtpWidget = (p: FieldProps<string | undefined> & { length?: number }) => {
+  const length = p.length ?? 6
+  return (
+    <InputOTP
+      id={p.name}
+      maxLength={length}
+      value={p.value ?? ''}
+      onChange={(v) => p.onChange(v)}
+      onBlur={p.onBlur}
+    >
+      <InputOTPGroup>
+        {Array.from({ length }, (_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length, positions never reorder
+          <InputOTPSlot key={i} index={i} />
+        ))}
+      </InputOTPGroup>
+    </InputOTP>
+  )
+}
+
+/* Calendar — inline date picker bound to a z.date(). */
+const CalendarWidget = (p: FieldProps<Date | undefined>) => (
+  <Calendar
+    mode="single"
+    selected={p.value}
+    onSelect={(d) => p.onChange(d)}
+    className="rounded-lg border"
+  />
+)
+
+/* Options from the array element's enum (toggle group is array-valued). */
+const arrayEnumOptions = (s: z.ZodType) => {
+  const element = (resolveInner(s) as { element?: z.ZodType }).element
+  return { options: element ? ((element as { options?: readonly string[] }).options ?? []) : [] }
+}
+/* `length` for the OTP widget: read the string schema's declared max length. */
+const otpLength = (s: z.ZodType) => ({ length: insane.boundsOf(s).max })
+/* Numeric value bounds for the slider — Zod 4 number .min()/.max() are
+ * greater_than/less_than checks (distinct from boundsOf's length checks). */
+const numberBounds = (s: z.ZodType): { min?: number; max?: number } => {
+  const checks =
+    (resolveInner(s) as unknown as { _zod: { def: { checks?: ReadonlyArray<unknown> } } })._zod.def
+      .checks ?? []
+  let min: number | undefined
+  let max: number | undefined
+  for (const c of checks) {
+    const cd = (c as { _zod?: { def?: { check?: string; value?: number } } })?._zod?.def
+    if (cd?.check === 'greater_than' && typeof cd.value === 'number') min = cd.value
+    if (cd?.check === 'less_than' && typeof cd.value === 'number') max = cd.value
+  }
+  return { min, max }
+}
+
+export const SwitchField = insane.field({
+  schema: z.boolean().default(false),
+  widget: SwitchWidget,
+  shell: CheckboxFieldShell,
+})
+export const radioField = insane.field({
+  widget: RadioWidget,
+  shell: GroupShell,
+  props: enumOptions,
+})
+export const toggleGroupField = insane.field({
+  widget: ToggleGroupWidget,
+  shell: GroupShell,
+  props: arrayEnumOptions,
+})
+export const SliderField = insane.field({
+  schema: z.number(),
+  widget: SliderWidget,
+  shell: GroupShell,
+  props: numberBounds, // exposes {min,max} from .min()/.max()
+})
+export const nativeSelectField = insane.field({
+  widget: NativeSelectWidget,
+  shell: FieldShell,
+  props: enumOptions,
+})
+export const OtpField = insane.field({
+  schema: z.string(),
+  widget: OtpWidget,
+  shell: FieldShell,
+  props: otpLength,
+})
+export const DateField = insane.field({
+  schema: z.date(),
+  widget: CalendarWidget,
+  shell: GroupShell,
 })
