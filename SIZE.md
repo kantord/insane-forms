@@ -8,15 +8,15 @@
 
 | metric | value |
 | --- | --- |
-| **Gzipped (what ships over the wire)** | **2269 bytes (~2.2 kB)** |
-| Minified | 4882 bytes (~4.8 kB) |
-| Compiled JavaScript (formatted) | 274 lines |
-| Runtime TypeScript source | 328 lines |
+| **Gzipped (what ships over the wire)** | **2525 bytes (~2.5 kB)** |
+| Minified | 5641 bytes (~5.5 kB) |
+| Compiled JavaScript (formatted) | 314 lines |
+| Runtime TypeScript source | 302 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
 `hidden` / `ZodForm` / `useZodForm`, the `resolve` introspection toolkit, and
-the URL-state codecs — in **2269 gzipped bytes** with **zero** runtime
+the URL-state codecs — in **2525 gzipped bytes** with **zero** runtime
 dependencies. Every `import` in the bundle is an externalized peer
 (`react`, `react-hook-form`, `zod`, `@hookform/resolvers`) that the host app
 already ships; nothing third-party is inlined.
@@ -25,19 +25,19 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 328 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 114 |
-| [`src/index.ts`](src/index.ts) | public barrel | 18 |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 302 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 134 |
+| [`src/index.ts`](src/index.ts) | public barrel | 24 |
 | **total** | | **460** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
-disappears at compile time. That is why the compiled JavaScript (274 lines)
-is *smaller* than the runtime TypeScript (328 lines) — type
+disappears at compile time. That is why the compiled JavaScript (314 lines)
+is *smaller* than the runtime TypeScript (302 lines) — type
 annotations and JSX collapse away.
 
-## Why 2269 gzipped bytes, not fewer
+## Why 2525 gzipped bytes, not fewer
 
-There is no filler to remove. 4882 minified bytes ÷ 274 lines ≈
+There is no filler to remove. 5641 minified bytes ÷ 314 lines ≈
 17 bytes of irreducible tokens per line — already 1-char
 identifiers and stripped whitespace. gzip then roughly halves that (the standard
 ~40–50% ratio for already-minified JS, which has little redundancy left to
@@ -50,12 +50,64 @@ The complete, formatted, browser-targeted production bundle (peers externalized)
 ```js
 'use client'
 
-// src/insane.tsx
+// src/adapters/react-hook-form.tsx
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import { Fragment, isValidElement, useEffect } from 'react'
 import { FormProvider, useController, useFieldArray, useForm } from 'react-hook-form'
+import { jsx } from 'react/jsx-runtime'
+var RhfProvider = ({ form, children }) => /* @__PURE__ */ jsx(FormProvider, { ...form, children })
+var reactHookFormAdapter = {
+  useForm(schema, { defaults }) {
+    return useForm({
+      resolver: standardSchemaResolver(schema),
+      defaultValues: defaults,
+      shouldUnregister: false,
+      // pinned: hidden/passthrough values must survive
+    })
+  },
+  Provider: RhfProvider,
+  onSubmit: (form, valid) => form.handleSubmit((d) => valid(d)),
+  useField(name, seed) {
+    const { field: field2, fieldState } = useController({ name, defaultValue: seed })
+    return {
+      value: field2.value,
+      onChange: field2.onChange,
+      onBlur: field2.onBlur,
+      error: fieldState.error?.message,
+    }
+  },
+  useArray(name) {
+    const fa = useFieldArray({ name })
+    return {
+      rows: fa.fields.map((f) => ({ id: f.id })),
+      append: (value) => fa.append(value),
+      remove: (index) => fa.remove(index),
+    }
+  },
+}
+function useZodForm(schema, opts = {}) {
+  const { defaults, ...rest } = opts
+  return useForm({
+    resolver: standardSchemaResolver(schema),
+    defaultValues: defaults,
+    shouldUnregister: false,
+    // pinned: hidden/passthrough values must survive
+    ...rest,
+  })
+}
+
+// src/context.tsx
+import { createContext, useContext } from 'react'
+import { jsx as jsx2 } from 'react/jsx-runtime'
+var AdapterContext = createContext(reactHookFormAdapter)
+var useAdapter = () => useContext(AdapterContext)
+function InsaneProvider({ adapter, children }) {
+  return /* @__PURE__ */ jsx2(AdapterContext.Provider, { value: adapter, children })
+}
+
+// src/insane.tsx
+import { Fragment, isValidElement, useEffect } from 'react'
 import * as z from 'zod'
-import { jsx, jsxs } from 'react/jsx-runtime'
+import { jsx as jsx3, jsxs } from 'react/jsx-runtime'
 var def = (s) => s._zod.def
 var resolve = (visit) =>
   function go(schema) {
@@ -131,7 +183,7 @@ function Render({ schema, name }) {
       )
     return null
   }
-  return /* @__PURE__ */ jsx(ResolvedComponent, {
+  return /* @__PURE__ */ jsx3(ResolvedComponent, {
     schema,
     inner: resolveInner(schema),
     name,
@@ -139,7 +191,7 @@ function Render({ schema, name }) {
     readonly: isReadonly(schema),
   })
 }
-var BareShell = ({ children }) => /* @__PURE__ */ jsx(Fragment, { children })
+var BareShell = ({ children }) => /* @__PURE__ */ jsx3(Fragment, { children })
 function field(spec) {
   if (spec.schema) return annotateLeaf(spec.schema, spec)
   return (schema) => annotateLeaf(schema, spec)
@@ -148,24 +200,21 @@ function annotateLeaf(schema, spec) {
   const ShellC = spec.shell ?? BareShell
   const widget = spec.widget
   const Leaf = (p) => {
-    const { field: f, fieldState } = useController({
-      name: p.name,
-      // per-field draft seeding: declared .default() wins, else the explicit initial
-      defaultValue: resolveDefault(p.schema) ?? spec.initial,
-    })
+    const seed = resolveDefault(p.schema) ?? spec.initial
+    const binding = useAdapter().useField(p.name, seed)
     const props = {
       name: p.name,
-      value: f.value,
-      onChange: f.onChange,
-      onBlur: f.onBlur,
+      value: binding.value,
+      onChange: binding.onChange,
+      onBlur: binding.onBlur,
       label: resolveTitle(p.schema),
       description: resolveDescription(p.schema),
-      error: fieldState.error?.message,
+      error: binding.error,
       required: p.required,
       readonly: p.readonly,
     }
     const extra = spec.props?.(p.schema) ?? {}
-    return /* @__PURE__ */ jsx(ShellC, { ...props, children: widget({ ...props, ...extra }) })
+    return /* @__PURE__ */ jsx3(ShellC, { ...props, children: widget({ ...props, ...extra }) })
   }
   return schema.meta({ component: Leaf })
 }
@@ -207,16 +256,16 @@ function group(...parts) {
     sections.push(spliceKeys(part))
   }
   const GroupRenderer = (p) =>
-    /* @__PURE__ */ jsx(Fragment, {
+    /* @__PURE__ */ jsx3(Fragment, {
       children: sections.map((sec, i) =>
         isValidElement(sec)
           ? // biome-ignore lint/suspicious/noArrayIndexKey: sections is an authored static sequence — positions never reorder at runtime
-            /* @__PURE__ */ jsx(Fragment, { children: sec }, `deco:${i}`)
+            /* @__PURE__ */ jsx3(Fragment, { children: sec }, `deco:${i}`)
           : sec instanceof z.ZodType
             ? // biome-ignore lint/suspicious/noArrayIndexKey: same authored static sequence
-              /* @__PURE__ */ jsx(Render, { schema: sec, name: p.name }, `frag:${i}`)
+              /* @__PURE__ */ jsx3(Render, { schema: sec, name: p.name }, `frag:${i}`)
             : sec.map((k) =>
-                /* @__PURE__ */ jsx(
+                /* @__PURE__ */ jsx3(
                   Render,
                   { schema: shape[k], name: p.name ? `${p.name}.${k}` : k },
                   k,
@@ -231,14 +280,14 @@ function wrap(Wrapper, ...parts) {
   const Inner = resolveComponent(g) ?? (() => null)
   return g.meta({
     component: (p) =>
-      /* @__PURE__ */ jsx(Wrapper, { children: /* @__PURE__ */ jsx(Inner, { ...p }) }),
+      /* @__PURE__ */ jsx3(Wrapper, { children: /* @__PURE__ */ jsx3(Inner, { ...p }) }),
   })
 }
 var BareItems = ({ items, header, footer }) =>
   /* @__PURE__ */ jsxs(Fragment, {
     children: [
       header,
-      items.map((it) => /* @__PURE__ */ jsx(Fragment, { children: it.node }, it.key)),
+      items.map((it) => /* @__PURE__ */ jsx3(Fragment, { children: it.node }, it.key)),
       footer,
     ],
   })
@@ -262,48 +311,41 @@ function list(element, opts = {}) {
     )
   const Wrap = opts.wrapper ?? BareItems
   const ListRenderer = (p) => {
-    const fa = useFieldArray({ name: p.name })
+    const arr = useAdapter().useArray(p.name)
     const { min, max } = boundsOf(p.inner)
-    const canAdd = fa.fields.length < max
-    const canRemove = fa.fields.length > min
-    const items = fa.fields.map((f, i) => ({
-      key: f.id,
+    const canAdd = arr.rows.length < max
+    const canRemove = arr.rows.length > min
+    const items = arr.rows.map((row, i) => ({
+      key: row.id,
       // stable identity — never the index
-      node: /* @__PURE__ */ jsx(Render, { schema: element, name: `${p.name}.${i}` }),
-      remove: canRemove ? () => fa.remove(i) : void 0,
+      node: /* @__PURE__ */ jsx3(Render, { schema: element, name: `${p.name}.${i}` }),
+      remove: canRemove ? () => arr.remove(i) : void 0,
     }))
-    return /* @__PURE__ */ jsx(Wrap, {
+    return /* @__PURE__ */ jsx3(Wrap, {
       label: resolveTitle(p.schema),
       items,
-      add: canAdd ? () => fa.append(opts.seed ? opts.seed() : seedFor(element)) : void 0,
+      add: canAdd ? () => arr.append(opts.seed ? opts.seed() : seedFor(element)) : void 0,
       header: opts.header,
       footer: opts.footer,
     })
   }
   return z.array(element).meta({ component: ListRenderer })
 }
-function useZodForm(schema, opts = {}) {
-  const { defaults, ...rest } = opts
-  return useForm({
-    resolver: standardSchemaResolver(schema),
-    defaultValues: defaults,
-    shouldUnregister: false,
-    // pinned: hidden/passthrough values must survive
-    ...rest,
-  })
-}
 function ZodForm({ schema, defaults, onSubmit, children, className }) {
-  const methods = useZodForm(schema, { defaults })
-  return /* @__PURE__ */ jsx(FormProvider, {
-    ...methods,
+  const adapter = useAdapter()
+  const form = adapter.useForm(schema, { defaults })
+  const Provider = adapter.Provider
+  return /* @__PURE__ */ jsx3(Provider, {
+    form,
     children: /* @__PURE__ */ jsxs('form', {
       className,
-      onSubmit: methods.handleSubmit((d) => onSubmit(d)),
-      children: [/* @__PURE__ */ jsx(Render, { schema, name: '' }), children],
+      onSubmit: adapter.onSubmit(form, (d) => onSubmit(d)),
+      children: [/* @__PURE__ */ jsx3(Render, { schema, name: '' }), children],
     }),
   })
 }
 export {
+  InsaneProvider,
   Render,
   ZodForm,
   boundsOf,
@@ -316,6 +358,7 @@ export {
   list,
   queryParam,
   queryParams,
+  reactHookFormAdapter,
   resolve,
   resolveComponent,
   resolveDefault,
@@ -323,6 +366,7 @@ export {
   resolveInner,
   resolveMeta,
   resolveTitle,
+  useAdapter,
   useQueryParamsSync,
   useZodForm,
   wrap,
