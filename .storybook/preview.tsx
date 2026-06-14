@@ -126,8 +126,8 @@ const preview: Preview = {
         // A tinted, padded "page" with the app shell floating on it. The shell
         // fills the padded viewport; the max width only gates very wide monitors.
         return (
-          <div className="flex min-h-screen justify-center bg-muted/50 p-6">
-            <div className="h-[calc(100vh-3rem)] w-full max-w-[1600px]">
+          <div className="flex min-h-screen justify-center bg-[#efe9df] p-6">
+            <div className="h-[calc(100vh-3rem)] w-full max-w-[1760px]">
               <DemoShell {...demo}>
                 <Story />
               </DemoShell>

@@ -109,7 +109,7 @@ export function DemoShell({
           <Bell className="size-4 text-muted-foreground" aria-hidden="true" />
         </header>
         <main className="flex-1 overflow-auto p-8">
-          <div className="mx-auto max-w-3xl">
+          <div className="max-w-3xl">
             <div className="mb-6">
               <div className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-amber-700">
                 {section}
