@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect } from 'storybook/test'
 import { Button } from '@/components/ui/button'
+import { ZodForm } from '../examples/react-hook-form'
 import { autoAddList, FieldSetList, InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -29,7 +30,7 @@ export const BoundedList: StoryObj = {
     })
     // Add disappears at 3 contacts; Remove disappears at 1 — from .min(1).max(3).
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
@@ -38,7 +39,7 @@ export const BoundedList: StoryObj = {
         <Button type="submit" className="self-start">
           Save contacts
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves bounds gating: Add appends rows until .max(3), then disappears;
@@ -66,7 +67,7 @@ export const AutoGrowingList: StoryObj = {
         .meta({ title: 'Shopping list' }),
     })
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ items: [{}] }}
@@ -75,7 +76,7 @@ export const AutoGrowingList: StoryObj = {
         <Button type="submit" className="self-start">
           Save list
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // One empty row to start; typing into the last row appends a fresh one.
@@ -98,7 +99,7 @@ export const UnboundedList: StoryObj = {
       links: insane.list(Link, { wrapper: FieldSetList }).meta({ title: 'Links' }),
     })
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ links: [] }}
@@ -107,7 +108,7 @@ export const UnboundedList: StoryObj = {
         <Button type="submit" className="self-start">
           Save links
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }

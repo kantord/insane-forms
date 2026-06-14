@@ -1,7 +1,9 @@
 'use client'
-// Form-engine adapters: react-hook-form is the default; swap via <InsaneProvider>.
-export { reactHookFormAdapter, useZodForm } from './adapters/react-hook-form'
-export { InsaneProvider, useAdapter } from './context'
+// Engine-agnostic core: schema builders, the matchless render runtime, the
+// introspection toolkit, and URL codecs. No form library, no context, no global.
+// Connect an engine with the FieldEngine contract (see ./types) and pass it to
+// <Render engine={…}>; a ready-made react-hook-form binding + ZodForm wrapper
+// live at "insane-forms/react-hook-form".
 export * from './insane'
 // Public type surface (declarations live in ./types — compile-time only, no runtime).
 // Internal types (guards, shape-merge machinery) stay unexported.
@@ -13,10 +15,10 @@ export type {
   CollectionWrapper,
   Def,
   FieldBinding,
+  FieldEngine,
   FieldMeta,
   FieldProps,
   FieldSpec,
-  FormAdapter,
   ListOpts,
   NodeProps,
   PropsMapper,

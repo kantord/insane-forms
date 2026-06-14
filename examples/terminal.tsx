@@ -5,6 +5,7 @@
 import * as z from 'zod'
 import type { CollectionWrapper, FieldProps, Shell } from '../src'
 import * as insane from '../src'
+import { ZodForm } from './react-hook-form'
 
 const TerminalShell: Shell = ({ name, label, error, children }) => (
   <div className="mb-3">
@@ -86,12 +87,12 @@ export const TerminalTreeForm = ({
   value: TreeNode
   onSubmit: (d: TreeNode) => void
 }) => (
-  <insane.ZodForm schema={Tree} defaults={value} onSubmit={onSubmit}>
+  <ZodForm schema={Tree} defaults={value} onSubmit={onSubmit}>
     <button
       type="submit"
       className="mt-5 border border-pop px-5 py-1.5 text-[0.78rem] uppercase tracking-[0.2em] text-pop hover:bg-pop hover:text-paper"
     >
       run ▸
     </button>
-  </insane.ZodForm>
+  </ZodForm>
 )

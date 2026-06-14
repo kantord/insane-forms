@@ -3,6 +3,7 @@ import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
+import { ZodForm } from '../examples/react-hook-form'
 import {
   CheckboxField,
   FieldSetList,
@@ -56,11 +57,11 @@ export const Profile: StoryObj = {
       }),
     )
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Save changes
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves the validation path: submitting empty surfaces field errors as
@@ -84,7 +85,7 @@ export const Contacts: StoryObj = {
       contacts: insane.list(Contact, { wrapper: FieldSetList }).min(1).max(3),
     })
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{ contacts: [{}] }}
@@ -93,7 +94,7 @@ export const Contacts: StoryObj = {
         <Button type="submit" className="self-start">
           Save contacts
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -113,7 +114,7 @@ export const Categories: StoryObj = {
     )
     // z.lazy renders exactly as deep as the data goes — add rows to grow the tree.
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={CategorySchema}
         className="flex flex-col gap-6"
         defaults={{ name: 'Docs', children: [{ name: 'Guides', children: [] }] }}
@@ -122,7 +123,7 @@ export const Categories: StoryObj = {
         <Button type="submit" className="self-start">
           Save categories
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }

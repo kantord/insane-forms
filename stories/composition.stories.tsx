@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect, within } from 'storybook/test'
 import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldLegend, FieldSeparator, FieldSet } from '@/components/ui/field'
+import { ZodForm } from '../examples/react-hook-form'
 import { InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -37,11 +38,11 @@ export const SectionsStayFlat: StoryObj = {
     )
     // z.output: { email, address } — one flat object, no section keys.
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Save changes
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves the data-flatness claim: sections render as fieldsets, yet the
@@ -72,11 +73,11 @@ export const ExplicitNesting: StoryObj = {
     })
     // z.output: { shipping: { city, zip } } — nesting is an explicit choice.
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Save address
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -93,11 +94,11 @@ export const ReusableSections: StoryObj = {
       email: InputField.email().meta({ title: 'Email', placeholder: 'm@example.com' }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Create account
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }

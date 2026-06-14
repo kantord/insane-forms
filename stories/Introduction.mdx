@@ -19,6 +19,9 @@ Bind your design system's components once, then forms are just schemas:
 ```tsx
 import * as z from 'zod'
 import * as insane from 'insane-forms'
+// The core is engine-agnostic. ZodForm is opt-in sugar for react-hook-form;
+// a TanStack adapter (or your own) plugs in the same way.
+import { ZodForm } from 'insane-forms/react-hook-form'
 
 // One-time bindings: widget + shell per field kind (see examples/shadcn/fields.tsx)
 const Text = insane.field({ schema: z.string(), widget: TextWidget, shell: Shell })
@@ -29,14 +32,15 @@ const Profile = insane.group({
 })
 
 export const ProfileForm = () => (
-  <insane.ZodForm schema={Profile} onSubmit={(data) => console.log(data)}>
+  <ZodForm schema={Profile} onSubmit={(data) => console.log(data)}>
     <button type="submit">Save</button>
-  </insane.ZodForm>
+  </ZodForm>
 )
 ```
 
 The form edits the `z.input` draft; `onSubmit` receives parsed `z.output` —
-defaults filled, types exact.
+defaults filled, types exact. The core never imports a form library: an engine
+is connected through a three-hook `FieldEngine` and threaded to `<Render>`.
 
 ## What the stories show
 

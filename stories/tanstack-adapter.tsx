@@ -3,22 +3,24 @@
 import { useStore, useForm as useTanstackForm } from '@tanstack/react-form'
 import { createContext, type ReactNode, useContext, useEffect, useRef } from 'react'
 import type * as z from 'zod'
-import type { FormAdapter } from '../src'
+import { createFormRenderer } from '../examples/create-form-renderer'
+import type { FieldEngine } from '../src'
 
 /**
- * A TanStack Form adapter for insane-forms — written entirely in USERLAND
- * against the exported `FormAdapter` port, with no privileged access to the
+ * A TanStack Form binding for insane-forms — written entirely in USERLAND
+ * against the exported `FieldEngine` contract, with no privileged access to the
  * core. That it works is the proof the library is engine-agnostic: the same
  * schemas and widgets render unchanged under a completely different engine.
  *
- * The three render seams map cleanly, with two documented wrinkles handled here:
- *  - per-field seeding: TanStack seeds at form level, so leaves fill on mount;
- *  - array identity: TanStack keys array items by INDEX, so we synthesize stable
- *    ids and splice them on remove (RHF gives this for free via field.id).
+ * Two halves, mirroring the architecture:
+ *  - `tanstackFieldEngine` — the three render-time bindings the core threads
+ *    down a `Render` tree (the only required boilerplate). It reads the form
+ *    instance from a context THIS module owns (the engine's own concern).
+ *  - `TanstackZodForm` — the optional form wrapper: create the form, provide it,
+ *    wire submit, render. Userland, copy-and-bend; the core never sees it.
  *
- * TanStack's `AnyFormApi` collapses field-name params to `never` and omits the
- * React `.useStore` extension, so we describe the exact surface we use as a
- * small structural type and cast the instance to it once, at creation.
+ * Wrinkles handled here: TanStack keys array items by INDEX (we synthesize
+ * stable ids), and seeds at the form level (leaves fill on mount).
  */
 type ErrorMap = { onChange?: Record<string, unknown>; onSubmit?: Record<string, unknown> }
 type TState = { values: Record<string, unknown>; errorMap: ErrorMap }
@@ -49,41 +51,18 @@ const firstMessage = (issues: unknown): string | undefined => {
   return undefined
 }
 
-// The schema is needed at submit time to produce z.output (defaults/transforms
-// applied), matching RHF's resolver semantics. Keyed by the form instance.
+// The schema produces z.output at submit (defaults/transforms applied), matching
+// a resolver's semantics. Keyed by the form instance.
 const schemaForForm = new WeakMap<TForm, z.ZodType>()
 
 const FormCtx = createContext<TForm | null>(null)
 const useFormInstance = (): TForm => {
   const form = useContext(FormCtx)
-  if (!form) throw new Error('tanstack adapter: a field rendered outside its Provider')
+  if (!form) throw new Error('tanstack engine: a field rendered outside <TanstackZodForm>')
   return form
 }
 
-export const tanstackFormAdapter: FormAdapter<TForm> = {
-  useForm(schema, { defaults }) {
-    // The real instance carries far stricter generics; cast to the surface we use.
-    const form = useTanstackForm({
-      defaultValues: (defaults ?? {}) as Record<string, unknown>,
-      validators: { onChange: schema as never, onSubmit: schema as never },
-    }) as unknown as TForm
-    schemaForForm.set(form, schema)
-    return form
-  },
-
-  Provider: ({ form, children }: { form: TForm; children: ReactNode }) => (
-    <FormCtx.Provider value={form}>{children}</FormCtx.Provider>
-  ),
-
-  onSubmit: (form, valid) => (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    void form.handleSubmit().then(() => {
-      const parsed = schemaForForm.get(form)?.safeParse(form.state.values)
-      if (parsed?.success) valid(parsed.data)
-    })
-  },
-
+export const tanstackFieldEngine: FieldEngine = {
   useField(name, seed) {
     const form = useFormInstance()
     const value = useStore<TState, unknown>(form.store as never, (s) => getByPath(s.values, name))
@@ -128,4 +107,47 @@ export const tanstackFormAdapter: FormAdapter<TForm> = {
     const form = useFormInstance()
     return useStore<TState, unknown>(form.store as never, (s) => getByPath(s.values, name))
   },
+}
+
+/** The engine bound into a schema-only renderer — same sugar the RHF example uses. */
+const TanstackFields = createFormRenderer(tanstackFieldEngine)
+
+/** Userland form wrapper on TanStack Form — the counterpart to ZodForm. The only
+ *  insane-specific line is the `<Render … engine={tanstackFieldEngine} />`. */
+export function TanstackZodForm<S extends z.ZodType>({
+  schema,
+  defaults,
+  onSubmit,
+  children,
+  className,
+}: {
+  schema: S
+  defaults?: Record<string, unknown>
+  onSubmit: (data: z.output<S>) => void
+  children?: ReactNode
+  className?: string
+}) {
+  const form = useTanstackForm({
+    defaultValues: defaults ?? {},
+    validators: { onChange: schema as never, onSubmit: schema as never },
+  }) as unknown as TForm
+  schemaForForm.set(form, schema)
+  return (
+    <FormCtx.Provider value={form}>
+      <form
+        className={className}
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          void form.handleSubmit().then(() => {
+            const parsed = schemaForForm.get(form)?.safeParse(form.state.values)
+            if (parsed?.success) onSubmit(parsed.data as z.output<S>)
+          })
+        }}
+      >
+        <TanstackFields schema={schema} />
+        {children}
+      </form>
+    </FormCtx.Provider>
+  )
 }

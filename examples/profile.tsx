@@ -4,6 +4,7 @@ import * as z from 'zod'
 import type { CollectionWrapper, FieldProps, Shell } from '../src'
 import * as insane from '../src'
 import { resolveInner } from '../src'
+import { ZodForm } from './react-hook-form'
 
 /* ---------- 1. Chrome: a shell and a list box — user code, replaceable. ---------- */
 
@@ -163,9 +164,9 @@ export const Profile = insane.group(Account, <hr />, Details)
 export type ProfileData = z.output<typeof Profile> // decorations & chrome absent here
 
 export const ProfileForm = ({ onSubmit }: { onSubmit: (d: ProfileData) => void }) => (
-  <insane.ZodForm schema={Profile} defaults={{ contacts: [{}] }} onSubmit={onSubmit}>
+  <ZodForm schema={Profile} defaults={{ contacts: [{}] }} onSubmit={onSubmit}>
     <button type="submit">Save</button>
-  </insane.ZodForm>
+  </ZodForm>
 )
 
 /* ---------- 4. Recursive tree — z.lazy renders to data depth and stops. ---------- */
@@ -179,7 +180,7 @@ export const Category: z.ZodType<Cat> = z.lazy(() =>
 )
 
 export const CategoryForm = ({ value, onSubmit }: { value: Cat; onSubmit: (d: Cat) => void }) => (
-  <insane.ZodForm schema={Category} defaults={value} onSubmit={onSubmit}>
+  <ZodForm schema={Category} defaults={value} onSubmit={onSubmit}>
     <button type="submit">Save</button>
-  </insane.ZodForm>
+  </ZodForm>
 )

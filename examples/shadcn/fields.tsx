@@ -134,7 +134,7 @@ const isBlank = (v: unknown): boolean =>
  *  under react-hook-form, TanStack Form, or any other adapter. */
 export const autoAddList = (Inner: CollectionWrapper): CollectionWrapper =>
   function AutoAddList(props) {
-    const rows = (insane.useAdapter().useWatch(props.name) as unknown[]) ?? []
+    const rows = (props.engine.useWatch(props.name) as unknown[]) ?? []
     const count = rows.length
     const lastFilled = count > 0 && !isBlank(rows[count - 1])
     const { add } = props

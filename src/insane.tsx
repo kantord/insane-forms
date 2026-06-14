@@ -30,13 +30,12 @@
 import type * as React from 'react'
 import { Fragment, isValidElement, type ReactElement, type ReactNode, useEffect } from 'react'
 import * as z from 'zod'
-import { useAdapter } from './context'
 import type {
   CollectionItem,
   CollectionWrapper,
   CurriedGuard,
-  DeepPartial,
   Def,
+  FieldEngine,
   FieldGroup,
   FieldMeta,
   FieldProps,
@@ -191,7 +190,22 @@ const rendersOrDeferred = (s: z.ZodType): boolean => {
   return d.innerType ? rendersOrDeferred(d.innerType) : false
 }
 
-export function Render({ schema, name }: { schema: z.ZodType; name: string }) {
+/**
+ * The render entry point — and the SINGLE place the form engine enters. The
+ * user's form wrapper renders `<Render schema={schema} engine={someEngine} />`
+ * inside whatever form context the engine needs; from here the engine is threaded
+ * down the whole tree (no context, no global), so two Render trees can run two
+ * different engines side by side.
+ */
+export function Render({
+  schema,
+  name,
+  engine,
+}: {
+  schema: z.ZodType
+  name: string
+  engine: FieldEngine
+}) {
   const ResolvedComponent = resolveComponent(schema)
   if (!ResolvedComponent) {
     if (typeof console !== 'undefined')
@@ -207,6 +221,7 @@ export function Render({ schema, name }: { schema: z.ZodType; name: string }) {
       name={name}
       required={isRequired(schema)}
       readonly={isReadonly(schema)}
+      engine={engine}
     />
   )
 }
@@ -237,9 +252,9 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
   const widget = spec.widget as Widget<unknown>
   const Leaf = (p: NodeProps) => {
     // per-field draft seeding: declared .default() wins, else the explicit initial.
-    // Computed engine-neutrally and handed to the adapter's leaf binding.
+    // Computed engine-neutrally and handed to the engine's leaf binding.
     const seed = resolveDefault(p.schema) ?? spec.initial
-    const binding = useAdapter().useField(p.name, seed)
+    const binding = p.engine.useField(p.name, seed)
     /* Flattening the engine's nested state into FieldProps is the seam, not an
      * accident: widgets/shells get insane's flat contract and never import the engine. */
     const props: FieldProps<unknown> = {
@@ -336,9 +351,16 @@ export function group<const A extends readonly Part[]>(...parts: A): z.ZodObject
           <Fragment key={`deco:${i}`}>{sec}</Fragment>
         ) : sec instanceof z.ZodType ? (
           // biome-ignore lint/suspicious/noArrayIndexKey: same authored static sequence
-          <Render key={`frag:${i}`} schema={sec} name={p.name} />
+          <Render key={`frag:${i}`} schema={sec} name={p.name} engine={p.engine} />
         ) : (
-          sec.map((k) => <Render key={k} schema={shape[k]} name={p.name ? `${p.name}.${k}` : k} />)
+          sec.map((k) => (
+            <Render
+              key={k}
+              schema={shape[k]}
+              name={p.name ? `${p.name}.${k}` : k}
+              engine={p.engine}
+            />
+          ))
         ),
       )}
     </Fragment>
@@ -409,13 +431,13 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
     )
   const Wrap = opts.wrapper ?? BareItems
   const ListRenderer = (p: NodeProps) => {
-    const arr = useAdapter().useArray(p.name)
+    const arr = p.engine.useArray(p.name)
     const { min, max } = boundsOf(p.inner)
     const canAdd = arr.rows.length < max
     const canRemove = arr.rows.length > min
     const items: CollectionItem[] = arr.rows.map((row, i) => ({
       key: row.id, // stable identity — never the index
-      node: <Render schema={element} name={`${p.name}.${i}`} />,
+      node: <Render schema={element} name={`${p.name}.${i}`} engine={p.engine} />,
       remove: canRemove ? () => arr.remove(i) : undefined,
     }))
     return (
@@ -426,6 +448,7 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
         add={canAdd ? () => arr.append(opts.seed ? opts.seed() : seedFor(element)) : undefined}
         header={opts.header}
         footer={opts.footer}
+        engine={p.engine}
       />
     )
   }
@@ -433,43 +456,14 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
 }
 
 /* ------------------------------------------------------------------ */
-/* Host. The schema stays a live, composable Zod value — it is passed  */
-/* as a PROP, never wrapped or consumed. ZodForm reads the active form  */
-/* adapter from context, creates the instance, provides it, and renders */
-/* NO chrome of its own. The RHF-specific `useZodForm` escape hatch     */
-/* (react-hook-form's own methods) lives in that adapter's module.      */
+/* There is intentionally NO form component here. Creating the form     */
+/* instance, wiring submit, and providing engine context are all        */
+/* engine-native, userland concerns — the user writes (or copies) a     */
+/* tiny wrapper that calls their engine's useForm, then renders         */
+/* `<Render schema={schema} engine={…} />` inside. A ready-made wrapper  */
+/* ships per engine (e.g. `ZodForm` from "insane-forms/react-hook-form") */
+/* but it is opt-in sugar, never part of the schema-driven core.         */
 /* ------------------------------------------------------------------ */
-
-export function ZodForm<S extends z.ZodType>({
-  schema,
-  defaults,
-  onSubmit,
-  children,
-  className,
-}: {
-  schema: S
-  /** Draft seed (edit-an-existing-record). Deep-partial: the draft may be looser than z.input. */
-  defaults?: DeepPartial<z.input<S>> & object
-  onSubmit: (data: z.output<S>) => void
-  children?: ReactNode
-  /** Forwarded to the <form> element — layout belongs to the consumer. */
-  className?: string
-}) {
-  const adapter = useAdapter()
-  const form = adapter.useForm(schema, { defaults })
-  const Provider = adapter.Provider
-  return (
-    <Provider form={form}>
-      <form
-        className={className}
-        onSubmit={adapter.onSubmit(form, (d) => onSubmit(d as z.output<S>))}
-      >
-        <Render schema={schema} name="" />
-        {children}
-      </form>
-    </Provider>
-  )
-}
 
 /* Named exports only — no aggregate object, no default export — so bundlers can
  * tree-shake. `import * as insane from "insane"` gives the namespace ergonomics

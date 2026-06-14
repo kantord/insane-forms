@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
+import { reactHookFormEngine, useZodForm } from '../examples/react-hook-form'
 import { CheckboxField, InputField, selectField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -52,7 +53,7 @@ const STEPS = [
 ]
 
 function MultiStepCheckout() {
-  const methods = insane.useZodForm(Checkout)
+  const methods = useZodForm(Checkout)
   const [step, setStep] = useState(0)
   const { errors } = methods.formState
   const stepHasError = (i: number) => STEPS[i].fields.some((f) => f in errors)
@@ -93,7 +94,7 @@ function MultiStepCheckout() {
           </nav>
           <FormProvider {...methods}>
             <form className="flex flex-col gap-6" onSubmit={methods.handleSubmit(demoSubmit)}>
-              <insane.Render schema={STEPS[step].schema} name="" />
+              <insane.Render schema={STEPS[step].schema} name="" engine={reactHookFormEngine} />
               <Field orientation="horizontal">
                 <Button
                   type="button"

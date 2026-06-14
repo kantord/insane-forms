@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect } from 'storybook/test'
 import { Step2, Step3, Step4 } from '../examples/morph'
-import * as insane from '../src'
+import { ZodForm } from '../examples/react-hook-form'
 import { demoSubmit } from './demo'
 
 /* The landing page's schema-morph steps, rendered & tested here — the morph
@@ -18,9 +18,9 @@ export const Steps: StoryObj = {
     <div className="biome-bureau demo-pane flex flex-col gap-10 bg-paper p-6 font-mono text-ink">
       {[Step2, Step3, Step4].map((schema, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: fixed authored sequence
-        <insane.ZodForm key={i} schema={schema} onSubmit={demoSubmit}>
+        <ZodForm key={i} schema={schema} onSubmit={demoSubmit}>
           <button type="submit">Save</button>
-        </insane.ZodForm>
+        </ZodForm>
       ))}
     </div>
   ),

@@ -5,6 +5,7 @@ import * as z from 'zod'
 import type { FieldProps, Shell } from '../src'
 import * as insane from '../src'
 import { resolveInner } from '../src'
+import { ZodForm } from './react-hook-form'
 
 const MeadowShell: Shell = ({ name, label, description, error, children }) => (
   <div className="mb-4">
@@ -104,12 +105,12 @@ export const Rsvp = insane.group({
 export type RsvpData = z.output<typeof Rsvp>
 
 export const MeadowForm = ({ onSubmit }: { onSubmit: (d: RsvpData) => void }) => (
-  <insane.ZodForm schema={Rsvp} onSubmit={onSubmit}>
+  <ZodForm schema={Rsvp} onSubmit={onSubmit}>
     <button
       type="submit"
       className="rounded-full bg-pop px-6 py-2.5 text-sm font-semibold text-paper shadow-md transition hover:opacity-90"
     >
       Send RSVP
     </button>
-  </insane.ZodForm>
+  </ZodForm>
 )

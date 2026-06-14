@@ -3,6 +3,7 @@ import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { FieldDescription } from '@/components/ui/field'
+import { ZodForm } from '../examples/react-hook-form'
 import {
   CheckboxField,
   InputField,
@@ -27,11 +28,11 @@ export const Input: StoryObj = {
       name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -46,11 +47,11 @@ export const InputWithDescription: StoryObj = {
       }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -61,11 +62,11 @@ export const OptionalInput: StoryObj = {
       website: InputField.optional().meta({ title: 'Website', placeholder: 'https://example.com' }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -76,11 +77,11 @@ export const ReadOnlyInput: StoryObj = {
       apiKey: InputField.readonly().default('sk-1a2b3c4d').meta({ title: 'API key' }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -95,11 +96,11 @@ export const NumberInput: StoryObj = {
       }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -114,11 +115,11 @@ export const Textarea: StoryObj = {
       }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -132,11 +133,11 @@ export const Checkbox: StoryObj = {
       }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -152,11 +153,11 @@ export const Select: StoryObj = {
       ),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
 }
@@ -175,11 +176,11 @@ export const HiddenField: StoryObj = {
       },
     )
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves the hidden field's default survives parse into the submitted output
@@ -199,11 +200,11 @@ export const CssCheck: StoryObj = {
       name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
     })
     return (
-      <insane.ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
           Submit
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // The submit Button uses bg-primary (--primary: oklch(0.205 0 0) in the zinc

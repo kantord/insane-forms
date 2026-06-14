@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
+import { ZodForm } from '../examples/react-hook-form'
 import { InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -153,7 +154,7 @@ export const NavigationMenu: StoryObj = {
         .meta({ title: 'Menu items' }),
     })
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{
@@ -171,7 +172,7 @@ export const NavigationMenu: StoryObj = {
         <Button type="submit" className="self-start">
           Save menu
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves the close gate: emptying a required field keeps the dialog open with

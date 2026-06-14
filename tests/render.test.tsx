@@ -5,6 +5,7 @@ import type * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import * as z from 'zod'
 import { type Cat, CategoryForm, Profile, ProfileForm, text } from '../examples/profile'
+import { ZodForm } from '../examples/react-hook-form'
 import * as insane from '../src'
 
 describe('a form rendered from the schema', () => {
@@ -63,7 +64,7 @@ describe('composition', () => {
     const A = insane.group(<em>secA</em>, { x: text(z.string()) })
     const B = insane.group({ y: text(z.string()) })
     const AB = insane.group(A, B)
-    const { container } = render(<insane.ZodForm schema={AB} onSubmit={() => {}} />)
+    const { container } = render(<ZodForm schema={AB} onSubmit={() => {}} />)
     expect(container.querySelector('em')).toHaveTextContent('secA')
     expect(container.querySelector('[name="x"]')).toBeInTheDocument()
     expect(container.querySelector('[name="y"]')).toBeInTheDocument()
@@ -75,7 +76,7 @@ describe('composition', () => {
       <section data-card>{children}</section>
     )
     const W = insane.group(insane.wrap(Card, { a: text(z.string()) }), { b: text(z.string()) })
-    const { container } = render(<insane.ZodForm schema={W} onSubmit={() => {}} />)
+    const { container } = render(<ZodForm schema={W} onSubmit={() => {}} />)
     expect(container.querySelector('[data-card] [name="a"]')).toBeInTheDocument()
     expect(container.querySelector('[name="b"]')).toBeInTheDocument()
     expect(W.safeParse({ a: '1', b: '2' }).success).toBe(true)

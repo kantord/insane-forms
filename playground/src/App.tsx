@@ -5,8 +5,8 @@ import { memo, type ReactNode, useEffect, useState } from 'react'
 import { MeadowForm, type RsvpData } from '../../examples/meadow'
 import { Step2, Step3, Step4 } from '../../examples/morph'
 import { type ProfileData, ProfileForm } from '../../examples/profile'
+import { ZodForm } from '../../examples/react-hook-form'
 import { TerminalTreeForm, type TreeNode } from '../../examples/terminal'
-import { ZodForm } from '../../src'
 import { Biome, type BiomeName, Duplex, motionOffNow, ScrollyBlock, Slide, Stack } from './slides'
 
 /* Page structure (hybrid scrollytelling — see research):

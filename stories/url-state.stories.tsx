@@ -5,6 +5,7 @@ import { FormProvider, useWatch } from 'react-hook-form'
 import { expect, waitFor } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
+import { reactHookFormEngine, useZodForm, ZodForm } from '../examples/react-hook-form'
 import { CheckboxField, InputField, selectField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { ProductTable, products } from './demo'
@@ -47,7 +48,7 @@ export const ProductFilters: StoryObj = {
       const [filters, setFilters] = useQueryStates(filterParsers, { history: 'replace' })
 
       return (
-        <insane.ZodForm
+        <ZodForm
           schema={schema}
           className="flex flex-col gap-6"
           defaults={filters}
@@ -56,7 +57,7 @@ export const ProductFilters: StoryObj = {
           <Button type="submit" className="self-start">
             Apply filters
           </Button>
-        </insane.ZodForm>
+        </ZodForm>
       )
     }
 
@@ -89,7 +90,7 @@ export const FilteredCatalog: StoryObj = {
         history: 'replace',
         throttleMs: 250,
       })
-      const methods = insane.useZodForm(schema, { defaults: params })
+      const methods = useZodForm(schema, { defaults: params })
 
       // Live: every edit lands in the URL…
       insane.useQueryParamsSync(methods, setParams)
@@ -114,7 +115,7 @@ export const FilteredCatalog: StoryObj = {
         <div className="flex flex-col gap-6">
           <FormProvider {...methods}>
             <form className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
-              <insane.Render schema={schema} name="" />
+              <insane.Render schema={schema} name="" engine={reactHookFormEngine} />
             </form>
           </FormProvider>
 

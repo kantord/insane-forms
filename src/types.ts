@@ -63,6 +63,10 @@ export type NodeProps = {
   name: string
   required: boolean
   readonly: boolean
+  /** The form-library bindings, threaded down the render tree from `Render`.
+   *  This is how the engine reaches every node WITHOUT context, a global, or a
+   *  factory — and lets two `Render` trees use two different engines at once. */
+  engine: FieldEngine
 }
 
 /* ------------------------------------------------------------------ */
@@ -170,7 +174,7 @@ export type CollectionItem = {
 }
 export type CollectionProps = {
   /** The array's field path — wrappers use it to label or OBSERVE the array
-   *  (e.g. an auto-add list watches its own last row via `useWatch`). */
+   *  (e.g. an auto-add list watches its own last row via `engine.useWatch`). */
   name: string
   label?: string
   items: CollectionItem[]
@@ -178,6 +182,9 @@ export type CollectionProps = {
   add?: () => void
   header?: ReactNode
   footer?: ReactNode
+  /** The form-library bindings, threaded from `Render` — lets a wrapper observe
+   *  its own array (auto-add, live previews) without context or a global. */
+  engine: FieldEngine
 }
 export type CollectionWrapper = React.ComponentType<CollectionProps>
 
@@ -191,17 +198,16 @@ export type ListOpts = {
 }
 
 /* ------------------------------------------------------------------ */
-/* Form-engine adapter port. The ONE engine-specific surface — exactly */
-/* one implementation per form library (react-hook-form, tanstack-form */
-/* …). The core imports no engine; it reads the active adapter from     */
-/* context. Both libraries reduce to the same three render seams.       */
+/* The FieldEngine — the ONE contract between insane and a form library. */
+/* It is exactly "what it takes to connect fields to the engine": three  */
+/* render-time bindings, nothing more. Form creation, submit wiring, and */
+/* context live in the USER's form wrapper (engine-native, out of core   */
+/* scope). The core imports no engine and holds no global/context — an   */
+/* engine is threaded down the render tree from `Render` (see NodeProps). */
 /* ------------------------------------------------------------------ */
 
-/** Local DeepPartial so the core needn't import a form library for a type. */
-export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
-
-/** Per-field binding the leaf renderer needs from the engine — the shape both
- *  RHF's useController and a TanStack field reduce to. */
+/** Per-field binding the leaf renderer needs — the shape both RHF's
+ *  useController and a TanStack field reduce to. */
 export type FieldBinding = {
   value: unknown
   onChange: (v: unknown) => void
@@ -210,7 +216,7 @@ export type FieldBinding = {
 }
 
 /** One array row's STABLE identity (stable across reorders). RHF gives
- *  `field.id`; the TanStack adapter must synthesize one, since TanStack keys
+ *  `field.id`; a TanStack adapter must synthesize one, since TanStack keys
  *  array items by index. */
 export type ArrayRow = { id: string }
 
@@ -222,21 +228,16 @@ export type ArrayBinding = {
 }
 
 /**
- * The port. Everything engine-specific lives behind these members; the core
- * reads the active adapter from context (`useAdapter`) and never imports a
- * form library. Members named `useX` are React hooks — called unconditionally
- * during render, so hook order stays stable.
+ * The whole contract. Three hooks, called at render time under whatever form
+ * context the user's wrapper set up (RHF's FormProvider, a TanStack adapter's
+ * own provider, …). insane never creates the form or knows the engine — it just
+ * calls these. Implement them once per library; that adapter is the ONLY
+ * boilerplate connecting insane to a form engine.
  */
-export type FormAdapter<Form = unknown> = {
-  /** Create the form instance from a Standard-Schema + resolved defaults. */
-  useForm(schema: z.ZodType, opts: { defaults?: unknown }): Form
-  /** Make the instance available to nested field/array bindings below. */
-  Provider: React.ComponentType<{ form: Form; children: ReactNode }>
-  /** Wrap a valid-submit callback as a DOM <form> onSubmit handler. */
-  onSubmit(form: Form, valid: (data: unknown) => void): React.ComponentProps<'form'>['onSubmit']
+export type FieldEngine = {
   /** Bind one leaf by name; `seed` is the core-resolved per-field default. */
   useField(name: string, seed: unknown): FieldBinding
-  /** Bind one array by name (stable row ids guaranteed by the adapter). */
+  /** Bind one array by name (stable row ids guaranteed by the engine). */
   useArray(name: string): ArrayBinding
   /** Reactively read the value at `name` (whole subtree). Powers wrappers that
    *  observe form state — auto-add lists, derived UI, live previews. */

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect, within } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
+import { ZodForm } from '../examples/react-hook-form'
 import { cellNumber, cellText, tableList } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
@@ -32,7 +33,7 @@ export const InvoiceLineItems: StoryObj = {
         .meta({ title: 'Line items' }),
     })
     return (
-      <insane.ZodForm
+      <ZodForm
         schema={schema}
         className="flex flex-col gap-6"
         defaults={{
@@ -46,7 +47,7 @@ export const InvoiceLineItems: StoryObj = {
         <Button type="submit" className="self-start">
           Save invoice
         </Button>
-      </insane.ZodForm>
+      </ZodForm>
     )
   },
   // Proves the table is live form state: a new row self-seeds its defaults,

@@ -51,7 +51,11 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
 - Stories are written as `render: () => { …schema… return <ZodForm…> }` —
   the panel shows exactly that body. Keep the interesting part inline; hide
   boring plumbing behind one honest import from `stories/demo.tsx`
-  (`demoSubmit`, fixtures, `ProductTable`).
+  (`demoSubmit`, fixtures, `ProductTable`). NOTE: `ZodForm` is a USERLAND form
+  wrapper imported from `examples/react-hook-form` (an engine binding shown, not
+  shipped) — the core publishes no form component. The core surface is the
+  schema builders + `<Render schema engine={…}>`; a form library is connected
+  by implementing the 3-hook `FieldEngine` and (optionally) `createFormRenderer`.
 - Shared chrome (`examples/biomes.css`) is imported by BOTH the landing and
   Storybook so examples render identically in both harnesses.
 - New display surface? It must consume one of these mechanisms — never an
