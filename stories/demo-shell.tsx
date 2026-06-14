@@ -84,7 +84,7 @@ const CATERING_NAV: NavItem[] = [
 
 function CateringShell({ section, title, description, children }: ShellProps) {
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-xl border bg-card font-sans text-card-foreground shadow-sm">
+    <div className="flex h-full w-full overflow-hidden rounded-none border bg-card font-sans sm:rounded-xl text-card-foreground shadow-sm">
       <aside className="hidden h-full w-60 shrink-0 flex-col border-r bg-muted/40 md:flex">
         <div className="flex h-14 shrink-0 items-center gap-2.5 px-5">
           <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -157,7 +157,7 @@ const DEV_NAV: NavItem[] = [
 
 function DevConsoleShell({ section, title, description, children }: ShellProps) {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-md border bg-card font-sans text-card-foreground shadow-sm">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-none border bg-card font-sans sm:rounded-md text-card-foreground shadow-sm">
       <header className="flex h-12 shrink-0 items-center gap-3 border-b px-4 md:px-6">
         <span className="flex size-6 items-center justify-center rounded bg-primary text-primary-foreground">
           <Terminal className="size-4" />
@@ -224,7 +224,7 @@ const STORE_NAV: NavItem[] = [
 
 function StoreAdminShell({ section, title, description, children }: ShellProps) {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card font-sans text-card-foreground shadow-sm">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-none border bg-card font-sans sm:rounded-2xl text-card-foreground shadow-sm">
       <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4 md:px-6">
         <div className="flex shrink-0 items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">

@@ -81,7 +81,7 @@ function MultiStepCheckout() {
           <CardDescription>Steps with invalid fields are highlighted.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <nav aria-label="Steps" className="flex gap-2">
+          <nav aria-label="Steps" className="flex flex-wrap gap-2">
             {STEPS.map((s, i) => (
               <button
                 key={s.label}

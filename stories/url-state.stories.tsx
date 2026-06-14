@@ -6,7 +6,7 @@ import { expect, waitFor } from 'storybook/test'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { reactHookFormEngine, useZodForm, ZodForm } from '../examples/react-hook-form'
-import { CheckboxField, InputField, selectField } from '../examples/shadcn/fields'
+import { CheckboxField, SearchField, selectField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { ProductTable, products } from './demo'
 
@@ -45,7 +45,7 @@ export const ProductFilters: StoryObj = {
     }
 
     const schema = insane.group({
-      q: InputField.default('').meta({ title: 'Search', placeholder: 'Search products…' }),
+      q: SearchField.default('').meta({ title: 'Search', placeholder: 'Search products…' }),
       category: selectField(
         z.enum(['All', 'Audio', 'Video', 'Accessories']).default('All').meta({ title: 'Category' }),
       ),
@@ -75,7 +75,7 @@ export const ProductFilters: StoryObj = {
   // Proves the round trip: submitting lands the form values in the iframe URL.
   play: async ({ canvas, canvasElement, userEvent }) => {
     const location = canvasElement.ownerDocument.defaultView?.location
-    await userEvent.type(canvas.getByLabelText(/search/i), 'speaker')
+    await userEvent.type(canvas.getByRole('searchbox'), 'speaker')
     await userEvent.click(canvas.getByRole('button', { name: /apply filters/i }))
     await waitFor(() => expect(location?.search).toContain('q=speaker'))
   },
@@ -85,7 +85,7 @@ export const FilteredCatalog: StoryObj = {
   name: 'Data table — filtered and sorted live',
   render: () => {
     const schema = insane.group({
-      q: InputField.default('').meta({ title: 'Search', placeholder: 'Filter products…' }),
+      q: SearchField.default('').meta({ title: 'Search', placeholder: 'Filter products…' }),
       sort: selectField(z.enum(['name', 'price']).default('name').meta({ title: 'Sort by' })),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
     })
@@ -121,14 +121,16 @@ export const FilteredCatalog: StoryObj = {
         .toSorted((a, b) => (sort === 'price' ? a.price - b.price : a.name.localeCompare(b.name)))
 
       return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start">
           <FormProvider {...methods}>
-            <form className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
+            <form className="flex flex-col gap-4 md:w-60 md:shrink-0">
               <insane.Render schema={schema} name="" engine={reactHookFormEngine} />
             </form>
           </FormProvider>
 
-          <ProductTable rows={rows} />
+          <div className="min-w-0 flex-1">
+            <ProductTable rows={rows} />
+          </div>
         </div>
       )
     }
@@ -139,8 +141,8 @@ export const FilteredCatalog: StoryObj = {
   // Clear first: URL state persists across stories sharing this page.
   play: async ({ canvas, canvasElement, userEvent }) => {
     const location = canvasElement.ownerDocument.defaultView?.location
-    await userEvent.clear(canvas.getByLabelText(/search/i))
-    await userEvent.type(canvas.getByLabelText(/search/i), 'cap')
+    await userEvent.clear(canvas.getByRole('searchbox'))
+    await userEvent.type(canvas.getByRole('searchbox'), 'cap')
     await waitFor(() => expect(canvas.queryByText('Studio Headphones')).not.toBeInTheDocument())
     await expect(canvas.getByText('Capture Card')).toBeVisible()
     await waitFor(() => expect(location?.search).toContain('q=cap'))

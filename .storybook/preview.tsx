@@ -172,8 +172,10 @@ const preview: Preview = {
         const cfg = param && param.variant === variant ? param : defaultPage
         // A tinted, padded "page" (--demo-page) with the app card floating on it.
         return (
-          <div className={`demo-frame ${themeClass} flex min-h-screen justify-center p-6`}>
-            <div className="h-[calc(100vh-3rem)] w-full max-w-[1760px]">
+          // Mobile: full-bleed card, no page margin. Desktop (sm+): tinted margin
+          // with the card floating, capped width.
+          <div className={`demo-frame ${themeClass} flex min-h-screen justify-center sm:p-6`}>
+            <div className="h-screen w-full max-w-[1760px] sm:h-[calc(100vh-3rem)]">
               <Shell section={cfg.section} title={cfg.title} description={cfg.description}>
                 <Story />
               </Shell>

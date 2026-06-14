@@ -2,7 +2,7 @@
  * Mirrors examples/profile.tsx: widgets, a shell, and a list wrapper are all user
  * code, so swapping the bureau chrome for shadcn touches zero library lines. */
 
-import { XIcon } from 'lucide-react'
+import { Search as SearchIcon, XIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -296,6 +296,39 @@ const NumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string
   />
 )
 
+/* Search input: leading magnifier, and a clear (✕) button once there's a value
+ * — clearing is just onChange(''). The native search clear is hidden so there's
+ * one consistent control. */
+const SearchWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  <div className="relative">
+    <SearchIcon
+      className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
+      aria-hidden="true"
+    />
+    <Input
+      id={p.name}
+      name={p.name}
+      type="search"
+      value={p.value ?? ''}
+      placeholder={p.placeholder}
+      className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
+      aria-invalid={p.error !== undefined || undefined}
+      onChange={(e) => p.onChange(e.target.value)}
+      onBlur={p.onBlur}
+    />
+    {p.value ? (
+      <button
+        type="button"
+        aria-label="Clear search"
+        onClick={() => p.onChange('')}
+        className="-translate-y-1/2 absolute top-1/2 right-1.5 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+      >
+        <XIcon className="size-4" />
+      </button>
+    ) : null}
+  </div>
+)
+
 /* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
 const CheckWidget = (p: FieldProps<boolean>) => (
   <Checkbox
@@ -333,6 +366,12 @@ const enumOptions = (s: z.ZodType) => ({
 export const InputField = insane.field({
   schema: z.string(),
   widget: TextWidget,
+  shell: FieldShell,
+  props: fieldExtras,
+})
+export const SearchField = insane.field({
+  schema: z.string(),
+  widget: SearchWidget,
   shell: FieldShell,
   props: fieldExtras,
 })
