@@ -16,6 +16,14 @@ import { ProductTable, products } from './demo'
 const meta: Meta = {
   title: 'URL state',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Menus',
+      title: 'Catalog',
+      description: 'Filter and sort the catering catalog.',
+    },
+  },
   decorators: [
     (Story) => (
       <NuqsAdapter>

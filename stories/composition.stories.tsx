@@ -11,6 +11,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Composition',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Menus',
+      title: 'Menu sections',
+      description: 'Compose a menu from reusable, flat sections.',
+    },
+  },
 }
 export default meta
 

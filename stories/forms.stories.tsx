@@ -18,6 +18,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Forms',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Customers',
+      title: 'Customer profile',
+      description: 'Contact details, emergency contacts, and saved categories.',
+    },
+  },
 }
 export default meta
 

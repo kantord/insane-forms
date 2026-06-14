@@ -12,6 +12,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Editable table',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Orders',
+      title: 'Invoice line items',
+      description: 'Quantities and pricing for this order.',
+    },
+  },
 }
 export default meta
 

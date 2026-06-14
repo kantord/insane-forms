@@ -27,6 +27,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Nested modals',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Menus',
+      title: 'Menu builder',
+      description: 'A menu of sections nested within sections.',
+    },
+  },
 }
 export default meta
 

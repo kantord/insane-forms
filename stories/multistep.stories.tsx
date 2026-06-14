@@ -18,6 +18,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Multi-step',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Orders',
+      title: 'New order',
+      description: 'A short, guided ordering flow.',
+    },
+  },
 }
 export default meta
 

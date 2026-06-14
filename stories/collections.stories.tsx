@@ -11,6 +11,14 @@ import { demoSubmit } from './demo'
 const meta: Meta = {
   title: 'Collections',
   tags: ['ai-generated'],
+  parameters: {
+    layout: 'fullscreen',
+    demo: {
+      section: 'Orders',
+      title: 'Order details',
+      description: 'The people and items attached to this order.',
+    },
+  },
 }
 export default meta
 

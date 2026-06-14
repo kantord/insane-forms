@@ -4,6 +4,7 @@ import { emitTransformCode, useEffect } from 'storybook/preview-api'
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 import '../examples/shadcn/globals.css'
 import { Toaster } from '@/components/ui/sonner'
+import { type DemoConfig, DemoShell } from '../stories/demo-shell'
 
 /* ------------------------------------------------------------------------- */
 /* Code panel: show each story's render body VERBATIM from the source file.  */
@@ -117,6 +118,24 @@ const preview: Preview = {
         const source = context.parameters?.docs?.source?.originalSource
         if (source) void emitTransformCode(source, context)
       })
+      // Opt-in fake-app frame: a story sets `parameters.demo` to render inside
+      // the catering portal shell. It's a decorator, so it never reaches the
+      // code panel. Low-level stories (widgets, morph, biomes) omit it.
+      const demo = context.parameters?.demo as DemoConfig | undefined
+      if (demo) {
+        // A tinted, padded "page" with the app shell floating on it. The shell
+        // fills the padded viewport; the max width only gates very wide monitors.
+        return (
+          <div className="flex min-h-screen justify-center bg-muted/50 p-6">
+            <div className="h-[calc(100vh-3rem)] w-full max-w-[1600px]">
+              <DemoShell {...demo}>
+                <Story />
+              </DemoShell>
+            </div>
+            <Toaster />
+          </div>
+        )
+      }
       return (
         <div style={{ maxWidth: 640 }}>
           <Story />
