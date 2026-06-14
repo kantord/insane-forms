@@ -3,8 +3,10 @@ import { emitTransformCode, useEffect } from 'storybook/preview-api'
 /* Pure shadcn/ui default theme — the docs-page (bureau) styling is deliberately
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 import '../examples/shadcn/globals.css'
+// Loaded after globals so the scoped `.theme-*` overrides win (see the file).
+import '../examples/demo-themes.css'
 import { Toaster } from '@/components/ui/sonner'
-import { type DemoParam, DemoShell } from '../stories/demo-shell'
+import { type AppVariant, DEMO_APPS, type DemoParam } from '../stories/demo-shell'
 
 /* ------------------------------------------------------------------------- */
 /* Code panel: show each story's render body VERBATIM from the source file.  */
@@ -108,12 +110,28 @@ const preview: Preview = {
       },
     },
   },
-  // Built-in light/dark switch (no addon) — toggles shadcn's `.dark` on the
-  // iframe root; see the decorator below.
+  // Toolbar globals (built-in, no addon). Defaults live in initialGlobals.
+  // `demoApp: auto` means "use each story's own parameters.demo.variant"; pick a
+  // specific app to force it across all stories.
+  initialGlobals: { theme: 'light', demoApp: 'auto' },
   globalTypes: {
+    demoApp: {
+      description: 'Demo app',
+      toolbar: {
+        title: 'Demo app',
+        icon: 'browser',
+        items: [
+          { value: 'auto', title: 'Per story (default)' },
+          { value: 'catering', title: 'Catering' },
+          { value: 'dev', title: 'Dev console' },
+          { value: 'store', title: 'Store admin' },
+          { value: 'none', title: 'None (bare)' },
+        ],
+        dynamicTitle: true,
+      },
+    },
     theme: {
       description: 'Theme',
-      defaultValue: 'light',
       toolbar: {
         title: 'Theme',
         icon: 'circlehollow',
@@ -141,18 +159,24 @@ const preview: Preview = {
         document.documentElement.classList.toggle('dark', context.globals.theme === 'dark')
       }, [context.globals.theme])
 
-      // Opt-in fake-app frame, parametric per story. It's a decorator, so it
-      // never reaches the code panel.
-      const demo = context.parameters?.demo as DemoParam | undefined
-      if (demo?.variant === 'catering') {
-        // A tinted, padded "page" with the app shell floating on it. The shell
-        // fills the padded viewport; the max width only gates very wide monitors.
+      // Pick the app: toolbar override wins, else the story's own default. It's a
+      // decorator, so none of this reaches the code panel.
+      const param = context.parameters?.demo as DemoParam | undefined
+      const picked = context.globals.demoApp as AppVariant | 'auto' | 'none' | undefined
+      const variant = !picked || picked === 'auto' ? (param?.variant ?? 'none') : picked
+
+      if (variant !== 'none') {
+        const { Shell, themeClass, defaultPage } = DEMO_APPS[variant]
+        // The example's page hint applies ONLY to its own default app; in any
+        // other app, fall back to that app's built-in default page.
+        const cfg = param && param.variant === variant ? param : defaultPage
+        // A tinted, padded "page" (--demo-page) with the app card floating on it.
         return (
-          <div className="flex min-h-screen justify-center bg-[#efe9df] p-6 dark:bg-neutral-950">
+          <div className={`demo-frame ${themeClass} flex min-h-screen justify-center p-6`}>
             <div className="h-[calc(100vh-3rem)] w-full max-w-[1760px]">
-              <DemoShell {...demo}>
+              <Shell section={cfg.section} title={cfg.title} description={cfg.description}>
                 <Story />
-              </DemoShell>
+              </Shell>
             </div>
             <Toaster />
           </div>

@@ -21,10 +21,10 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
-      variant: 'catering',
-      section: 'Customers',
-      title: 'Customer profile',
-      description: 'Contact details, emergency contacts, and saved categories.',
+      variant: 'dev',
+      section: 'Settings',
+      title: 'Account',
+      description: 'Your profile and notification preferences.',
     },
   },
 }

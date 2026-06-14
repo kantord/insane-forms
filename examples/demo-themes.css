@@ -1,0 +1,79 @@
+/*
+ * Demo-app themes — scoped token overrides so the SAME form example restyles to
+ * match whichever demo app frames it, with ZERO code changes in the example.
+ * Each `.theme-*` class re-points shadcn's CSS variables (primary, accent, ring,
+ * radius) + a `--demo-page` margin colour, for light AND dark. The shell chrome
+ * and the shadcn form components inside both read these tokens, so switching the
+ * app re-themes everything at once.
+ *
+ * Loaded AFTER globals.css (see .storybook/preview.tsx) so these equal-specificity
+ * rules win over the stock :root / .dark defaults.
+ */
+
+/* Self-hosted (no external link) — the dev console's monospace face. */
+@import "@fontsource-variable/jetbrains-mono";
+
+/* The padded "page" the app card floats on. */
+.demo-frame {
+  background: var(--demo-page);
+}
+
+/* ---------------- Catering — warm terracotta, medium radius ---------------- */
+.theme-catering {
+  --primary: oklch(0.44 0.13 52);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.44 0.13 52);
+  --accent: oklch(0.95 0.022 72);
+  --accent-foreground: oklch(0.32 0.08 50);
+  --radius: 0.625rem;
+  --demo-page: oklch(0.955 0.013 75);
+}
+.dark .theme-catering {
+  --primary: oklch(0.74 0.13 66);
+  --primary-foreground: oklch(0.2 0.03 56);
+  --ring: oklch(0.74 0.13 66);
+  --accent: oklch(0.27 0.025 60);
+  --accent-foreground: oklch(0.97 0.01 70);
+  --demo-page: oklch(0.16 0.006 60);
+}
+
+/* ---------------- Dev console — cool violet, tight radius ---------------- */
+.theme-dev {
+  --primary: oklch(0.45 0.17 280);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.45 0.17 280);
+  --accent: oklch(0.96 0.016 286);
+  --accent-foreground: oklch(0.34 0.1 280);
+  --radius: 0.375rem;
+  --demo-page: oklch(0.975 0.004 286);
+  /* Whole dev app (chrome + form) renders monospace — scoped token feeds the
+   * `font-sans` utility, no example code changes. */
+  --app-font: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+.dark .theme-dev {
+  --primary: oklch(0.7 0.16 286);
+  --primary-foreground: oklch(0.18 0.03 286);
+  --ring: oklch(0.7 0.16 286);
+  --accent: oklch(0.27 0.03 286);
+  --accent-foreground: oklch(0.97 0 0);
+  --demo-page: oklch(0.155 0.008 286);
+}
+
+/* ---------------- Store admin — emerald, large radius ---------------- */
+.theme-store {
+  --primary: oklch(0.45 0.11 162);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.45 0.11 162);
+  --accent: oklch(0.95 0.026 162);
+  --accent-foreground: oklch(0.3 0.07 160);
+  --radius: 0.875rem;
+  --demo-page: oklch(0.965 0.016 162);
+}
+.dark .theme-store {
+  --primary: oklch(0.72 0.12 162);
+  --primary-foreground: oklch(0.18 0.03 160);
+  --ring: oklch(0.72 0.12 162);
+  --accent: oklch(0.27 0.03 162);
+  --accent-foreground: oklch(0.97 0 0);
+  --demo-page: oklch(0.155 0.006 160);
+}

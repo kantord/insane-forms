@@ -19,10 +19,10 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
     demo: {
-      variant: 'catering',
-      section: 'Menus',
+      variant: 'store',
+      section: 'Products',
       title: 'Catalog',
-      description: 'Filter and sort the catering catalog.',
+      description: 'Filter and sort your products.',
     },
   },
   decorators: [

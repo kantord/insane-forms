@@ -61,23 +61,32 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
 - New display surface? It must consume one of these mechanisms — never an
   inline string.
 
-## Demo shell (story framing) + theme
+## Demo apps (story framing) + theming
 
-- `stories/demo-shell.tsx` is a fake catering client-portal (`DemoShell`),
-  applied as a DECORATOR via `parameters.demo`, so it frames a form but NEVER
-  reaches the code panel (the panel still shows only the render body). It is
-  pure chrome — no inputs of its own, so it can't collide with a story's a11y
-  queries; nav labels avoid every play's button regexes.
-- The frame is parametric: `parameters.demo.variant` is `'catering'` (full
-  portal, warm accents, padded tinted page; needs `section`/`title`/`description`)
-  or `'none'` (thin wrapper, stock shadcn). Static per story for now — NOT wired
-  to a UI control. Realistic stories use `catering`; low-level ones (Widgets,
-  Morph, Biomes) stay `none`/unwrapped.
-- Light/dark: a built-in `globalTypes.theme` toolbar toggles `.dark` on the
-  iframe root (no addon); shadcn tokens + Tailwind `dark:` variants do the rest.
-  The catering frame carries `dark:` variants; keep stock shadcn for `none`.
-- The a11y gate runs in the default (light) theme — contrast-check any custom
-  accents there (amber on tint already bit once).
+- `stories/demo-shell.tsx` holds THREE fake apps in `DEMO_APPS` (registry:
+  variant → `Shell` + `themeClass` + `defaultPage`): `catering` (warm sidebar
+  back-office), `dev` (cool violet tabbed console, monospace), `store` (emerald
+  top-bar admin). Applied as a DECORATOR (in `.storybook/preview.tsx`) via
+  `parameters.demo`, so chrome NEVER reaches the code panel. Pure chrome — no
+  inputs of their own (can't collide with a11y queries), responsive (md:
+  breakpoints), nav labels avoid every play's button regexes.
+- `parameters.demo` is `{ variant, section, title, description? }` or
+  `{ variant: 'none' }` (thin wrapper, stock shadcn — Widgets/Morph/Biomes).
+  The `section`/`title`/`description` is a HINT that applies ONLY when the active
+  app equals the example's own `variant`; in any OTHER app the shell shows that
+  app's `defaultPage`. So an example only authors page chrome for its default app.
+- Two toolbar globals (built-in, no addon; defaults in `initialGlobals`):
+  `theme` (light/dark → toggles `.dark` on the iframe root) and `demoApp`
+  (`auto` = use the story's own variant, or force one). Switching app/theme is
+  the user's; each story has a sensible default.
+- Theming is token-only (`examples/demo-themes.css`, loaded AFTER globals so the
+  equal-specificity `.theme-*` rules win): each app remaps `--primary`/`--accent`/
+  `--ring`/`--radius`/`--demo-page` (+ `--app-font`) for light AND dark. The form
+  examples read these tokens, so the SAME example restyles per app with ZERO
+  code changes. Fonts: `--font-sans` is `var(--app-font)` in globals (indirection
+  so a theme can swap it); all self-hosted via Fontsource (dev = JetBrains Mono).
+- The a11y gate runs in the default (light) theme — contrast-check custom
+  accents there (amber-on-tint bit once; semantic `--primary` avoids it).
 
 ## Changing these decisions
 
