@@ -9,6 +9,7 @@ import {
   useController,
   useFieldArray,
   useForm,
+  useWatch as useRhfWatch,
 } from 'react-hook-form'
 import type * as z from 'zod'
 import type { FormAdapter } from '../types'
@@ -51,6 +52,9 @@ export const reactHookFormAdapter: FormAdapter<RhfForm> = {
       append: (value) => fa.append(value as never),
       remove: (index) => fa.remove(index),
     }
+  },
+  useWatch(name) {
+    return useRhfWatch({ name })
   },
 }
 

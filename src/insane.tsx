@@ -420,6 +420,7 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
     }))
     return (
       <Wrap
+        name={p.name}
         label={resolveTitle(p.schema)}
         items={items}
         add={canAdd ? () => arr.append(opts.seed ? opts.seed() : seedFor(element)) : undefined}

@@ -8,15 +8,15 @@
 
 | metric | value |
 | --- | --- |
-| **Gzipped (what ships over the wire)** | **2525 bytes (~2.5 kB)** |
-| Minified | 5641 bytes (~5.5 kB) |
-| Compiled JavaScript (formatted) | 314 lines |
-| Runtime TypeScript source | 302 lines |
+| **Gzipped (what ships over the wire)** | **2544 bytes (~2.5 kB)** |
+| Minified | 5702 bytes (~5.6 kB) |
+| Compiled JavaScript (formatted) | 324 lines |
+| Runtime TypeScript source | 303 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
 `hidden` / `ZodForm` / `useZodForm`, the `resolve` introspection toolkit, and
-the URL-state codecs — in **2525 gzipped bytes** with **zero** runtime
+the URL-state codecs — in **2544 gzipped bytes** with **zero** runtime
 dependencies. Every `import` in the bundle is an externalized peer
 (`react`, `react-hook-form`, `zod`, `@hookform/resolvers`) that the host app
 already ships; nothing third-party is inlined.
@@ -25,19 +25,19 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 302 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 134 |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 303 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 136 |
 | [`src/index.ts`](src/index.ts) | public barrel | 24 |
-| **total** | | **460** |
+| **total** | | **463** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
-disappears at compile time. That is why the compiled JavaScript (314 lines)
-is *smaller* than the runtime TypeScript (302 lines) — type
+disappears at compile time. That is why the compiled JavaScript (324 lines)
+is *smaller* than the runtime TypeScript (303 lines) — type
 annotations and JSX collapse away.
 
-## Why 2525 gzipped bytes, not fewer
+## Why 2544 gzipped bytes, not fewer
 
-There is no filler to remove. 5641 minified bytes ÷ 314 lines ≈
+There is no filler to remove. 5702 minified bytes ÷ 324 lines ≈
 17 bytes of irreducible tokens per line — already 1-char
 identifiers and stripped whitespace. gzip then roughly halves that (the standard
 ~40–50% ratio for already-minified JS, which has little redundancy left to
@@ -52,7 +52,13 @@ The complete, formatted, browser-targeted production bundle (peers externalized)
 
 // src/adapters/react-hook-form.tsx
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import { FormProvider, useController, useFieldArray, useForm } from 'react-hook-form'
+import {
+  FormProvider,
+  useController,
+  useFieldArray,
+  useForm,
+  useWatch as useRhfWatch,
+} from 'react-hook-form'
 import { jsx } from 'react/jsx-runtime'
 var RhfProvider = ({ form, children }) => /* @__PURE__ */ jsx(FormProvider, { ...form, children })
 var reactHookFormAdapter = {
@@ -82,6 +88,9 @@ var reactHookFormAdapter = {
       append: (value) => fa.append(value),
       remove: (index) => fa.remove(index),
     }
+  },
+  useWatch(name) {
+    return useRhfWatch({ name })
   },
 }
 function useZodForm(schema, opts = {}) {
@@ -322,6 +331,7 @@ function list(element, opts = {}) {
       remove: canRemove ? () => arr.remove(i) : void 0,
     }))
     return /* @__PURE__ */ jsx3(Wrap, {
+      name: p.name,
       label: resolveTitle(p.schema),
       items,
       add: canAdd ? () => arr.append(opts.seed ? opts.seed() : seedFor(element)) : void 0,

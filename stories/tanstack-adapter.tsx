@@ -123,4 +123,9 @@ export const tanstackFormAdapter: FormAdapter<TForm> = {
       },
     }
   },
+
+  useWatch(name) {
+    const form = useFormInstance()
+    return useStore<TState, unknown>(form.store as never, (s) => getByPath(s.values, name))
+  },
 }

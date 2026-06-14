@@ -3,6 +3,7 @@
  * code, so swapping the bureau chrome for shadcn touches zero library lines. */
 
 import { XIcon } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -117,6 +118,37 @@ export const FieldSetList: CollectionWrapper = ({ label, items, add, header, foo
     </FieldGroup>
   </FieldSet>
 )
+
+/** A row counts as filled once any leaf holds a meaningful value (numbers and
+ *  booleans count as present; empty strings/objects/arrays do not). */
+const isBlank = (v: unknown): boolean =>
+  v == null ||
+  (typeof v === 'string' && v.trim() === '') ||
+  (Array.isArray(v) && v.every(isBlank)) ||
+  (typeof v === 'object' && Object.values(v).every(isBlank))
+
+/** Wraps any list wrapper so the list grows ITSELF: it keeps one empty trailing
+ *  row and appends a fresh one the instant the last row is filled (until .max).
+ *  Typing is the add, so the manual Add button is hidden. Engine-agnostic — it
+ *  observes the array through the adapter's `useWatch`, so it works unchanged
+ *  under react-hook-form, TanStack Form, or any other adapter. */
+export const autoAddList = (Inner: CollectionWrapper): CollectionWrapper =>
+  function AutoAddList(props) {
+    const rows = (insane.useAdapter().useWatch(props.name) as unknown[]) ?? []
+    const count = rows.length
+    const lastFilled = count > 0 && !isBlank(rows[count - 1])
+    const { add } = props
+    // `add` is a fresh closure each render, so guard on row count: append at most
+    // once per length (idempotent under re-renders and StrictMode double-fires).
+    const addedAt = useRef(-1)
+    useEffect(() => {
+      if (add && lastFilled && addedAt.current !== count) {
+        addedAt.current = count
+        add()
+      }
+    }, [add, lastFilled, count])
+    return <Inner {...props} add={undefined} />
+  }
 
 /* ---------- table chrome: rows as <tr>, leaves as bare cells. ----------
  * Column headers carry the labels, so the cell shell renders no label of its

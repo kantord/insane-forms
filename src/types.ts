@@ -169,6 +169,9 @@ export type CollectionItem = {
   remove?: () => void
 }
 export type CollectionProps = {
+  /** The array's field path — wrappers use it to label or OBSERVE the array
+   *  (e.g. an auto-add list watches its own last row via `useWatch`). */
+  name: string
   label?: string
   items: CollectionItem[]
   /** Absent when adding would violate maxItems. */
@@ -235,4 +238,7 @@ export type FormAdapter<Form = unknown> = {
   useField(name: string, seed: unknown): FieldBinding
   /** Bind one array by name (stable row ids guaranteed by the adapter). */
   useArray(name: string): ArrayBinding
+  /** Reactively read the value at `name` (whole subtree). Powers wrappers that
+   *  observe form state — auto-add lists, derived UI, live previews. */
+  useWatch(name: string): unknown
 }

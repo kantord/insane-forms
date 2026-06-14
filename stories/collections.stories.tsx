@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect } from 'storybook/test'
 import { Button } from '@/components/ui/button'
-import { FieldSetList, InputField } from '../examples/shadcn/fields'
+import { autoAddList, FieldSetList, InputField } from '../examples/shadcn/fields'
 import * as insane from '../src'
 import { demoSubmit } from './demo'
 
@@ -48,6 +48,43 @@ export const BoundedList: StoryObj = {
     await userEvent.click(canvas.getByRole('button', { name: /^add$/i }))
     await expect(canvas.queryByRole('button', { name: /^add$/i })).not.toBeInTheDocument()
     await expect(canvas.getAllByRole('button', { name: /remove/i })).toHaveLength(3)
+  },
+}
+
+export const AutoGrowingList: StoryObj = {
+  name: 'Auto-growing list',
+  render: () => {
+    // No manual Add: the list keeps one empty trailing row and grows as you
+    // type. Rows are single-field groups (RHF's useFieldArray expects objects).
+    const Item = insane.group({
+      text: InputField.meta({ title: 'Item', placeholder: 'Add an item…' }),
+    })
+    const schema = insane.group({
+      items: insane
+        .list(Item, { wrapper: autoAddList(FieldSetList) })
+        .max(6)
+        .meta({ title: 'Shopping list' }),
+    })
+    return (
+      <insane.ZodForm
+        schema={schema}
+        className="flex flex-col gap-6"
+        defaults={{ items: [{}] }}
+        onSubmit={demoSubmit}
+      >
+        <Button type="submit" className="self-start">
+          Save list
+        </Button>
+      </insane.ZodForm>
+    )
+  },
+  // One empty row to start; typing into the last row appends a fresh one.
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getAllByLabelText(/item/i)).toHaveLength(1)
+    await userEvent.type(canvas.getAllByLabelText(/item/i)[0], 'Milk')
+    await expect(canvas.getAllByLabelText(/item/i)).toHaveLength(2)
+    await userEvent.type(canvas.getAllByLabelText(/item/i)[1], 'Eggs')
+    await expect(canvas.getAllByLabelText(/item/i)).toHaveLength(3)
   },
 }
 
