@@ -1,7 +1,6 @@
 'use client'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 /**
- * insane — schema-driven forms on plain Zod + React Hook Form.
+ * insane — schema-driven forms on plain Zod, engine-agnostic.
  *
  *  - Plain Zod schemas carry their renderer in `.meta({ component })`; no Proxy, no fusion.
  *  - Matchless rendering: each node invokes its own renderer; React does all traversal.
@@ -13,9 +12,11 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
  *  - undefined appears only where absence IS the information (no title, no error,
  *    no component). Where a total default exists, the API returns it instead
  *    (bounds → 0/Infinity, wrapper predicates → booleans).
- *  - Engine note: React Hook Form is deliberately hard-bound for v1, confined to three
- *    call sites (leaf → useController, list → useFieldArray, useZodForm → useForm).
- *    FieldProps is OUR consumer-driven contract — widgets and shells never see RHF.
+ *  - Engine-agnostic: the form library lives behind a FormAdapter port (./types),
+ *    confined to three render seams (leaf → useField, list → useArray, host → useForm).
+ *    The active adapter is read from context (useAdapter); the core imports NO engine.
+ *    react-hook-form is the default adapter; a tanstack-form adapter ships alongside.
+ *    FieldProps is OUR consumer-driven contract — widgets and shells never see the engine.
  *
  * Terminology:
  *  - default — Zod's `.default(v)`. Data layer. Fills omitted values at parse time AND
@@ -28,19 +29,13 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
  */
 import type * as React from 'react'
 import { Fragment, isValidElement, type ReactElement, type ReactNode, useEffect } from 'react'
-import {
-  type DeepPartial,
-  FormProvider,
-  type UseFormProps,
-  useController,
-  useFieldArray,
-  useForm,
-} from 'react-hook-form'
 import * as z from 'zod'
+import { useAdapter } from './context'
 import type {
   CollectionItem,
   CollectionWrapper,
   CurriedGuard,
+  DeepPartial,
   Def,
   FieldGroup,
   FieldMeta,
@@ -241,21 +236,20 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
   const ShellC = spec.shell ?? BareShell
   const widget = spec.widget as Widget<unknown>
   const Leaf = (p: NodeProps) => {
-    const { field: f, fieldState } = useController({
-      name: p.name,
-      // per-field draft seeding: declared .default() wins, else the explicit initial
-      defaultValue: resolveDefault(p.schema) ?? spec.initial,
-    })
+    // per-field draft seeding: declared .default() wins, else the explicit initial.
+    // Computed engine-neutrally and handed to the adapter's leaf binding.
+    const seed = resolveDefault(p.schema) ?? spec.initial
+    const binding = useAdapter().useField(p.name, seed)
     /* Flattening the engine's nested state into FieldProps is the seam, not an
-     * accident: widgets/shells get insane's flat contract and never import RHF. */
+     * accident: widgets/shells get insane's flat contract and never import the engine. */
     const props: FieldProps<unknown> = {
       name: p.name,
-      value: f.value,
-      onChange: f.onChange,
-      onBlur: f.onBlur,
+      value: binding.value,
+      onChange: binding.onChange,
+      onBlur: binding.onBlur,
       label: resolveTitle(p.schema),
       description: resolveDescription(p.schema),
-      error: fieldState.error?.message,
+      error: binding.error,
       required: p.required,
       readonly: p.readonly,
     }
@@ -398,7 +392,7 @@ export const boundsOf = (arr: z.ZodType): { min: number; max: number } => {
   return { min, max }
 }
 
-/** Append seed: useFieldArray.append needs SOME row value. The element's declared
+/** Append seed: the array's append needs SOME row value. The element's declared
  *  .default() if any, else a bare row whose leaves then self-seed on mount. */
 const seedFor = (element: z.ZodType): unknown =>
   resolveDefault(element) ?? (def(resolveInner(element)).type === 'object' ? {} : undefined)
@@ -415,24 +409,20 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
     )
   const Wrap = opts.wrapper ?? BareItems
   const ListRenderer = (p: NodeProps) => {
-    const fa = useFieldArray({ name: p.name })
+    const arr = useAdapter().useArray(p.name)
     const { min, max } = boundsOf(p.inner)
-    const canAdd = fa.fields.length < max
-    const canRemove = fa.fields.length > min
-    const items: CollectionItem[] = fa.fields.map((f, i) => ({
-      key: f.id, // stable identity — never the index
+    const canAdd = arr.rows.length < max
+    const canRemove = arr.rows.length > min
+    const items: CollectionItem[] = arr.rows.map((row, i) => ({
+      key: row.id, // stable identity — never the index
       node: <Render schema={element} name={`${p.name}.${i}`} />,
-      remove: canRemove ? () => fa.remove(i) : undefined,
+      remove: canRemove ? () => arr.remove(i) : undefined,
     }))
     return (
       <Wrap
         label={resolveTitle(p.schema)}
         items={items}
-        add={
-          canAdd
-            ? () => fa.append((opts.seed ? opts.seed() : seedFor(element)) as never)
-            : undefined
-        }
+        add={canAdd ? () => arr.append(opts.seed ? opts.seed() : seedFor(element)) : undefined}
         header={opts.header}
         footer={opts.footer}
       />
@@ -443,27 +433,11 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
 
 /* ------------------------------------------------------------------ */
 /* Host. The schema stays a live, composable Zod value — it is passed  */
-/* as a PROP, never wrapped or consumed. The hook is the real API:     */
-/* RHF's config surface (mode, reset, programmatic submit…) exists for */
-/* good reasons, so it passes through untouched. The component is the  */
-/* 90%-case sugar over it, rendering NO chrome of its own.             */
+/* as a PROP, never wrapped or consumed. ZodForm reads the active form  */
+/* adapter from context, creates the instance, provides it, and renders */
+/* NO chrome of its own. The RHF-specific `useZodForm` escape hatch     */
+/* (react-hook-form's own methods) lives in that adapter's module.      */
 /* ------------------------------------------------------------------ */
-
-export function useZodForm<S extends z.ZodType>(
-  schema: S,
-  opts: { defaults?: DeepPartial<z.input<S>> & object } & Omit<
-    UseFormProps<Record<string, unknown>>,
-    'resolver' | 'defaultValues'
-  > = {},
-) {
-  const { defaults, ...rest } = opts
-  return useForm({
-    resolver: standardSchemaResolver(schema as never),
-    defaultValues: defaults as never,
-    shouldUnregister: false, // pinned: hidden/passthrough values must survive
-    ...rest,
-  })
-}
 
 export function ZodForm<S extends z.ZodType>({
   schema,
@@ -480,17 +454,19 @@ export function ZodForm<S extends z.ZodType>({
   /** Forwarded to the <form> element — layout belongs to the consumer. */
   className?: string
 }) {
-  const methods = useZodForm(schema, { defaults })
+  const adapter = useAdapter()
+  const form = adapter.useForm(schema, { defaults })
+  const Provider = adapter.Provider
   return (
-    <FormProvider {...methods}>
+    <Provider form={form}>
       <form
         className={className}
-        onSubmit={methods.handleSubmit((d) => onSubmit(d as z.output<S>))}
+        onSubmit={adapter.onSubmit(form, (d) => onSubmit(d as z.output<S>))}
       >
         <Render schema={schema} name="" />
         {children}
       </form>
-    </FormProvider>
+    </Provider>
   )
 }
 

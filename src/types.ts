@@ -186,3 +186,53 @@ export type ListOpts = {
    *  declared .default(), else a bare row whose leaves self-seed on mount. */
   seed?: () => unknown
 }
+
+/* ------------------------------------------------------------------ */
+/* Form-engine adapter port. The ONE engine-specific surface — exactly */
+/* one implementation per form library (react-hook-form, tanstack-form */
+/* …). The core imports no engine; it reads the active adapter from     */
+/* context. Both libraries reduce to the same three render seams.       */
+/* ------------------------------------------------------------------ */
+
+/** Local DeepPartial so the core needn't import a form library for a type. */
+export type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
+
+/** Per-field binding the leaf renderer needs from the engine — the shape both
+ *  RHF's useController and a TanStack field reduce to. */
+export type FieldBinding = {
+  value: unknown
+  onChange: (v: unknown) => void
+  onBlur: () => void
+  error?: string
+}
+
+/** One array row's STABLE identity (stable across reorders). RHF gives
+ *  `field.id`; the TanStack adapter must synthesize one, since TanStack keys
+ *  array items by index. */
+export type ArrayRow = { id: string }
+
+/** Array operations the list renderer needs; bounds/gating stay in the core. */
+export type ArrayBinding = {
+  rows: ArrayRow[]
+  append: (value: unknown) => void
+  remove: (index: number) => void
+}
+
+/**
+ * The port. Everything engine-specific lives behind these members; the core
+ * reads the active adapter from context (`useAdapter`) and never imports a
+ * form library. Members named `useX` are React hooks — called unconditionally
+ * during render, so hook order stays stable.
+ */
+export type FormAdapter<Form = unknown> = {
+  /** Create the form instance from a Standard-Schema + resolved defaults. */
+  useForm(schema: z.ZodType, opts: { defaults?: unknown }): Form
+  /** Make the instance available to nested field/array bindings below. */
+  Provider: React.ComponentType<{ form: Form; children: ReactNode }>
+  /** Wrap a valid-submit callback as a DOM <form> onSubmit handler. */
+  onSubmit(form: Form, valid: (data: unknown) => void): React.ComponentProps<'form'>['onSubmit']
+  /** Bind one leaf by name; `seed` is the core-resolved per-field default. */
+  useField(name: string, seed: unknown): FieldBinding
+  /** Bind one array by name (stable row ids guaranteed by the adapter). */
+  useArray(name: string): ArrayBinding
+}
