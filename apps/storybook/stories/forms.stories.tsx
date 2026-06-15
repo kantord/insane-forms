@@ -2,7 +2,7 @@ import {
   CheckboxField,
   FieldSetList,
   InputField,
-  selectField,
+  SelectField,
   TextareaField,
 } from '@insane-forms/examples/fields'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
@@ -54,7 +54,7 @@ export const Profile: StoryObj = {
       ),
       <FieldSeparator />,
       insane.wrap(FieldSet, <FieldLegend>Notifications</FieldLegend>, {
-        frequency: selectField(
+        frequency: SelectField(
           z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
             title: 'Email frequency',
           }),

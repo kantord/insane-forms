@@ -1,4 +1,4 @@
-import { cellNumber, cellText, tableList } from '@insane-forms/examples/fields'
+import { CellNumber, CellText, tableList } from '@insane-forms/examples/fields'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
@@ -28,11 +28,11 @@ export const InvoiceLineItems: StoryObj = {
   name: 'Invoice line items',
   render: () => {
     const LineItem = insane.group({
-      description: cellText(
+      description: CellText(
         z.string().min(1).meta({ title: 'Description', placeholder: 'Design work' }),
       ),
-      quantity: cellNumber(z.number().int().min(1).default(1).meta({ title: 'Qty' })),
-      unitPrice: cellNumber(z.number().min(0).default(0).meta({ title: 'Unit price' })),
+      quantity: CellNumber(z.number().int().min(1).default(1).meta({ title: 'Qty' })),
+      unitPrice: CellNumber(z.number().min(0).default(0).meta({ title: 'Unit price' })),
     })
     const schema = insane.group({
       lineItems: insane

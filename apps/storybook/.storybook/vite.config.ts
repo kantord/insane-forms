@@ -2,11 +2,12 @@ import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { codePanelPlugin } from './code-panel.plugin'
 
 const root = path.resolve(import.meta.dirname, '../../..')
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), codePanelPlugin()],
   // The storybook vitest project roots at apps/storybook, but node_modules and
   // the workspace packages live at the monorepo root — allow serving from there.
   server: { fs: { allow: [root] } },

@@ -1,5 +1,8 @@
+// Build-time Shiki-highlighted code per story (file basename → story name → HTML).
+import codeMap from 'virtual:insane-code-panel'
 import type { Preview } from '@storybook/react-vite'
-import { emitTransformCode, useEffect } from 'storybook/preview-api'
+import { emitTransformCode, useChannel, useEffect } from 'storybook/preview-api'
+import { CODE_PANEL_EVENT, type CodePanelPayload } from './code-panel.shared'
 /* Pure shadcn/ui default theme — the docs-page (bureau) styling is deliberately
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 // Relative (not the @ alias) so Tailwind anchors its @source globs to the real
@@ -85,14 +88,30 @@ type SourceContext = { name?: unknown; parameters?: { fileName?: unknown } }
 const showRenderBody = (code: string, ctx?: SourceContext): string =>
   renderBodyFromFile(ctx?.parameters?.fileName, ctx?.name) ?? renderBodyFromCode(code)
 
+/** Look up this story's pre-highlighted HTML (built at build time by the
+ * code-panel Vite plugin), keyed by source file basename + display name. */
+const codeForStory = (ctx: {
+  name?: unknown
+  parameters?: { fileName?: unknown }
+}): CodePanelPayload => {
+  const file = typeof ctx.parameters?.fileName === 'string' ? ctx.parameters.fileName : undefined
+  const base = file?.split('/').pop()
+  const name = typeof ctx.name === 'string' ? ctx.name : undefined
+  return { html: (base && name && codeMap[base]?.[name]) || null }
+}
+
 const preview: Preview = {
   parameters: {
     layout: 'padded',
     docs: {
-      // Built-in code panel below the canvas — the schema IS the story, show it.
-      codePanel: true,
+      // Our custom build-time-highlighted "Code" panel replaces the built-in
+      // canvas code panel; the Docs tab still renders source via `source` below.
+      codePanel: false,
       source: { type: 'code', transform: showRenderBody },
     },
+    // Trim the noise panels — these examples are schema-driven, not arg-driven.
+    controls: { disable: true },
+    actions: { disable: true },
     // Axe checks run per story; 'error' makes violations FAIL the vitest run,
     // so a11y regressions in shells/widgets gate ci like any other test.
     a11y: { test: 'error' },
@@ -146,6 +165,13 @@ const preview: Preview = {
   tags: ['autodocs'],
   decorators: [
     (Story, context) => {
+      // Send this story's build-time-highlighted HTML to our custom Code panel
+      // (it lives in the manager, so the HTML crosses over the channel). Emitted
+      // on every render, so switching story/theme keeps the panel in sync.
+      const emitCode = useChannel({})
+      useEffect(() => {
+        emitCode(CODE_PANEL_EVENT, codeForStory(context))
+      })
       // With source.type 'code' the react jsxDecorator skips snippet emission,
       // so the canvas Code panel would show the raw CSF object. Emit the
       // transformed source ourselves so the panel matches the docs page.

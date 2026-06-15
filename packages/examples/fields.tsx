@@ -195,12 +195,12 @@ const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: st
   />
 )
 
-export const cellText = insane.field({
+export const CellText = insane.field({
   widget: CellTextWidget,
   shell: CellShell,
   props: fieldExtras,
 })
-export const cellNumber = insane.field({
+export const CellNumber = insane.field({
   widget: CellNumberWidget,
   shell: CellShell,
   props: fieldExtras,
@@ -399,7 +399,7 @@ export const CheckboxField = insane.field({
   widget: CheckWidget,
   shell: CheckboxFieldShell,
 })
-export const selectField = insane.field({
+export const SelectField = insane.field({
   widget: SelectWidget,
   shell: FieldShell,
   props: enumOptions,
@@ -566,12 +566,12 @@ export const SwitchField = insane.field({
   widget: SwitchWidget,
   shell: CheckboxFieldShell,
 })
-export const radioField = insane.field({
+export const RadioField = insane.field({
   widget: RadioWidget,
   shell: GroupShell,
   props: enumOptions,
 })
-export const toggleGroupField = insane.field({
+export const ToggleGroupField = insane.field({
   widget: ToggleGroupWidget,
   shell: GroupShell,
   props: arrayEnumOptions,
@@ -582,7 +582,7 @@ export const SliderField = insane.field({
   shell: GroupShell,
   props: numberBounds, // exposes {min,max} from .min()/.max()
 })
-export const nativeSelectField = insane.field({
+export const NativeSelectField = insane.field({
   widget: NativeSelectWidget,
   shell: FieldShell,
   props: enumOptions,

@@ -2,16 +2,16 @@ import {
   CheckboxField,
   DateField,
   InputField,
+  NativeSelectField,
   NumberField,
-  nativeSelectField,
   OtpField,
-  radioField,
+  RadioField,
   SearchField,
+  SelectField,
   SliderField,
   SwitchField,
-  selectField,
   TextareaField,
-  toggleGroupField,
+  ToggleGroupField,
 } from '@insane-forms/examples/fields'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -24,6 +24,8 @@ import { demoSubmit } from './demo'
 
 /* Each widget in isolation, inside a one-field live form. Submit to see the
  * parsed z.output as a toast; submit empty to see the validation path. */
+/* @code-panel:field-definition — the code panel shows each featured field's
+ * insane.field() definition + the example schema, not the form boilerplate. */
 const meta: Meta = {
   title: 'Integration examples/Base widgets',
   tags: ['ai-generated'],
@@ -155,7 +157,7 @@ export const Checkbox: StoryObj = {
 export const Select: StoryObj = {
   render: () => {
     const schema = insane.group({
-      language: selectField(
+      language: SelectField(
         z.enum(['English', 'French', 'German', 'Spanish']).default('English').meta({
           title: 'Language',
           description: 'Options come from the enum — nothing is declared twice.',
@@ -220,11 +222,11 @@ export const SearchInput: StoryObj = {
   },
 }
 
-export const NativeSelectField: StoryObj = {
+export const NativeSelect: StoryObj = {
   name: 'Native select',
   render: () => {
     const schema = insane.group({
-      tier: nativeSelectField(
+      tier: NativeSelectField(
         z.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({ title: 'Plan tier' }),
       ),
     })
@@ -241,7 +243,7 @@ export const NativeSelectField: StoryObj = {
 export const Radio: StoryObj = {
   render: () => {
     const schema = insane.group({
-      plan: radioField(
+      plan: RadioField(
         z.enum(['Monthly', 'Yearly', 'Lifetime']).default('Yearly').meta({
           title: 'Billing plan',
           description: 'Switch any time.',
@@ -305,7 +307,7 @@ export const ToggleGroupControl: StoryObj = {
   render: () => {
     // Toggle groups are multi-select: an array of the chosen options.
     const schema = insane.group({
-      days: toggleGroupField(
+      days: ToggleGroupField(
         z
           .array(z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']))
           .default(['Mon', 'Wed'])

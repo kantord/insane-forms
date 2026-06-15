@@ -79,10 +79,14 @@ Build/dev/test configs are per-app; typecheck/lint/measure are root-orchestrated
   wrappers (`ZodForm`/`useZodForm`, the TanStack adapter) are USERLAND examples
   in `packages/examples` — shown, not shipped. The published entry is core-only
   (single tsdown entry; no engine subpath).
-- shadcn bindings are named `<Component>Field` (`InputField`, `CheckboxField`,
-  curried `selectField`) and live in `packages/examples/fields.tsx`; the
-  UNCHANGED shadcn components stay CLI-managed under `packages/ui/components`
-  (lint-excluded, vendored) and are imported via the `@/` alias.
+- Field bindings are PascalCase `<Component>Field` (`InputField`, `CheckboxField`,
+  `SelectField`, `NativeSelectField`, `CellText`…) and live in
+  `packages/examples/fields.tsx`. PascalCase is deliberate: every `insane.field()`
+  result is named like a component so it reads as a FIELD, not a plain Zod parser
+  (`z.string()`). Collection helpers/factories (`tableList`, `autoAddList`,
+  `FieldSetList`) are NOT fields and keep their own naming. The UNCHANGED shadcn
+  components stay CLI-managed under `packages/ui/components` (lint-excluded,
+  vendored) and are imported via the `@/` alias.
 - No external network requests from any shipped page (fonts self-hosted).
 
 ## Changing these decisions

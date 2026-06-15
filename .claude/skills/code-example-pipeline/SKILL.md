@@ -24,12 +24,28 @@ from a real, compiled, tested module — so docs cannot drift from working code.
   runtime ships ONLY `ShikiMagicMovePrecompiled` — verify zero Shiki in the
   bundle (no `oniguruma`/`grammar` strings in dist). The only allowed display
   transform is identifier renaming (`export const StepN` → `const Profile`).
-- **Storybook code panels**: `apps/storybook/.storybook/preview.tsx` shows each story's
-  render body VERBATIM from the raw file (`import.meta.glob(..., ?raw)`,
-  brace-balanced extraction) — because Storybook's `originalSource` is an AST
-  re-print that drops blank lines. The canvas Code panel additionally needs
-  the `emitTransformCode` decorator (the React renderer skips snippet emission
-  for `source.type: 'code'`).
+- **Storybook code panel (custom, default)**: a CUSTOM "Code" panel
+  (`apps/storybook/.storybook/manager.tsx`) replaces the built-in one and is the
+  default selected panel (`addons.setConfig({ selectedPanel })`); Controls/Actions
+  are disabled (`parameters.controls/actions: { disable: true }`). Its content is
+  highlighted at BUILD TIME by a Vite plugin (`code-panel.plugin.ts`) — same
+  zero-runtime-Shiki rule as the landing page — into a virtual module
+  (`virtual:insane-code-panel`, typed in `code-panel.d.ts`), keyed file basename →
+  story display name → HTML. The preview looks up the current story's HTML and
+  sends it to the manager over the channel (`code-panel.shared.ts` constants); the
+  manager renders it with `dangerouslySetInnerHTML`. The Docs tab still renders
+  source via the `docs.source` transform + `emitTransformCode` decorator.
+  - TWO gotchas, both from the manager running its OWN React 18 (separate from the
+    workspace React 19): in `manager.tsx` build elements with
+    `React.createElement` (NO JSX — JSX compiles to React 19's jsx-runtime, whose
+    elements React 18 can't render → "addon has errors"), and use Storybook's
+    hooks from `storybook/manager-api` (`useAddonState`/`useChannel`), never
+    React's hooks.
+  - The plugin slices each story's render body (brace-balanced from the raw file).
+    Files marked `@code-panel:field-definition` (the Base widgets) get a different
+    view: each featured `insane.field()` binding's definition (sliced from the real
+    `fields.tsx`) + the example schema, with the `return (<form…>)` boilerplate
+    dropped — "how the field is built" is the lesson there, not the wrapper.
 
 ## Code annotations (hover explanations)
 
@@ -50,9 +66,11 @@ decorations). The e2e suite asserts notes exist and `@note` never leaks.
 - Biome formats everything (`pnpm run format`); the verbatim pipeline means
   formatting on disk IS the formatting users see. Blank-line segmentation is
   deliberate and load-bearing.
-- Stories are written as `render: () => { …schema… return <ZodForm…> }` —
-  the panel shows exactly that body. Keep the interesting part inline; hide
-  boring plumbing behind one honest import from `apps/storybook/stories/demo.tsx`
+- Stories are written as `render: () => { …schema… return <ZodForm…> }` — the
+  panel shows that body verbatim (EXCEPT in `@code-panel:field-definition` files,
+  where it shows the binding definition + schema and drops the `return` JSX; see
+  the pipeline section). Keep the interesting part inline; hide boring plumbing
+  behind one honest import from `apps/storybook/stories/demo.tsx`
   (`demoSubmit`, fixtures, `ProductTable`). NOTE: `ZodForm` is a USERLAND form
   wrapper imported from `@insane-forms/examples/react-hook-form` (an engine binding shown, not
   shipped) — the core publishes no form component. The core surface is the

@@ -1,4 +1,4 @@
-import { CheckboxField, SearchField, selectField } from '@insane-forms/examples/fields'
+import { CheckboxField, SearchField, SelectField } from '@insane-forms/examples/fields'
 import { reactHookFormEngine, useZodForm, ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
@@ -46,7 +46,7 @@ export const ProductFilters: StoryObj = {
 
     const schema = insane.group({
       q: SearchField.default('').meta({ title: 'Search', placeholder: 'Search products…' }),
-      category: selectField(
+      category: SelectField(
         z.enum(['All', 'Audio', 'Video', 'Accessories']).default('All').meta({ title: 'Category' }),
       ),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
@@ -86,7 +86,7 @@ export const FilteredCatalog: StoryObj = {
   render: () => {
     const schema = insane.group({
       q: SearchField.default('').meta({ title: 'Search', placeholder: 'Filter products…' }),
-      sort: selectField(z.enum(['name', 'price']).default('name').meta({ title: 'Sort by' })),
+      sort: SelectField(z.enum(['name', 'price']).default('name').meta({ title: 'Sort by' })),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
     })
 

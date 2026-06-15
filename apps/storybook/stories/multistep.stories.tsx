@@ -1,4 +1,4 @@
-import { CheckboxField, InputField, selectField } from '@insane-forms/examples/fields'
+import { CheckboxField, InputField, SelectField } from '@insane-forms/examples/fields'
 import { reactHookFormEngine, useZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
@@ -44,7 +44,7 @@ const Shipping = insane.group({
 })
 
 const Preferences = insane.group({
-  frequency: selectField(
+  frequency: SelectField(
     z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
       title: 'Email frequency',
     }),
