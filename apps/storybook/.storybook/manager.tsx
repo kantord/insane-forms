@@ -1,7 +1,13 @@
 import * as React from 'react'
 import { AddonPanel } from 'storybook/internal/components'
 import { addons, types, useAddonState, useChannel } from 'storybook/manager-api'
-import { ADDON_ID, CODE_PANEL_EVENT, type CodePanelPayload, PANEL_ID } from './code-panel.shared'
+import {
+  ADDON_ID,
+  CODE_PANEL_EVENT,
+  CODE_PANEL_REQUEST,
+  type CodePanelPayload,
+  PANEL_ID,
+} from './code-panel.shared'
 
 // The Storybook manager runs its OWN React (18), which the manager builder
 // externalizes `react` to. We must create elements with that React — JSX here
@@ -14,7 +20,15 @@ const h = React.createElement
  * only CSS we need is panel layout. */
 const CodePanel = ({ active }: { active: boolean }) => {
   const [html, setHtml] = useAddonState<string | null>(ADDON_ID, null)
-  useChannel({ [CODE_PANEL_EVENT]: (payload: CodePanelPayload) => setHtml(payload.html) })
+  const emit = useChannel({
+    [CODE_PANEL_EVENT]: (payload: CodePanelPayload) => setHtml(payload.html),
+  })
+  // The panel can mount after the first render (collapsed panel, narrow
+  // viewport) — ask the preview to re-send the current story's code on mount.
+  // React.useEffect (not the react-jsx runtime) uses the manager's own React.
+  React.useEffect(() => {
+    emit(CODE_PANEL_REQUEST)
+  }, [emit])
 
   const body = h(
     'div',

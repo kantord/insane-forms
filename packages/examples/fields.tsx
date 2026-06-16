@@ -262,145 +262,137 @@ export const tableList =
     </FieldSet>
   )
 
-/* ---------- 2. Widgets: plain render functions over shadcn components. ---------- */
-
-const TextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
-  <Input
-    id={p.name}
-    name={p.name}
-    value={p.value ?? ''}
-    placeholder={p.placeholder}
-    aria-invalid={p.error !== undefined || undefined}
-    readOnly={p.readonly}
-    onChange={(e) => p.onChange(e.target.value)}
-    onBlur={p.onBlur}
-  />
-)
-
-const TextareaWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
-  <Textarea
-    id={p.name}
-    name={p.name}
-    value={p.value ?? ''}
-    placeholder={p.placeholder}
-    aria-invalid={p.error !== undefined || undefined}
-    readOnly={p.readonly}
-    onChange={(e) => p.onChange(e.target.value)}
-    onBlur={p.onBlur}
-  />
-)
-
-const NumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
-  <Input
-    id={p.name}
-    name={p.name}
-    type="number"
-    value={p.value ?? ''}
-    placeholder={p.placeholder}
-    aria-invalid={p.error !== undefined || undefined}
-    onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-    onBlur={p.onBlur}
-  />
-)
-
-/* Search input: leading magnifier, and a clear (✕) button once there's a value
- * — clearing is just onChange(''). The native search clear is hidden so there's
- * one consistent control. */
-const SearchWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
-  <div className="relative">
-    <SearchIcon
-      className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
-      aria-hidden="true"
-    />
-    <Input
-      id={p.name}
-      name={p.name}
-      type="search"
-      value={p.value ?? ''}
-      placeholder={p.placeholder}
-      className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
-      aria-invalid={p.error !== undefined || undefined}
-      onChange={(e) => p.onChange(e.target.value)}
-      onBlur={p.onBlur}
-    />
-    {p.value ? (
-      <button
-        type="button"
-        aria-label="Clear search"
-        onClick={() => p.onChange('')}
-        className="-translate-y-1/2 absolute top-1/2 right-1.5 rounded-sm p-1 text-muted-foreground hover:text-foreground"
-      >
-        <XIcon className="size-4" />
-      </button>
-    ) : null}
-  </div>
-)
-
-/* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
-const CheckWidget = (p: FieldProps<boolean>) => (
-  <Checkbox
-    id={p.name}
-    name={p.name}
-    checked={p.value}
-    aria-invalid={p.error !== undefined || undefined}
-    onCheckedChange={(checked) => p.onChange(checked === true)}
-  />
-)
-
-/* Strict select: schema must carry .default(v). Options come from the schema via
- * the `props` mapper — same mechanism as the bureau example. */
-const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
-  <Select value={p.value} onValueChange={(v) => p.onChange(v as string)}>
-    <SelectTrigger id={p.name}>
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      {p.options?.map((o) => (
-        <SelectItem key={o} value={o}>
-          {o}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-)
+/* ---------- 2. Bound fields: each insane.field() inlines its widget — the
+ * arrow that maps the field's draft value onto a shadcn control. Shells and the
+ * schema→props mappers stay shared (cross-cutting). ---------- */
 
 const enumOptions = (s: z.ZodType) => ({
   options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
 })
 
-/* ---------- 3. Bound fields: same shapes as the bureau example. ---------- */
-
 export const InputField = insane.field({
   schema: z.string(),
-  widget: TextWidget,
+  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+    <Input
+      id={p.name}
+      name={p.name}
+      value={p.value ?? ''}
+      placeholder={p.placeholder}
+      aria-invalid={p.error !== undefined || undefined}
+      readOnly={p.readonly}
+      onChange={(e) => p.onChange(e.target.value)}
+      onBlur={p.onBlur}
+    />
+  ),
   shell: FieldShell,
   props: fieldExtras,
 })
+
+/* Search input: leading magnifier + a clear (✕) button once there's a value
+ * (clearing is just onChange('')); the native search clear is hidden. */
 export const SearchField = insane.field({
   schema: z.string(),
-  widget: SearchWidget,
+  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+    <div className="relative">
+      <SearchIcon
+        className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
+        aria-hidden="true"
+      />
+      <Input
+        id={p.name}
+        name={p.name}
+        type="search"
+        value={p.value ?? ''}
+        placeholder={p.placeholder}
+        className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
+        aria-invalid={p.error !== undefined || undefined}
+        onChange={(e) => p.onChange(e.target.value)}
+        onBlur={p.onBlur}
+      />
+      {p.value ? (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => p.onChange('')}
+          className="-translate-y-1/2 absolute top-1/2 right-1.5 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+        >
+          <XIcon className="size-4" />
+        </button>
+      ) : null}
+    </div>
+  ),
   shell: FieldShell,
   props: fieldExtras,
 })
+
 export const TextareaField = insane.field({
   schema: z.string(),
-  widget: TextareaWidget,
+  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+    <Textarea
+      id={p.name}
+      name={p.name}
+      value={p.value ?? ''}
+      placeholder={p.placeholder}
+      aria-invalid={p.error !== undefined || undefined}
+      readOnly={p.readonly}
+      onChange={(e) => p.onChange(e.target.value)}
+      onBlur={p.onBlur}
+    />
+  ),
   shell: FieldShell,
   props: fieldExtras,
 })
+
 export const NumberField = insane.field({
   schema: z.number(),
-  widget: NumberWidget,
+  widget: (p: FieldProps<number | undefined> & { placeholder?: string }) => (
+    <Input
+      id={p.name}
+      name={p.name}
+      type="number"
+      value={p.value ?? ''}
+      placeholder={p.placeholder}
+      aria-invalid={p.error !== undefined || undefined}
+      onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+      onBlur={p.onBlur}
+    />
+  ),
   shell: FieldShell,
   props: fieldExtras,
 })
+
+/* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
 export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
-  widget: CheckWidget,
+  widget: (p: FieldProps<boolean>) => (
+    <Checkbox
+      id={p.name}
+      name={p.name}
+      checked={p.value}
+      aria-invalid={p.error !== undefined || undefined}
+      onCheckedChange={(checked) => p.onChange(checked === true)}
+    />
+  ),
   shell: CheckboxFieldShell,
 })
+
+/* Strict select: schema must carry .default(v). Options come from the schema via
+ * the `props` mapper. */
 export const SelectField = insane.field({
-  widget: SelectWidget,
+  widget: (p: FieldProps<string> & { options?: readonly string[] }) => (
+    <Select value={p.value} onValueChange={(v) => p.onChange(v as string)}>
+      <SelectTrigger id={p.name}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {p.options?.map((o) => (
+          <SelectItem key={o} value={o}>
+            {o}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ),
   shell: FieldShell,
   props: enumOptions,
 })
@@ -424,108 +416,6 @@ const GroupShell: Shell = ({ name, label, description, required, error, children
     {description !== undefined && <FieldDescription>{description}</FieldDescription>}
     {error !== undefined && <FieldError errors={[{ message: error }]} />}
   </FieldSet>
-)
-
-/* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
-const SwitchWidget = (p: FieldProps<boolean>) => (
-  <Switch
-    id={p.name}
-    name={p.name}
-    checked={p.value}
-    aria-invalid={p.error !== undefined || undefined}
-    onCheckedChange={(checked) => p.onChange(checked)}
-  />
-)
-
-/* Radio group — single choice; options come from the enum via the props mapper. */
-const RadioWidget = (p: FieldProps<string | undefined> & { options?: readonly string[] }) => (
-  <RadioGroup
-    value={p.value ?? null}
-    aria-invalid={p.error !== undefined || undefined}
-    onValueChange={(v) => p.onChange(v as string)}
-  >
-    {p.options?.map((o) => (
-      <FieldLabel key={o} className="flex items-center gap-2 font-normal">
-        <RadioGroupItem value={o} />
-        {o}
-      </FieldLabel>
-    ))}
-  </RadioGroup>
-)
-
-/* Toggle group — MULTI-select (Base UI toggle groups are array-valued). Options
- * from the array element's enum. */
-const ToggleGroupWidget = (
-  p: FieldProps<string[] | undefined> & { options?: readonly string[] },
-) => (
-  <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
-    {p.options?.map((o) => (
-      <ToggleGroupItem key={o} value={o} aria-label={o}>
-        {o}
-      </ToggleGroupItem>
-    ))}
-  </ToggleGroup>
-)
-
-/* Slider — single-thumb number. value is an ARRAY (a bare number makes the
- * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
-const SliderWidget = (p: FieldProps<number | undefined> & { min?: number; max?: number }) => (
-  <Slider
-    value={[p.value ?? p.min ?? 0]}
-    min={p.min}
-    max={p.max}
-    aria-labelledby={`${p.name}-legend`}
-    onValueChange={(v) => p.onChange(Array.isArray(v) ? v[0] : v)}
-  />
-)
-
-/* Native select — plain <select>; options from the enum. */
-const NativeSelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
-  <NativeSelect
-    id={p.name}
-    name={p.name}
-    value={p.value}
-    aria-invalid={p.error !== undefined || undefined}
-    onChange={(e) => p.onChange(e.target.value)}
-    onBlur={p.onBlur}
-  >
-    {p.options?.map((o) => (
-      <NativeSelectOption key={o} value={o}>
-        {o}
-      </NativeSelectOption>
-    ))}
-  </NativeSelect>
-)
-
-/* One-time-code — fixed-length string; `length` comes from the schema's max. */
-const OtpWidget = (p: FieldProps<string | undefined> & { length?: number }) => {
-  const length = p.length ?? 6
-  return (
-    <InputOTP
-      id={p.name}
-      maxLength={length}
-      value={p.value ?? ''}
-      onChange={(v) => p.onChange(v)}
-      onBlur={p.onBlur}
-    >
-      <InputOTPGroup>
-        {Array.from({ length }, (_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length, positions never reorder
-          <InputOTPSlot key={i} index={i} />
-        ))}
-      </InputOTPGroup>
-    </InputOTP>
-  )
-}
-
-/* Calendar — inline date picker bound to a z.date(). */
-const CalendarWidget = (p: FieldProps<Date | undefined>) => (
-  <Calendar
-    mode="single"
-    selected={p.value}
-    onSelect={(d) => p.onChange(d)}
-    className="rounded-lg border"
-  />
 )
 
 /* Options from the array element's enum (toggle group is array-valued). */
@@ -561,40 +451,132 @@ const numberBounds = (s: z.ZodType): { min?: number; max?: number } => {
   return { min, max }
 }
 
+/* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
 export const SwitchField = insane.field({
   schema: z.boolean().default(false),
-  widget: SwitchWidget,
+  widget: (p: FieldProps<boolean>) => (
+    <Switch
+      id={p.name}
+      name={p.name}
+      checked={p.value}
+      aria-invalid={p.error !== undefined || undefined}
+      onCheckedChange={(checked) => p.onChange(checked)}
+    />
+  ),
   shell: CheckboxFieldShell,
 })
+
+/* Radio group — single choice; options come from the enum via the props mapper. */
 export const RadioField = insane.field({
-  widget: RadioWidget,
+  widget: (p: FieldProps<string | undefined> & { options?: readonly string[] }) => (
+    <RadioGroup
+      value={p.value ?? null}
+      aria-invalid={p.error !== undefined || undefined}
+      onValueChange={(v) => p.onChange(v as string)}
+    >
+      {p.options?.map((o) => (
+        <FieldLabel key={o} className="flex items-center gap-2 font-normal">
+          <RadioGroupItem value={o} />
+          {o}
+        </FieldLabel>
+      ))}
+    </RadioGroup>
+  ),
   shell: GroupShell,
   props: enumOptions,
 })
+
+/* Toggle group — MULTI-select (Base UI toggle groups are array-valued). Options
+ * from the array element's enum. */
 export const ToggleGroupField = insane.field({
-  widget: ToggleGroupWidget,
+  widget: (p: FieldProps<string[] | undefined> & { options?: readonly string[] }) => (
+    <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
+      {p.options?.map((o) => (
+        <ToggleGroupItem key={o} value={o} aria-label={o}>
+          {o}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  ),
   shell: GroupShell,
   props: arrayEnumOptions,
 })
+
+/* Slider — single-thumb number. value is an ARRAY (a bare number makes the
+ * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
 export const SliderField = insane.field({
   schema: z.number(),
-  widget: SliderWidget,
+  widget: (p: FieldProps<number | undefined> & { min?: number; max?: number }) => (
+    <Slider
+      value={[p.value ?? p.min ?? 0]}
+      min={p.min}
+      max={p.max}
+      aria-labelledby={`${p.name}-legend`}
+      onValueChange={(v) => p.onChange(Array.isArray(v) ? v[0] : v)}
+    />
+  ),
   shell: GroupShell,
   props: numberBounds, // exposes {min,max} from .min()/.max()
 })
+
+/* Native select — plain <select>; options from the enum. */
 export const NativeSelectField = insane.field({
-  widget: NativeSelectWidget,
+  widget: (p: FieldProps<string> & { options?: readonly string[] }) => (
+    <NativeSelect
+      id={p.name}
+      name={p.name}
+      value={p.value}
+      aria-invalid={p.error !== undefined || undefined}
+      onChange={(e) => p.onChange(e.target.value)}
+      onBlur={p.onBlur}
+    >
+      {p.options?.map((o) => (
+        <NativeSelectOption key={o} value={o}>
+          {o}
+        </NativeSelectOption>
+      ))}
+    </NativeSelect>
+  ),
   shell: FieldShell,
   props: enumOptions,
 })
+
+/* One-time-code — fixed-length string; `length` comes from the schema's max. */
 export const OtpField = insane.field({
   schema: z.string(),
-  widget: OtpWidget,
+  widget: (p: FieldProps<string | undefined> & { length?: number }) => {
+    const length = p.length ?? 6
+    return (
+      <InputOTP
+        id={p.name}
+        maxLength={length}
+        value={p.value ?? ''}
+        onChange={(v) => p.onChange(v)}
+        onBlur={p.onBlur}
+      >
+        <InputOTPGroup>
+          {Array.from({ length }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length, positions never reorder
+            <InputOTPSlot key={i} index={i} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>
+    )
+  },
   shell: FieldShell,
   props: otpLength,
 })
+
+/* Calendar — inline date picker bound to a z.date(). */
 export const DateField = insane.field({
   schema: z.date(),
-  widget: CalendarWidget,
+  widget: (p: FieldProps<Date | undefined>) => (
+    <Calendar
+      mode="single"
+      selected={p.value}
+      onSelect={(d) => p.onChange(d)}
+      className="rounded-lg border"
+    />
+  ),
   shell: GroupShell,
 })

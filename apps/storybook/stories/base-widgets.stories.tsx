@@ -27,7 +27,7 @@ import { demoSubmit } from './demo'
 /* @code-panel:field-definition — the code panel shows each featured field's
  * insane.field() definition + the example schema, not the form boilerplate. */
 const meta: Meta = {
-  title: 'Integration examples/Base widgets',
+  title: 'Integration examples/shadcn ui/Widgets',
   tags: ['ai-generated'],
   // Low-level, single-field stories: the thin wrapper, stock shadcn (no portal).
   parameters: { demo: { variant: 'none' } },

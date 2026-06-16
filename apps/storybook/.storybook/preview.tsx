@@ -2,7 +2,7 @@
 import codeMap from 'virtual:insane-code-panel'
 import type { Preview } from '@storybook/react-vite'
 import { emitTransformCode, useChannel, useEffect } from 'storybook/preview-api'
-import { CODE_PANEL_EVENT, type CodePanelPayload } from './code-panel.shared'
+import { CODE_PANEL_EVENT, CODE_PANEL_REQUEST, type CodePanelPayload } from './code-panel.shared'
 /* Pure shadcn/ui default theme — the docs-page (bureau) styling is deliberately
  * NOT loaded here. Storybook shows the library through stock shadcn only. */
 // Relative (not the @ alias) so Tailwind anchors its @source globs to the real
@@ -122,7 +122,7 @@ const preview: Preview = {
           'Examples',
           ['Forms', 'Collections', 'Editable table', 'Multi-step', 'Nested modals', 'URL state'],
           'Integration examples',
-          ['Base widgets', 'Derived widgets', 'Form engines'],
+          ['shadcn ui', ['Widgets', 'Derived widgets'], 'Form engines'],
           'Misc',
           'Tests',
         ],
@@ -167,8 +167,10 @@ const preview: Preview = {
     (Story, context) => {
       // Send this story's build-time-highlighted HTML to our custom Code panel
       // (it lives in the manager, so the HTML crosses over the channel). Emitted
-      // on every render, so switching story/theme keeps the panel in sync.
-      const emitCode = useChannel({})
+      // on every render, plus on request when the panel mounts late.
+      const emitCode = useChannel({
+        [CODE_PANEL_REQUEST]: () => emitCode(CODE_PANEL_EVENT, codeForStory(context)),
+      })
       useEffect(() => {
         emitCode(CODE_PANEL_EVENT, codeForStory(context))
       })

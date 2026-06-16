@@ -8,7 +8,7 @@
  *  - Field-definition (files marked `@code-panel:field-definition`): show each
  *    featured field's `insane.field()` definition (sliced from the real
  *    fields.tsx) followed by the example schema, dropping the form boilerplate.
- *    Used for the Base widgets, where "how the field is built" is the point.
+ *    Used for the shadcn ui widgets, where "how the field is built" is the point.
  *
  * Emits a virtual module mapping  file basename → story display name → HTML. */
 

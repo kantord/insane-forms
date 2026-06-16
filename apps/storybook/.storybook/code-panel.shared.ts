@@ -6,9 +6,10 @@
 export const ADDON_ID = 'insane/code-panel'
 export const PANEL_ID = `${ADDON_ID}/panel`
 
-/** Preview → manager: the highlighted HTML for the story that just rendered.
- * The default-open panel mounts before the first story renders, and the preview
- * re-emits on every render, so no mount-time handshake is needed. */
+/** Preview → manager: the highlighted HTML for the story that just rendered. */
 export const CODE_PANEL_EVENT = `${ADDON_ID}/code`
+/** Manager → preview: the panel just mounted (e.g. user expanded a collapsed
+ * panel, or a narrow viewport mounted it late) — re-send the current code. */
+export const CODE_PANEL_REQUEST = `${ADDON_ID}/request`
 
 export type CodePanelPayload = { html: string | null }
