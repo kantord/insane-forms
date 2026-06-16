@@ -46,9 +46,9 @@ export const ProductFilters: StoryObj = {
 
     const schema = insane.group({
       q: SearchField.default('').meta({ title: 'Search', placeholder: 'Search products…' }),
-      category: SelectField(
-        z.enum(['All', 'Audio', 'Video', 'Accessories']).default('All').meta({ title: 'Category' }),
-      ),
+      category: SelectField.enum(['All', 'Audio', 'Video', 'Accessories']).default('All').meta({
+        title: 'Category',
+      }),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
     })
 
@@ -86,7 +86,7 @@ export const FilteredCatalog: StoryObj = {
   render: () => {
     const schema = insane.group({
       q: SearchField.default('').meta({ title: 'Search', placeholder: 'Filter products…' }),
-      sort: SelectField(z.enum(['name', 'price']).default('name').meta({ title: 'Sort by' })),
+      sort: SelectField.enum(['name', 'price']).default('name').meta({ title: 'Sort by' }),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
     })
 

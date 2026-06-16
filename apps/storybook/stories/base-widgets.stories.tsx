@@ -25,7 +25,7 @@ import { demoSubmit } from './demo'
 /* Each widget in isolation, inside a one-field live form. Submit to see the
  * parsed z.output as a toast; submit empty to see the validation path. */
 /* @code-panel:field-definition — the code panel shows each featured field's
- * insane.field() definition + the example schema, not the form boilerplate. */
+ * binding definition + the example schema, not the form boilerplate. */
 const meta: Meta = {
   title: 'Integration examples/shadcn ui/Widgets',
   tags: ['ai-generated'],
@@ -157,12 +157,12 @@ export const Checkbox: StoryObj = {
 export const Select: StoryObj = {
   render: () => {
     const schema = insane.group({
-      language: SelectField(
-        z.enum(['English', 'French', 'German', 'Spanish']).default('English').meta({
+      language: SelectField.enum(['English', 'French', 'German', 'Spanish'])
+        .default('English')
+        .meta({
           title: 'Language',
           description: 'Options come from the enum — nothing is declared twice.',
         }),
-      ),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
@@ -226,9 +226,9 @@ export const NativeSelect: StoryObj = {
   name: 'Native select',
   render: () => {
     const schema = insane.group({
-      tier: NativeSelectField(
-        z.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({ title: 'Plan tier' }),
-      ),
+      tier: NativeSelectField.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({
+        title: 'Plan tier',
+      }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
@@ -243,12 +243,10 @@ export const NativeSelect: StoryObj = {
 export const Radio: StoryObj = {
   render: () => {
     const schema = insane.group({
-      plan: RadioField(
-        z.enum(['Monthly', 'Yearly', 'Lifetime']).default('Yearly').meta({
-          title: 'Billing plan',
-          description: 'Switch any time.',
-        }),
-      ),
+      plan: RadioField.enum(['Monthly', 'Yearly', 'Lifetime']).default('Yearly').meta({
+        title: 'Billing plan',
+        description: 'Switch any time.',
+      }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
@@ -307,14 +305,11 @@ export const ToggleGroupControl: StoryObj = {
   render: () => {
     // Toggle groups are multi-select: an array of the chosen options.
     const schema = insane.group({
-      days: ToggleGroupField(
-        z
-          .array(z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']))
-          .default(['Mon', 'Wed'])
-          .meta({
-            title: 'Active days',
-          }),
-      ),
+      days: ToggleGroupField.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
+        .default(['Mon', 'Wed'])
+        .meta({
+          title: 'Active days',
+        }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>

@@ -5,7 +5,6 @@ import * as insane from 'insane-forms'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { expect } from 'storybook/test'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -44,11 +43,11 @@ const Shipping = insane.group({
 })
 
 const Preferences = insane.group({
-  frequency: SelectField(
-    z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
+  frequency: SelectField.enum(['Every email', 'Daily digest', 'Weekly digest'])
+    .default('Daily digest')
+    .meta({
       title: 'Email frequency',
     }),
-  ),
   marketing: CheckboxField.meta({ title: 'Email me about product updates' }),
 })
 

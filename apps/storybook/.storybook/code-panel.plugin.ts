@@ -67,13 +67,16 @@ const extractStories = (raw: string): { name: string; body: string }[] => {
   return out
 }
 
-/** All `export const Name = insane.field({…})` blocks from fields.tsx, by name. */
+/** Field binding definitions from fields.tsx, by name. Two shapes:
+ *  baked   `export const InputField = insane.field({ … })`  — balance the (…)
+ *  enum    `export const SelectField = { enum: (v) => … }`  — balance the {…} */
 const extractFieldDefs = (src: string): Record<string, string> => {
   const defs: Record<string, string> = {}
-  const re = /export const (\w+) = insane\.field\(/g
+  const re = /export const (\w+) = (insane\.field\(|\{)/g
   for (let m = re.exec(src); m !== null; m = re.exec(src)) {
-    const paren = m.index + m[0].length - 1 // points at '('
-    const close = matchBracket(src, paren, '(', ')')
+    const isObject = m[2] === '{'
+    const open = m.index + m[0].length - 1 // points at the '(' or '{'
+    const close = isObject ? matchBracket(src, open, '{', '}') : matchBracket(src, open, '(', ')')
     if (close !== -1) defs[m[1]] = src.slice(m.index, close + 1)
   }
   return defs

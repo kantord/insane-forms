@@ -54,11 +54,11 @@ export const Profile: StoryObj = {
       ),
       <FieldSeparator />,
       insane.wrap(FieldSet, <FieldLegend>Notifications</FieldLegend>, {
-        frequency: SelectField(
-          z.enum(['Every email', 'Daily digest', 'Weekly digest']).default('Daily digest').meta({
+        frequency: SelectField.enum(['Every email', 'Daily digest', 'Weekly digest'])
+          .default('Daily digest')
+          .meta({
             title: 'Email frequency',
           }),
-        ),
         marketing: CheckboxField.meta({
           title: 'Email me about product updates',
           description: 'You can unsubscribe at any time.',
