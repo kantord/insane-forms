@@ -4,7 +4,6 @@
 
 import type { CollectionWrapper, FieldProps, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
-import { resolveInner } from 'insane-forms'
 import { Search as SearchIcon, XIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import * as z from 'zod'
@@ -44,12 +43,7 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-
-/* User-land meta key: `.meta({ placeholder })` — a one-line resolver on the
- * library's `resolve` primitive. Widgets read it off their own `p.schema`. */
-const resolvePlaceholder = insane.resolve<string>(
-  (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
-)
+import { readSchema } from './schema-read'
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -173,7 +167,7 @@ const CellTextWidget = (p: FieldProps<string | undefined>) => (
     name={p.name}
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={resolvePlaceholder(p.schema)}
+    placeholder={readSchema(p.schema).placeholder()}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
@@ -187,7 +181,7 @@ const CellNumberWidget = (p: FieldProps<number | undefined>) => (
     type="number"
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={resolvePlaceholder(p.schema)}
+    placeholder={readSchema(p.schema).placeholder()}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
     onBlur={p.onBlur}
@@ -263,10 +257,6 @@ export const tableList =
  * arrow that maps the field's draft value onto a shadcn control. Shells and the
  * schema→props mappers stay shared (cross-cutting). ---------- */
 
-const enumOptions = (s: z.ZodType) => ({
-  options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
-})
-
 export const InputField = insane.field({
   schema: z.string(),
   widget: (p: FieldProps<string | undefined>) => (
@@ -274,7 +264,7 @@ export const InputField = insane.field({
       id={p.name}
       name={p.name}
       value={p.value ?? ''}
-      placeholder={resolvePlaceholder(p.schema)}
+      placeholder={readSchema(p.schema).placeholder()}
       aria-invalid={p.error !== undefined || undefined}
       readOnly={p.readonly}
       onChange={(e) => p.onChange(e.target.value)}
@@ -299,7 +289,7 @@ export const SearchField = insane.field({
         name={p.name}
         type="search"
         value={p.value ?? ''}
-        placeholder={resolvePlaceholder(p.schema)}
+        placeholder={readSchema(p.schema).placeholder()}
         className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
         aria-invalid={p.error !== undefined || undefined}
         onChange={(e) => p.onChange(e.target.value)}
@@ -327,7 +317,7 @@ export const TextareaField = insane.field({
       id={p.name}
       name={p.name}
       value={p.value ?? ''}
-      placeholder={resolvePlaceholder(p.schema)}
+      placeholder={readSchema(p.schema).placeholder()}
       aria-invalid={p.error !== undefined || undefined}
       readOnly={p.readonly}
       onChange={(e) => p.onChange(e.target.value)}
@@ -345,7 +335,7 @@ export const NumberField = insane.field({
       name={p.name}
       type="number"
       value={p.value ?? ''}
-      placeholder={resolvePlaceholder(p.schema)}
+      placeholder={readSchema(p.schema).placeholder()}
       aria-invalid={p.error !== undefined || undefined}
       onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
       onBlur={p.onBlur}
@@ -383,11 +373,14 @@ export const SelectField = {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {enumOptions(p.schema).options.map((o) => (
-              <SelectItem key={o} value={o}>
-                {o}
-              </SelectItem>
-            ))}
+            {readSchema(p.schema)
+              .enum()
+              .options()
+              .map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       ),
@@ -416,39 +409,6 @@ const GroupShell: Shell = ({ name, label, description, required, error, children
   </FieldSet>
 )
 
-/* Options from the array element's enum (toggle group is array-valued). */
-const arrayEnumOptions = (s: z.ZodType) => {
-  const element = (resolveInner(s) as { element?: z.ZodType }).element
-  return { options: element ? ((element as { options?: readonly string[] }).options ?? []) : [] }
-}
-/* `length` for the OTP widget: read the string schema's `.length(n)` check
- * (Zod 4 stores it under `length`, not min/max). */
-const otpLength = (s: z.ZodType): { length: number } => {
-  const checks =
-    (resolveInner(s) as unknown as { _zod: { def: { checks?: ReadonlyArray<unknown> } } })._zod.def
-      .checks ?? []
-  for (const c of checks) {
-    const cd = (c as { _zod?: { def?: { check?: string; length?: number } } })?._zod?.def
-    if (cd?.check === 'length_equals' && typeof cd.length === 'number') return { length: cd.length }
-  }
-  return { length: 6 }
-}
-/* Numeric value bounds for the slider — Zod 4 number .min()/.max() are
- * greater_than/less_than checks (distinct from boundsOf's length checks). */
-const numberBounds = (s: z.ZodType): { min?: number; max?: number } => {
-  const checks =
-    (resolveInner(s) as unknown as { _zod: { def: { checks?: ReadonlyArray<unknown> } } })._zod.def
-      .checks ?? []
-  let min: number | undefined
-  let max: number | undefined
-  for (const c of checks) {
-    const cd = (c as { _zod?: { def?: { check?: string; value?: number } } })?._zod?.def
-    if (cd?.check === 'greater_than' && typeof cd.value === 'number') min = cd.value
-    if (cd?.check === 'less_than' && typeof cd.value === 'number') max = cd.value
-  }
-  return { min, max }
-}
-
 /* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
 export const SwitchField = insane.field({
   schema: z.boolean().default(false),
@@ -474,12 +434,15 @@ export const RadioField = {
           aria-invalid={p.error !== undefined || undefined}
           onValueChange={(v) => p.onChange(v as string)}
         >
-          {enumOptions(p.schema).options.map((o) => (
-            <FieldLabel key={o} className="flex items-center gap-2 font-normal">
-              <RadioGroupItem value={o} />
-              {o}
-            </FieldLabel>
-          ))}
+          {readSchema(p.schema)
+            .enum()
+            .options()
+            .map((o) => (
+              <FieldLabel key={o} className="flex items-center gap-2 font-normal">
+                <RadioGroupItem value={o} />
+                {o}
+              </FieldLabel>
+            ))}
         </RadioGroup>
       ),
       shell: GroupShell,
@@ -493,11 +456,16 @@ export const ToggleGroupField = {
     insane.bindWidget(z.array(z.enum(values)), {
       widget: (p: FieldProps<string[] | undefined>) => (
         <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
-          {arrayEnumOptions(p.schema).options.map((o) => (
-            <ToggleGroupItem key={o} value={o} aria-label={o}>
-              {o}
-            </ToggleGroupItem>
-          ))}
+          {readSchema(p.schema)
+            .array()
+            .element()
+            .enum()
+            .options()
+            .map((o) => (
+              <ToggleGroupItem key={o} value={o} aria-label={o}>
+                {o}
+              </ToggleGroupItem>
+            ))}
         </ToggleGroup>
       ),
       shell: GroupShell,
@@ -510,12 +478,12 @@ export const SliderField = insane.field({
   schema: z.number(),
   widget: (p: FieldProps<number | undefined>) => {
     // min/max come from the schema's .min()/.max() — read them off p.schema.
-    const { min, max } = numberBounds(p.schema)
+    const num = readSchema(p.schema).number()
     return (
       <Slider
-        value={[p.value ?? min ?? 0]}
-        min={min}
-        max={max}
+        value={[p.value ?? num.min() ?? 0]}
+        min={num.min()}
+        max={num.max()}
         aria-labelledby={`${p.name}-legend`}
         onValueChange={(v) => p.onChange(Array.isArray(v) ? v[0] : v)}
       />
@@ -537,11 +505,14 @@ export const NativeSelectField = {
           onChange={(e) => p.onChange(e.target.value)}
           onBlur={p.onBlur}
         >
-          {enumOptions(p.schema).options.map((o) => (
-            <NativeSelectOption key={o} value={o}>
-              {o}
-            </NativeSelectOption>
-          ))}
+          {readSchema(p.schema)
+            .enum()
+            .options()
+            .map((o) => (
+              <NativeSelectOption key={o} value={o}>
+                {o}
+              </NativeSelectOption>
+            ))}
         </NativeSelect>
       ),
       shell: FieldShell,
@@ -553,7 +524,7 @@ export const OtpField = insane.field({
   schema: z.string(),
   widget: (p: FieldProps<string | undefined>) => {
     // fixed length comes from the schema's .length(n) — read it off p.schema.
-    const { length } = otpLength(p.schema)
+    const length = readSchema(p.schema).string().length() ?? 6
     return (
       <InputOTP
         id={p.name}

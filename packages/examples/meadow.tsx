@@ -3,9 +3,9 @@
 
 import type { FieldProps, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
-import { resolveInner } from 'insane-forms'
 import * as z from 'zod'
 import { ZodForm } from './react-hook-form'
+import { readSchema } from './schema-read'
 
 const MeadowShell: Shell = ({ name, label, description, error, children }) => (
   <div className="mb-4">
@@ -73,17 +73,16 @@ const SelectWidget = (p: FieldProps<string>) => (
     onBlur={p.onBlur}
     className={inputClass}
   >
-    {enumOptions(p.schema).options.map((o) => (
-      <option key={o} value={o}>
-        {o}
-      </option>
-    ))}
+    {readSchema(p.schema)
+      .enum()
+      .options()
+      .map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
   </select>
 )
-
-const enumOptions = (s: z.ZodType) => ({
-  options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
-})
 
 const text = insane.field({ widget: TextWidget, shell: MeadowShell })
 const number = insane.field({ widget: NumberWidget, shell: MeadowShell })

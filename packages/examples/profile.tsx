@@ -2,9 +2,9 @@
 
 import type { CollectionWrapper, FieldProps, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
-import { resolveInner } from 'insane-forms'
 import * as z from 'zod'
 import { ZodForm } from './react-hook-form'
+import { readSchema } from './schema-read'
 
 /* ---------- 1. Chrome: a shell and a list box — user code, replaceable. ---------- */
 
@@ -95,19 +95,16 @@ const SelectWidget = (p: FieldProps<string>) => (
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   >
-    {enumOptions(p.schema).options.map((o) => (
-      <option key={o} value={o}>
-        {o}
-      </option>
-    ))}
+    {readSchema(p.schema)
+      .enum()
+      .options()
+      .map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
   </select>
 )
-/* Reads a schema fact (the enum's options) off the MATERIAL schema via the
- * resolve toolkit — the SelectWidget calls it with its own p.schema. */
-const enumOptions = (s: z.ZodType) => ({
-  options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
-})
-
 /* Curried form of insane.field: bind widget + shell once, apply per schema. */
 export const text = insane.field({ widget: TextWidget, shell: FieldShell })
 export const number = insane.field({ widget: NumberWidget, shell: FieldShell })
