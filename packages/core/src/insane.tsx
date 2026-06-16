@@ -283,9 +283,11 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
       error: binding.error,
       required: p.required,
       readonly: p.readonly,
+      // The material schema: a widget reads any schema-derived config (options,
+      // bounds, length, placeholder) from here — no separate `props` mapper.
+      schema: p.schema,
     }
-    const extra = spec.props?.(p.schema) ?? {}
-    return <ShellC {...props}>{widget({ ...props, ...extra })}</ShellC>
+    return <ShellC {...props}>{widget(props)}</ShellC>
   }
   return schema.meta({ component: Leaf } satisfies FieldMeta)
 }

@@ -86,9 +86,8 @@ const CheckWidget = (p: FieldProps<boolean>) => (
 )
 
 /* Strict: cannot render unselected — schema must carry .default(v) (or pass `initial`).
- * Declares an EXTRA prop (options) beyond FieldProps; the field's `props` mapper
- * derives it from the schema. */
-const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
+ * The options are a schema fact: read them off p.schema via the resolve toolkit. */
+const SelectWidget = (p: FieldProps<string>) => (
   <select
     id={p.name}
     name={p.name}
@@ -96,15 +95,15 @@ const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) =
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   >
-    {p.options?.map((o) => (
+    {enumOptions(p.schema).options.map((o) => (
       <option key={o} value={o}>
         {o}
       </option>
     ))}
   </select>
 )
-/* The mapper: schema facts → widget props. Receives the MATERIAL schema (post-
- * derivation, per use site) and composes from the resolve toolkit. */
+/* Reads a schema fact (the enum's options) off the MATERIAL schema via the
+ * resolve toolkit — the SelectWidget calls it with its own p.schema. */
 const enumOptions = (s: z.ZodType) => ({
   options: (resolveInner(s) as { options?: readonly string[] }).options ?? [],
 })
@@ -113,7 +112,7 @@ const enumOptions = (s: z.ZodType) => ({
 export const text = insane.field({ widget: TextWidget, shell: FieldShell })
 export const number = insane.field({ widget: NumberWidget, shell: FieldShell })
 export const check = insane.field({ widget: CheckWidget, shell: FieldShell })
-export const select = insane.field({ widget: SelectWidget, shell: FieldShell, props: enumOptions })
+export const select = insane.field({ widget: SelectWidget, shell: FieldShell })
 
 /* Pre-baked fields: the one-go form returns a plain (immutable) schema, so a
  * reusable field is just a constant — per-use customization is ordinary Zod

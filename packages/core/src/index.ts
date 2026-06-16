@@ -21,7 +21,6 @@ export type {
   FieldSpec,
   ListOpts,
   NodeProps,
-  PropsMapper,
   QueryParam,
   Shell,
   ShellProps,

@@ -86,11 +86,15 @@ export type FieldProps<T> = {
   error?: string
   required: boolean
   readonly: boolean
+  /** The MATERIAL schema at this render site (after per-use derivations and
+   *  wrappers). A widget that needs schema-derived config — enum options, number
+   *  bounds, a fixed length, a placeholder — reads it from here with the resolve
+   *  toolkit, instead of a separate `props` mapper. */
+  schema: z.ZodType
 }
 
-/** A widget is just a render function. Its value type IS its self-init declaration.
- *  Widgets may declare EXTRA props beyond FieldProps (e.g. options) — a field's
- *  `props` mapper derives them from the schema. */
+/** A widget is just a render function over FieldProps (value type IS its
+ *  self-init declaration); schema-derived config is read from `p.schema`. */
 export type Widget<T> = (p: FieldProps<T>) => ReactNode
 /** Constraint used in signatures: bottom-typed param so ANY widget matches (contravariance-safe). */
 export type AnyWidget = (p: never) => ReactNode
@@ -99,18 +103,11 @@ export type AnyWidget = (p: never) => ReactNode
 export type ShellProps = FieldProps<unknown> & { children: ReactNode }
 export type Shell = React.ComponentType<ShellProps>
 
-/** Maps schema facts → extra widget props (anything a widget's signature declares
- *  beyond FieldProps, e.g. `options`). Receives the MATERIAL schema — the one at
- *  the render site, after per-use derivations and wrappers — not the base the
- *  field was declared with. The resolve toolkit is the access it composes from. */
-export type PropsMapper = (schema: z.ZodType) => object
-
 export type FieldSpec = {
   schema?: z.ZodType
   widget: AnyWidget
   shell?: Shell
   initial?: unknown
-  props?: PropsMapper
 }
 
 /* Compile-time guard — evaluated where field() meets a schema (the form / field-

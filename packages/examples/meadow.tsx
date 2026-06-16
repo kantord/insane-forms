@@ -64,7 +64,7 @@ const CheckWidget = (p: FieldProps<boolean>) => (
   />
 )
 
-const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) => (
+const SelectWidget = (p: FieldProps<string>) => (
   <select
     id={p.name}
     name={p.name}
@@ -73,7 +73,7 @@ const SelectWidget = (p: FieldProps<string> & { options?: readonly string[] }) =
     onBlur={p.onBlur}
     className={inputClass}
   >
-    {p.options?.map((o) => (
+    {enumOptions(p.schema).options.map((o) => (
       <option key={o} value={o}>
         {o}
       </option>
@@ -88,7 +88,7 @@ const enumOptions = (s: z.ZodType) => ({
 const text = insane.field({ widget: TextWidget, shell: MeadowShell })
 const number = insane.field({ widget: NumberWidget, shell: MeadowShell })
 const check = insane.field({ widget: CheckWidget, shell: MeadowShell })
-const select = insane.field({ widget: SelectWidget, shell: MeadowShell, props: enumOptions })
+const select = insane.field({ widget: SelectWidget, shell: MeadowShell })
 
 export const Rsvp = insane.group({
   name: text(z.string().min(2).meta({ title: 'Your name' })),

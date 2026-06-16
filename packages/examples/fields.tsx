@@ -45,12 +45,11 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
-/* User-land meta key: `.meta({ placeholder })` reaches widgets through the
- * props mapper — a one-line resolver on the library's `resolve` primitive. */
+/* User-land meta key: `.meta({ placeholder })` — a one-line resolver on the
+ * library's `resolve` primitive. Widgets read it off their own `p.schema`. */
 const resolvePlaceholder = insane.resolve<string>(
   (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
 )
-const fieldExtras = (s: z.ZodType) => ({ placeholder: resolvePlaceholder(s) })
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -168,27 +167,27 @@ const CellShell: Shell = ({ error, children }) => (
   </TableCell>
 )
 
-const CellTextWidget = (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+const CellTextWidget = (p: FieldProps<string | undefined>) => (
   <Input
     id={p.name}
     name={p.name}
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={p.placeholder}
+    placeholder={resolvePlaceholder(p.schema)}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   />
 )
 
-const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: string }) => (
+const CellNumberWidget = (p: FieldProps<number | undefined>) => (
   <Input
     id={p.name}
     name={p.name}
     type="number"
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={p.placeholder}
+    placeholder={resolvePlaceholder(p.schema)}
     aria-invalid={p.error !== undefined || undefined}
     onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
     onBlur={p.onBlur}
@@ -198,12 +197,10 @@ const CellNumberWidget = (p: FieldProps<number | undefined> & { placeholder?: st
 export const CellText = insane.field({
   widget: CellTextWidget,
   shell: CellShell,
-  props: fieldExtras,
 })
 export const CellNumber = insane.field({
   widget: CellNumberWidget,
   shell: CellShell,
-  props: fieldExtras,
 })
 
 /** Rows are list items; a row group's cell fields render in column order. */
@@ -272,12 +269,12 @@ const enumOptions = (s: z.ZodType) => ({
 
 export const InputField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  widget: (p: FieldProps<string | undefined>) => (
     <Input
       id={p.name}
       name={p.name}
       value={p.value ?? ''}
-      placeholder={p.placeholder}
+      placeholder={resolvePlaceholder(p.schema)}
       aria-invalid={p.error !== undefined || undefined}
       readOnly={p.readonly}
       onChange={(e) => p.onChange(e.target.value)}
@@ -285,14 +282,13 @@ export const InputField = insane.field({
     />
   ),
   shell: FieldShell,
-  props: fieldExtras,
 })
 
 /* Search input: leading magnifier + a clear (✕) button once there's a value
  * (clearing is just onChange('')); the native search clear is hidden. */
 export const SearchField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  widget: (p: FieldProps<string | undefined>) => (
     <div className="relative">
       <SearchIcon
         className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
@@ -303,7 +299,7 @@ export const SearchField = insane.field({
         name={p.name}
         type="search"
         value={p.value ?? ''}
-        placeholder={p.placeholder}
+        placeholder={resolvePlaceholder(p.schema)}
         className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
         aria-invalid={p.error !== undefined || undefined}
         onChange={(e) => p.onChange(e.target.value)}
@@ -322,17 +318,16 @@ export const SearchField = insane.field({
     </div>
   ),
   shell: FieldShell,
-  props: fieldExtras,
 })
 
 export const TextareaField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined> & { placeholder?: string }) => (
+  widget: (p: FieldProps<string | undefined>) => (
     <Textarea
       id={p.name}
       name={p.name}
       value={p.value ?? ''}
-      placeholder={p.placeholder}
+      placeholder={resolvePlaceholder(p.schema)}
       aria-invalid={p.error !== undefined || undefined}
       readOnly={p.readonly}
       onChange={(e) => p.onChange(e.target.value)}
@@ -340,25 +335,23 @@ export const TextareaField = insane.field({
     />
   ),
   shell: FieldShell,
-  props: fieldExtras,
 })
 
 export const NumberField = insane.field({
   schema: z.number(),
-  widget: (p: FieldProps<number | undefined> & { placeholder?: string }) => (
+  widget: (p: FieldProps<number | undefined>) => (
     <Input
       id={p.name}
       name={p.name}
       type="number"
       value={p.value ?? ''}
-      placeholder={p.placeholder}
+      placeholder={resolvePlaceholder(p.schema)}
       aria-invalid={p.error !== undefined || undefined}
       onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
       onBlur={p.onBlur}
     />
   ),
   shell: FieldShell,
-  props: fieldExtras,
 })
 
 /* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
@@ -384,13 +377,13 @@ export const CheckboxField = insane.field({
 export const SelectField = {
   enum: <const T extends readonly [string, ...string[]]>(values: T) =>
     insane.bindWidget(z.enum(values), {
-      widget: (p: FieldProps<string> & { options?: readonly string[] }) => (
+      widget: (p: FieldProps<string>) => (
         <Select value={p.value} onValueChange={(v) => p.onChange(v as string)}>
           <SelectTrigger id={p.name}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {p.options?.map((o) => (
+            {enumOptions(p.schema).options.map((o) => (
               <SelectItem key={o} value={o}>
                 {o}
               </SelectItem>
@@ -399,7 +392,6 @@ export const SelectField = {
         </Select>
       ),
       shell: FieldShell,
-      props: enumOptions,
     }),
 }
 
@@ -476,13 +468,13 @@ export const SwitchField = insane.field({
 export const RadioField = {
   enum: <const T extends readonly [string, ...string[]]>(values: T) =>
     insane.bindWidget(z.enum(values), {
-      widget: (p: FieldProps<string | undefined> & { options?: readonly string[] }) => (
+      widget: (p: FieldProps<string | undefined>) => (
         <RadioGroup
           value={p.value ?? null}
           aria-invalid={p.error !== undefined || undefined}
           onValueChange={(v) => p.onChange(v as string)}
         >
-          {p.options?.map((o) => (
+          {enumOptions(p.schema).options.map((o) => (
             <FieldLabel key={o} className="flex items-center gap-2 font-normal">
               <RadioGroupItem value={o} />
               {o}
@@ -491,7 +483,6 @@ export const RadioField = {
         </RadioGroup>
       ),
       shell: GroupShell,
-      props: enumOptions,
     }),
 }
 
@@ -500,9 +491,9 @@ export const RadioField = {
 export const ToggleGroupField = {
   enum: <const T extends readonly [string, ...string[]]>(values: T) =>
     insane.bindWidget(z.array(z.enum(values)), {
-      widget: (p: FieldProps<string[] | undefined> & { options?: readonly string[] }) => (
+      widget: (p: FieldProps<string[] | undefined>) => (
         <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
-          {p.options?.map((o) => (
+          {arrayEnumOptions(p.schema).options.map((o) => (
             <ToggleGroupItem key={o} value={o} aria-label={o}>
               {o}
             </ToggleGroupItem>
@@ -510,7 +501,6 @@ export const ToggleGroupField = {
         </ToggleGroup>
       ),
       shell: GroupShell,
-      props: arrayEnumOptions,
     }),
 }
 
@@ -518,24 +508,27 @@ export const ToggleGroupField = {
  * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
 export const SliderField = insane.field({
   schema: z.number(),
-  widget: (p: FieldProps<number | undefined> & { min?: number; max?: number }) => (
-    <Slider
-      value={[p.value ?? p.min ?? 0]}
-      min={p.min}
-      max={p.max}
-      aria-labelledby={`${p.name}-legend`}
-      onValueChange={(v) => p.onChange(Array.isArray(v) ? v[0] : v)}
-    />
-  ),
+  widget: (p: FieldProps<number | undefined>) => {
+    // min/max come from the schema's .min()/.max() — read them off p.schema.
+    const { min, max } = numberBounds(p.schema)
+    return (
+      <Slider
+        value={[p.value ?? min ?? 0]}
+        min={min}
+        max={max}
+        aria-labelledby={`${p.name}-legend`}
+        onValueChange={(v) => p.onChange(Array.isArray(v) ? v[0] : v)}
+      />
+    )
+  },
   shell: GroupShell,
-  props: numberBounds, // exposes {min,max} from .min()/.max()
 })
 
 /* Native select — plain <select>; the enum values come from the call site. */
 export const NativeSelectField = {
   enum: <const T extends readonly [string, ...string[]]>(values: T) =>
     insane.bindWidget(z.enum(values), {
-      widget: (p: FieldProps<string> & { options?: readonly string[] }) => (
+      widget: (p: FieldProps<string>) => (
         <NativeSelect
           id={p.name}
           name={p.name}
@@ -544,7 +537,7 @@ export const NativeSelectField = {
           onChange={(e) => p.onChange(e.target.value)}
           onBlur={p.onBlur}
         >
-          {p.options?.map((o) => (
+          {enumOptions(p.schema).options.map((o) => (
             <NativeSelectOption key={o} value={o}>
               {o}
             </NativeSelectOption>
@@ -552,15 +545,15 @@ export const NativeSelectField = {
         </NativeSelect>
       ),
       shell: FieldShell,
-      props: enumOptions,
     }),
 }
 
 /* One-time-code — fixed-length string; `length` comes from the schema's max. */
 export const OtpField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined> & { length?: number }) => {
-    const length = p.length ?? 6
+  widget: (p: FieldProps<string | undefined>) => {
+    // fixed length comes from the schema's .length(n) — read it off p.schema.
+    const { length } = otpLength(p.schema)
     return (
       <InputOTP
         id={p.name}
@@ -579,7 +572,6 @@ export const OtpField = insane.field({
     )
   },
   shell: FieldShell,
-  props: otpLength,
 })
 
 /* Calendar — inline date picker bound to a z.date(). */
