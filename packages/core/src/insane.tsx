@@ -43,6 +43,7 @@ import type {
   ListOpts,
   NodeProps,
   OneGoGuard,
+  ParametricSpec,
   Part,
   QueryParam,
   ShapeOf,
@@ -234,33 +235,32 @@ export function Render({
 /** No-op shell: renders the widget bare. The default — the core owns no chrome. */
 const BareShell: Shell = ({ children }) => <Fragment>{children}</Fragment>
 
-/* Two call shapes, one name. The first two `function field` lines are overload
- * SIGNATURES — types only, no bodies; the third is the single implementation.
- * (Parametric/enum fields are built from `bindWidget` below, not field(), so the
- * call-site generic — e.g. the enum's literal members — is preserved.) */
+/* Three call shapes, one name. The first three `function field` lines are overload
+ * SIGNATURES — types only, no bodies; the last is the implementation.
+ *   one-go:     field({ schema, widget, … })          → the bound schema
+ *   curried:    field({ widget, … })                  → (schema) => bound schema
+ *   parametric: field({ enum: (v) => field({ schema: z.enum(v), widget, … }) })
+ *               → the same method object, returned unchanged. Each method calls
+ *               the one-go form, so it returns a bound schema AND keeps its own
+ *               generic (e.g. the enum's literal members) — the outer call adds
+ *               no transform, just the shared name + a typed shape.
+ * Discriminated by whether the spec carries a top-level `widget`. */
 export function field<const Sp extends FieldSpec & { schema: z.ZodType }>(
   spec: Sp & OneGoGuard<Sp>,
 ): Sp['schema'] // one go: field({ schema, widget, … })
 export function field<const Sp extends FieldSpec & { schema?: never }>(
   spec: Sp,
 ): <S extends z.ZodType>(schema: S & CurriedGuard<S, Sp>) => S // curried: field({ widget, … }) → (schema) => schema
-export function field(spec: FieldSpec): unknown {
-  if (spec.schema) return annotateLeaf(spec.schema, spec)
-  return (schema: z.ZodType) => annotateLeaf(schema, spec)
-}
-
-/** Low-level binder: attach a widget (+ shell/props/initial) to an ALREADY-built
- * schema and return it UNCHANGED in type. Unlike field(), it runs no init guard —
- * it's for parametric fields, where the schema is built from call-site params and
- * any `.default()` is chained AFTERWARDS, so the guard couldn't see it yet:
- *   const SelectField = {
- *     enum: <const T extends readonly [string, ...string[]]>(values: T) =>
- *       bindWidget(z.enum(values), { widget, shell, props }),
- *   }
- * Because the method is a plain generic arrow, the literal members of `values`
- * flow through to the returned schema. */
-export function bindWidget<S extends z.ZodType>(schema: S, spec: Omit<FieldSpec, 'schema'>): S {
-  return annotateLeaf(schema, spec as FieldSpec) as S
+export function field<const M extends ParametricSpec>(spec: M): M // parametric: { enum, boolean, … }
+export function field(spec: FieldSpec | ParametricSpec): unknown {
+  // A field spec carries a top-level `widget`; a parametric spec is a record of
+  // base-type methods (each already returns a bound field), so it has none.
+  if ('widget' in spec) {
+    const s = spec as FieldSpec
+    if (s.schema) return annotateLeaf(s.schema, s)
+    return (schema: z.ZodType) => annotateLeaf(schema, s)
+  }
+  return spec
 }
 
 function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {

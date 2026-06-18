@@ -67,16 +67,27 @@ const extractStories = (raw: string): { name: string; body: string }[] => {
   return out
 }
 
-/** Field binding definitions from fields.tsx, by name. Two shapes:
- *  baked   `export const InputField = insane.field({ … })`  — balance the (…)
- *  enum    `export const SelectField = { enum: (v) => … }`  — balance the {…} */
+/** Field binding definitions from fields.tsx, by name. Shapes:
+ *  baked     `export const InputField = insane.field({ … })`
+ *  function  `export const SelectField = <T>(values) => insane.field({ … })`
+ *            (both end at the close of their `insane.field(…)` call)
+ *  object    `export const X = { … }`  (balance the braces)
+ * Non-field consts (no `insane.field(` before the next export) are skipped. */
 const extractFieldDefs = (src: string): Record<string, string> => {
   const defs: Record<string, string> = {}
-  const re = /export const (\w+) = (insane\.field\(|\{)/g
+  const re = /export const (\w+) = /g
   for (let m = re.exec(src); m !== null; m = re.exec(src)) {
-    const isObject = m[2] === '{'
-    const open = m.index + m[0].length - 1 // points at the '(' or '{'
-    const close = isObject ? matchBracket(src, open, '{', '}') : matchBracket(src, open, '(', ')')
+    const afterEq = m.index + m[0].length
+    let close = -1
+    if (src[afterEq] === '{') {
+      close = matchBracket(src, afterEq, '{', '}')
+    } else {
+      const fieldAt = src.indexOf('insane.field(', afterEq)
+      const nextExport = src.indexOf('\nexport const ', afterEq)
+      if (fieldAt !== -1 && (nextExport === -1 || fieldAt < nextExport)) {
+        close = matchBracket(src, fieldAt + 'insane.field('.length - 1, '(', ')')
+      }
+    }
     if (close !== -1) defs[m[1]] = src.slice(m.index, close + 1)
   }
   return defs

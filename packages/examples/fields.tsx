@@ -359,16 +359,17 @@ export const CheckboxField = insane.field({
   shell: CheckboxFieldShell,
 })
 
-/* Strict select: schema must carry .default(v). Options come from the schema via
- * the `props` mapper. */
-// Parametric: the enum values come from the call site (SelectField.enum([...])),
-// so the field can't bake the schema — the method builds it from the params and
-// binds the widget. `bindWidget` keeps the literal members in the returned type.
-export const SelectField = {
-  enum: <const T extends readonly [string, ...string[]]>(values: T) =>
-    insane.bindWidget(z.enum(values), {
-      widget: (p: FieldProps<string>) => (
-        <Select value={p.value} onValueChange={(v) => p.onChange(v as string)}>
+/* Parametric: the enum values come from the call site, so `.enum(values)` builds
+ * z.enum(values) and binds the widget via the one-go field(). The widget is
+ * self-initializing (string | undefined → renders unselected), so no .default() is
+ * required; the inner field() returns the schema, so the enum's literal members
+ * survive — `SelectField.enum(['A','B']).default('A')`. */
+export const SelectField = insane.field({
+  enum<const T extends readonly [string, ...string[]]>(values: T) {
+    return insane.field({
+      schema: z.enum(values),
+      widget: (p: FieldProps<string | undefined>) => (
+        <Select value={p.value ?? null} onValueChange={(v) => p.onChange(v as string)}>
           <SelectTrigger id={p.name}>
             <SelectValue />
           </SelectTrigger>
@@ -385,8 +386,9 @@ export const SelectField = {
         </Select>
       ),
       shell: FieldShell,
-    }),
-}
+    })
+  },
+})
 
 /* ---------- 4. More base shadcn controls. ---------- */
 
@@ -425,9 +427,10 @@ export const SwitchField = insane.field({
 })
 
 /* Radio group — single choice; the enum values come from the call site. */
-export const RadioField = {
-  enum: <const T extends readonly [string, ...string[]]>(values: T) =>
-    insane.bindWidget(z.enum(values), {
+export const RadioField = insane.field({
+  enum<const T extends readonly [string, ...string[]]>(values: T) {
+    return insane.field({
+      schema: z.enum(values),
       widget: (p: FieldProps<string | undefined>) => (
         <RadioGroup
           value={p.value ?? null}
@@ -446,14 +449,16 @@ export const RadioField = {
         </RadioGroup>
       ),
       shell: GroupShell,
-    }),
-}
+    })
+  },
+})
 
 /* Toggle group — MULTI-select: `.enum(values)` builds an ARRAY of that enum
  * (Base UI toggle groups are array-valued). */
-export const ToggleGroupField = {
-  enum: <const T extends readonly [string, ...string[]]>(values: T) =>
-    insane.bindWidget(z.array(z.enum(values)), {
+export const ToggleGroupField = insane.field({
+  enum<const T extends readonly [string, ...string[]]>(values: T) {
+    return insane.field({
+      schema: z.array(z.enum(values)),
       widget: (p: FieldProps<string[] | undefined>) => (
         <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
           {readSchema(p.schema)
@@ -469,8 +474,9 @@ export const ToggleGroupField = {
         </ToggleGroup>
       ),
       shell: GroupShell,
-    }),
-}
+    })
+  },
+})
 
 /* Slider — single-thumb number. value is an ARRAY (a bare number makes the
  * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
@@ -493,14 +499,15 @@ export const SliderField = insane.field({
 })
 
 /* Native select — plain <select>; the enum values come from the call site. */
-export const NativeSelectField = {
-  enum: <const T extends readonly [string, ...string[]]>(values: T) =>
-    insane.bindWidget(z.enum(values), {
-      widget: (p: FieldProps<string>) => (
+export const NativeSelectField = insane.field({
+  enum<const T extends readonly [string, ...string[]]>(values: T) {
+    return insane.field({
+      schema: z.enum(values),
+      widget: (p: FieldProps<string | undefined>) => (
         <NativeSelect
           id={p.name}
           name={p.name}
-          value={p.value}
+          value={p.value ?? ''}
           aria-invalid={p.error !== undefined || undefined}
           onChange={(e) => p.onChange(e.target.value)}
           onBlur={p.onBlur}
@@ -516,8 +523,9 @@ export const NativeSelectField = {
         </NativeSelect>
       ),
       shell: FieldShell,
-    }),
-}
+    })
+  },
+})
 
 /* One-time-code — fixed-length string; `length` comes from the schema's max. */
 export const OtpField = insane.field({

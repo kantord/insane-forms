@@ -110,6 +110,14 @@ export type FieldSpec = {
   initial?: unknown
 }
 
+/** Parametric field: a record of base-type methods, each building + binding a
+ *  schema by calling the one-go field() and returning it. field() returns the
+ *  record unchanged, so the methods keep their generics (enum literals survive):
+ *    insane.field({ enum: (v) => field({ schema: z.enum(v), widget, shell }) })
+ *  → `SelectField.enum(['A','B']).default('A')`. The `never[]` param is a
+ *  bottom-typed constraint so any method matches (like AnyWidget). */
+export type ParametricSpec = Record<string, (...args: never[]) => z.ZodType>
+
 /* Compile-time guard — evaluated where field() meets a schema (the form / field-
  * constant definition site), never inside the widget. Every field must be able
  * to render from blank: (a) widget value type admits undefined, or (b) the

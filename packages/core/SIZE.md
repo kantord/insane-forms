@@ -8,15 +8,15 @@
 
 | metric | value |
 | --- | --- |
-| **Gzipped (what ships over the wire)** | **2060 bytes (~2.0 kB)** |
-| Minified | 4441 bytes (~4.3 kB) |
+| **Gzipped (what ships over the wire)** | **2053 bytes (~2.0 kB)** |
+| Minified | 4429 bytes (~4.3 kB) |
 | Compiled JavaScript (formatted) | 267 lines |
-| Runtime TypeScript source | 294 lines |
+| Runtime TypeScript source | 297 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
 `hidden` / `ZodForm` / `useZodForm`, the `resolve` introspection toolkit, and
-the URL-state codecs — in **2060 gzipped bytes** with **zero** runtime
+the URL-state codecs — in **2053 gzipped bytes** with **zero** runtime
 dependencies. Every `import` in the bundle is an externalized peer
 (`react`, `react-hook-form`, `zod`, `@hookform/resolvers`) that the host app
 already ships; nothing third-party is inlined.
@@ -25,19 +25,19 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 294 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 133 |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 297 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 134 |
 | [`src/index.ts`](src/index.ts) | public barrel | 21 |
-| **total** | | **448** |
+| **total** | | **452** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
 disappears at compile time. That is why the compiled JavaScript (267 lines)
-is *smaller* than the runtime TypeScript (294 lines) — type
+is *smaller* than the runtime TypeScript (297 lines) — type
 annotations and JSX collapse away.
 
-## Why 2060 gzipped bytes, not fewer
+## Why 2053 gzipped bytes, not fewer
 
-There is no filler to remove. 4441 minified bytes ÷ 267 lines ≈
+There is no filler to remove. 4429 minified bytes ÷ 267 lines ≈
 16 bytes of irreducible tokens per line — already 1-char
 identifiers and stripped whitespace. gzip then roughly halves that (the standard
 ~40–50% ratio for already-minified JS, which has little redundancy left to
@@ -140,11 +140,12 @@ function Render({ schema, name, engine }) {
 }
 var BareShell = ({ children }) => /* @__PURE__ */ jsx(Fragment, { children })
 function field(spec) {
-  if (spec.schema) return annotateLeaf(spec.schema, spec)
-  return (schema) => annotateLeaf(schema, spec)
-}
-function bindWidget(schema, spec) {
-  return annotateLeaf(schema, spec)
+  if ('widget' in spec) {
+    const s = spec
+    if (s.schema) return annotateLeaf(s.schema, s)
+    return (schema) => annotateLeaf(schema, s)
+  }
+  return spec
 }
 function annotateLeaf(schema, spec) {
   const ShellC = spec.shell ?? BareShell
@@ -299,7 +300,6 @@ function list(element, opts = {}) {
 }
 export {
   Render,
-  bindWidget,
   boundsOf,
   field,
   group,
