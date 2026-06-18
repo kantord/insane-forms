@@ -35,6 +35,7 @@ import type {
   CollectionWrapper,
   CurriedGuard,
   Def,
+  DraftOf,
   FieldEngine,
   FieldGroup,
   FieldMeta,
@@ -42,7 +43,6 @@ import type {
   FieldSpec,
   ListOpts,
   NodeProps,
-  OneGoGuard,
   ParametricSpec,
   Part,
   QueryParam,
@@ -245,9 +245,18 @@ const BareShell: Shell = ({ children }) => <Fragment>{children}</Fragment>
  *               generic (e.g. the enum's literal members) — the outer call adds
  *               no transform, just the shared name + a typed shape.
  * Discriminated by whether the spec carries a top-level `widget`. */
-export function field<const Sp extends FieldSpec & { schema: z.ZodType }>(
-  spec: Sp & OneGoGuard<Sp>,
-): Sp['schema'] // one go: field({ schema, widget, … })
+export function field<const S extends z.ZodType>(spec: {
+  schema: S
+  widget: Widget<DraftOf<S>>
+  shell?: Shell
+  initial?: unknown
+}): S // one go, BARE widget: the value type is derived from the schema as DraftOf<S>
+export function field<const S extends z.ZodType, W>(spec: {
+  schema: S
+  widget: Widget<W>
+  shell?: Shell
+  initial?: unknown
+}): S // one go, ANNOTATED widget: the value type is taken from the widget itself
 export function field<const Sp extends FieldSpec & { schema?: never }>(
   spec: Sp,
 ): <S extends z.ZodType>(schema: S & CurriedGuard<S, Sp>) => S // curried: field({ widget, … }) → (schema) => schema

@@ -259,7 +259,9 @@ export const tableList =
 
 export const InputField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined>) => (
+  // No widget annotation: the value type is inferred from the schema as
+  // DraftOf<z.ZodString> = string | undefined (raw draft + unset state).
+  widget: (p) => (
     <Input
       id={p.name}
       name={p.name}
@@ -278,7 +280,7 @@ export const InputField = insane.field({
  * (clearing is just onChange('')); the native search clear is hidden. */
 export const SearchField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined>) => (
+  widget: (p) => (
     <div className="relative">
       <SearchIcon
         className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
@@ -312,7 +314,7 @@ export const SearchField = insane.field({
 
 export const TextareaField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined>) => (
+  widget: (p) => (
     <Textarea
       id={p.name}
       name={p.name}
@@ -329,7 +331,7 @@ export const TextareaField = insane.field({
 
 export const NumberField = insane.field({
   schema: z.number(),
-  widget: (p: FieldProps<number | undefined>) => (
+  widget: (p) => (
     <Input
       id={p.name}
       name={p.name}
@@ -347,7 +349,7 @@ export const NumberField = insane.field({
 /* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
 export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
-  widget: (p: FieldProps<boolean>) => (
+  widget: (p) => (
     <Checkbox
       id={p.name}
       name={p.name}
@@ -414,7 +416,7 @@ const GroupShell: Shell = ({ name, label, description, required, error, children
 /* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
 export const SwitchField = insane.field({
   schema: z.boolean().default(false),
-  widget: (p: FieldProps<boolean>) => (
+  widget: (p) => (
     <Switch
       id={p.name}
       name={p.name}
@@ -482,7 +484,7 @@ export const ToggleGroupField = insane.field({
  * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
 export const SliderField = insane.field({
   schema: z.number(),
-  widget: (p: FieldProps<number | undefined>) => {
+  widget: (p) => {
     // min/max come from the schema's .min()/.max() — read them off p.schema.
     const num = readSchema(p.schema).number()
     return (
@@ -530,7 +532,7 @@ export const NativeSelectField = insane.field({
 /* One-time-code — fixed-length string; `length` comes from the schema's max. */
 export const OtpField = insane.field({
   schema: z.string(),
-  widget: (p: FieldProps<string | undefined>) => {
+  widget: (p) => {
     // fixed length comes from the schema's .length(n) — read it off p.schema.
     const length = readSchema(p.schema).string().length() ?? 6
     return (
@@ -556,7 +558,7 @@ export const OtpField = insane.field({
 /* Calendar — inline date picker bound to a z.date(). */
 export const DateField = insane.field({
   schema: z.date(),
-  widget: (p: FieldProps<Date | undefined>) => (
+  widget: (p) => (
     <Calendar
       mode="single"
       selected={p.value}

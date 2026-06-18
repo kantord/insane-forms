@@ -11,7 +11,7 @@
 | **Gzipped (what ships over the wire)** | **2053 bytes (~2.0 kB)** |
 | Minified | 4429 bytes (~4.3 kB) |
 | Compiled JavaScript (formatted) | 267 lines |
-| Runtime TypeScript source | 297 lines |
+| Runtime TypeScript source | 306 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
@@ -25,14 +25,14 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 297 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 134 |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 306 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 143 |
 | [`src/index.ts`](src/index.ts) | public barrel | 21 |
-| **total** | | **452** |
+| **total** | | **470** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
 disappears at compile time. That is why the compiled JavaScript (267 lines)
-is *smaller* than the runtime TypeScript (297 lines) — type
+is *smaller* than the runtime TypeScript (306 lines) — type
 annotations and JSX collapse away.
 
 ## Why 2053 gzipped bytes, not fewer

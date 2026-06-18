@@ -118,6 +118,22 @@ export type FieldSpec = {
  *  bottom-typed constraint so any method matches (like AnyWidget). */
 export type ParametricSpec = Record<string, (...args: never[]) => z.ZodType>
 
+/** The DRAFT value a widget edits, derived from its schema: the schema's output
+ *  WIDENED to its primitive base (so a widget handles raw DOM strings, not the
+ *  narrow `'a'|'b'` enum), plus `| undefined` for the unset state UNLESS the
+ *  schema carries a `.default` (then the value is always present → strict). Used
+ *  as the default widget value type in field()'s one-go form, so the inline
+ *  `widget: (p) => …` is typed without an annotation; a widget MAY narrow it. */
+export type Widen<T> = [T] extends [string]
+  ? string
+  : [T] extends [number]
+    ? number
+    : [T] extends [boolean]
+      ? boolean
+      : T
+export type DraftOf<S extends z.ZodType> =
+  HasDefault<S> extends true ? Widen<z.output<S>> : Widen<z.output<S>> | undefined
+
 /* Compile-time guard — evaluated where field() meets a schema (the form / field-
  * constant definition site), never inside the widget. Every field must be able
  * to render from blank: (a) widget value type admits undefined, or (b) the
