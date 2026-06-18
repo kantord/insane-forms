@@ -26,9 +26,9 @@ already ships; nothing third-party is inlined.
 | file | role | code lines |
 | --- | --- | --- |
 | [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 346 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 158 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 165 |
 | [`src/index.ts`](src/index.ts) | public barrel | 23 |
-| **total** | | **527** |
+| **total** | | **534** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
 disappears at compile time. That is why the compiled JavaScript (301 lines)

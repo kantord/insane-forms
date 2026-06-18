@@ -353,9 +353,7 @@ export const SelectField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      // Generic enum schema → p is annotated (the bare inference defers over the
-      // method's generic); derive/hint are still handed in by core.
-      widget: (p: FieldProps<string | undefined>, derive, hint) => (
+      widget: (p, derive, hint) => (
         <Select value={p.value ?? null} onValueChange={(v) => p.onChange(v as string)}>
           <SelectTrigger {...derive('id', 'aria-invalid')}>
             <SelectValue />
@@ -416,7 +414,7 @@ export const RadioField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      widget: (p: FieldProps<string | undefined>, derive, hint) => (
+      widget: (p, derive, hint) => (
         <RadioGroup
           {...derive('aria-invalid')}
           value={p.value ?? null}
@@ -444,7 +442,7 @@ export const ToggleGroupField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.array(z.enum(values)),
-      widget: (p: FieldProps<string[] | undefined>, _derive, hint) => (
+      widget: (p, _derive, hint) => (
         <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
           {hint
             .array()
@@ -488,7 +486,7 @@ export const NativeSelectField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      widget: (p: FieldProps<string | undefined>, derive, hint) => (
+      widget: (p, derive, hint) => (
         <NativeSelect
           {...derive('id', 'name', 'aria-invalid', 'onBlur')}
           value={p.value ?? ''}

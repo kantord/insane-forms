@@ -157,7 +157,17 @@ export type Widen<T> = [T] extends [string]
       ? boolean
       : T
 export type DraftOf<S extends z.ZodType> =
-  HasDefault<S> extends true ? Widen<z.output<S>> : Widen<z.output<S>> | undefined
+  S extends z.ZodEnum<infer _M>
+    ? // An enum (and array-of-enum) drafts as its widened base — `string` /
+      // `string[]` — known regardless of the literal members, so this resolves even
+      // when those members are still a generic (the parametric `.enum(values)` case)
+      // where `Widen<z.output>` would defer.
+      string | undefined
+    : S extends z.ZodArray<z.ZodEnum<infer _M>>
+      ? string[] | undefined
+      : HasDefault<S> extends true
+        ? Widen<z.output<S>>
+        : Widen<z.output<S>> | undefined
 
 /* Compile-time guard — evaluated where field() meets a schema (the form / field-
  * constant definition site), never inside the widget. Every field must be able
