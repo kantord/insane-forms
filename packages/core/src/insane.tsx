@@ -35,6 +35,7 @@ import type {
   CollectionWrapper,
   CurriedGuard,
   Def,
+  Derive,
   DraftOf,
   FieldEngine,
   FieldGroup,
@@ -46,6 +47,7 @@ import type {
   ParametricSpec,
   Part,
   QueryParam,
+  SchemaReader,
   ShapeOf,
   Shell,
   Widget,
@@ -105,6 +107,61 @@ const containsWrapper =
 export const isOptional = (s: z.ZodType): boolean => containsWrapper('optional', 'nullable')(s)
 export const isReadonly = (s: z.ZodType): boolean => containsWrapper('readonly')(s)
 export const isRequired = (s: z.ZodType): boolean => !isOptional(s)
+
+/* ------------------------------------------------------------------ */
+/* The two bound helpers every widget receives: `derive` (boilerplate */
+/* attributes off the binding) and `hint` (the reverse-schema reader). */
+/* Both are built per-render in annotateLeaf and passed positionally,  */
+/* so a widget reads its wiring without threading `p`/`p.schema`.       */
+/* ------------------------------------------------------------------ */
+
+/** Attributes that map straight from a binding to a control with no per-control
+ *  decision. Read only T-free fields, so they apply to any FieldProps. */
+const fieldDerivers = {
+  id: (p: FieldProps<unknown>) => p.name,
+  name: (p: FieldProps<unknown>) => p.name,
+  'aria-invalid': (p: FieldProps<unknown>) => p.error !== undefined || undefined,
+  onBlur: (p: FieldProps<unknown>) => p.onBlur,
+  readOnly: (p: FieldProps<unknown>) => p.readonly,
+} satisfies Record<string, (p: FieldProps<unknown>) => unknown>
+
+const makeDerive = (p: FieldProps<unknown>): Derive =>
+  ((...keys: (keyof typeof fieldDerivers)[]) =>
+    Object.fromEntries(keys.map((k) => [k, fieldDerivers[k](p)]))) as Derive
+
+/** Reads back the facts a schema DECLARED (the inverse of building one), e.g.
+ *  `hint.number().min()`, `hint.enum().options()`, `hint.placeholder()`. Built
+ *  on the `resolve` toolkit; bound to the field's schema and passed as `hint`. */
+type ReaderCheck = { check?: string; value?: number; length?: number }
+const checksOf = (s: z.ZodType): readonly ReaderCheck[] =>
+  (
+    (resolveInner(s) as { _zod?: { def?: { checks?: readonly unknown[] } } })._zod?.def?.checks ??
+    []
+  ).map((c) => (c as { _zod?: { def?: ReaderCheck } })._zod?.def ?? {})
+const checkValue = (s: z.ZodType, check: string): number | undefined =>
+  checksOf(s).find((c) => c.check === check)?.value
+const placeholderOf = resolve<string>(
+  (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
+)
+export const readSchema = (schema: z.ZodType): SchemaReader => ({
+  // Zod 4 number .min()/.max() are greater_than/less_than checks.
+  number: () => ({
+    min: () => checkValue(schema, 'greater_than'),
+    max: () => checkValue(schema, 'less_than'),
+  }),
+  // .length(n) is a length_equals check (stored under `length`, not value).
+  string: () => ({
+    length: () => checksOf(schema).find((c) => c.check === 'length_equals')?.length,
+  }),
+  enum: () => ({
+    options: () => (resolveInner(schema) as { options?: readonly string[] }).options ?? [],
+  }),
+  array: () => ({
+    element: () =>
+      readSchema((resolveInner(schema) as { element?: z.ZodType }).element ?? z.never()),
+  }),
+  placeholder: () => placeholderOf(schema),
+})
 
 /* ------------------------------------------------------------------ */
 /* URL query-param codecs. One source of truth for URL-state libraries */
@@ -296,7 +353,7 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
       // bounds, length, placeholder) from here — no separate `props` mapper.
       schema: p.schema,
     }
-    return <ShellC {...props}>{widget(props)}</ShellC>
+    return <ShellC {...props}>{widget(props, makeDerive(props), readSchema(props.schema))}</ShellC>
   }
   return schema.meta({ component: Leaf } satisfies FieldMeta)
 }

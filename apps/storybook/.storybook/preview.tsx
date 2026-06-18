@@ -122,7 +122,7 @@ const preview: Preview = {
           'Examples',
           ['Forms', 'Collections', 'Editable table', 'Multi-step', 'Nested modals', 'URL state'],
           'Integration examples',
-          ['shadcn ui', ['Widgets', 'Derived widgets'], 'Form engines'],
+          ['shadcn ui', ['Widgets', 'Derived widgets'], 'Native HTML widgets', 'Form engines'],
           'Misc',
           'Tests',
         ],

@@ -5,7 +5,6 @@ import type { FieldProps, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
 import * as z from 'zod'
 import { ZodForm } from './react-hook-form'
-import { readSchema } from './schema-read'
 
 const MeadowShell: Shell = ({ name, label, description, error, children }) => (
   <div className="mb-4">
@@ -73,7 +72,8 @@ const SelectWidget = (p: FieldProps<string>) => (
     onBlur={p.onBlur}
     className={inputClass}
   >
-    {readSchema(p.schema)
+    {insane
+      .readSchema(p.schema)
       .enum()
       .options()
       .map((o) => (

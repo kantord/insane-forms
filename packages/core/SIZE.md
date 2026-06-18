@@ -8,15 +8,15 @@
 
 | metric | value |
 | --- | --- |
-| **Gzipped (what ships over the wire)** | **2053 bytes (~2.0 kB)** |
-| Minified | 4429 bytes (~4.3 kB) |
-| Compiled JavaScript (formatted) | 267 lines |
-| Runtime TypeScript source | 306 lines |
+| **Gzipped (what ships over the wire)** | **2313 bytes (~2.3 kB)** |
+| Minified | 5035 bytes (~4.9 kB) |
+| Compiled JavaScript (formatted) | 301 lines |
+| Runtime TypeScript source | 346 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
 `hidden` / `ZodForm` / `useZodForm`, the `resolve` introspection toolkit, and
-the URL-state codecs — in **2053 gzipped bytes** with **zero** runtime
+the URL-state codecs — in **2313 gzipped bytes** with **zero** runtime
 dependencies. Every `import` in the bundle is an externalized peer
 (`react`, `react-hook-form`, `zod`, `@hookform/resolvers`) that the host app
 already ships; nothing third-party is inlined.
@@ -25,19 +25,19 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 306 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 143 |
-| [`src/index.ts`](src/index.ts) | public barrel | 21 |
-| **total** | | **470** |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 346 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 158 |
+| [`src/index.ts`](src/index.ts) | public barrel | 23 |
+| **total** | | **527** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
-disappears at compile time. That is why the compiled JavaScript (267 lines)
-is *smaller* than the runtime TypeScript (306 lines) — type
+disappears at compile time. That is why the compiled JavaScript (301 lines)
+is *smaller* than the runtime TypeScript (346 lines) — type
 annotations and JSX collapse away.
 
-## Why 2053 gzipped bytes, not fewer
+## Why 2313 gzipped bytes, not fewer
 
-There is no filler to remove. 4429 minified bytes ÷ 267 lines ≈
+There is no filler to remove. 5035 minified bytes ÷ 301 lines ≈
 16 bytes of irreducible tokens per line — already 1-char
 identifiers and stripped whitespace. gzip then roughly halves that (the standard
 ~40–50% ratio for already-minified JS, which has little redundancy left to
@@ -83,6 +83,38 @@ var containsWrapper =
 var isOptional = (s) => containsWrapper('optional', 'nullable')(s)
 var isReadonly = (s) => containsWrapper('readonly')(s)
 var isRequired = (s) => !isOptional(s)
+var fieldDerivers = {
+  id: (p) => p.name,
+  name: (p) => p.name,
+  'aria-invalid': (p) => p.error !== void 0 || void 0,
+  onBlur: (p) => p.onBlur,
+  readOnly: (p) => p.readonly,
+}
+var makeDerive =
+  (p) =>
+  (...keys) =>
+    Object.fromEntries(keys.map((k) => [k, fieldDerivers[k](p)]))
+var checksOf = (s) => (resolveInner(s)._zod?.def?.checks ?? []).map((c) => c._zod?.def ?? {})
+var checkValue = (s, check) => checksOf(s).find((c) => c.check === check)?.value
+var placeholderOf = resolve((s) => s.meta()?.placeholder)
+var readSchema = (schema) => ({
+  // Zod 4 number .min()/.max() are greater_than/less_than checks.
+  number: () => ({
+    min: () => checkValue(schema, 'greater_than'),
+    max: () => checkValue(schema, 'less_than'),
+  }),
+  // .length(n) is a length_equals check (stored under `length`, not value).
+  string: () => ({
+    length: () => checksOf(schema).find((c) => c.check === 'length_equals')?.length,
+  }),
+  enum: () => ({
+    options: () => resolveInner(schema).options ?? [],
+  }),
+  array: () => ({
+    element: () => readSchema(resolveInner(schema).element ?? z.never()),
+  }),
+  placeholder: () => placeholderOf(schema),
+})
 function queryParam(field2) {
   const fallback = resolveDefault(field2)
   if (fallback === void 0)
@@ -167,7 +199,10 @@ function annotateLeaf(schema, spec) {
       // bounds, length, placeholder) from here — no separate `props` mapper.
       schema: p.schema,
     }
-    return /* @__PURE__ */ jsx(ShellC, { ...props, children: widget(props) })
+    return /* @__PURE__ */ jsx(ShellC, {
+      ...props,
+      children: widget(props, makeDerive(props), readSchema(props.schema)),
+    })
   }
   return schema.meta({ component: Leaf })
 }
@@ -310,6 +345,7 @@ export {
   list,
   queryParam,
   queryParams,
+  readSchema,
   resolve,
   resolveComponent,
   resolveDefault,

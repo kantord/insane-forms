@@ -4,7 +4,6 @@ import type { CollectionWrapper, FieldProps, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
 import * as z from 'zod'
 import { ZodForm } from './react-hook-form'
-import { readSchema } from './schema-read'
 
 /* ---------- 1. Chrome: a shell and a list box — user code, replaceable. ---------- */
 
@@ -95,7 +94,8 @@ const SelectWidget = (p: FieldProps<string>) => (
     onChange={(e) => p.onChange(e.target.value)}
     onBlur={p.onBlur}
   >
-    {readSchema(p.schema)
+    {insane
+      .readSchema(p.schema)
       .enum()
       .options()
       .map((o) => (

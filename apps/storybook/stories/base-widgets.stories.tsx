@@ -1,12 +1,8 @@
 import {
   CheckboxField,
-  DateField,
   InputField,
-  NativeSelectField,
   NumberField,
-  OtpField,
   RadioField,
-  SearchField,
   SelectField,
   SliderField,
   SwitchField,
@@ -206,40 +202,6 @@ export const HiddenField: StoryObj = {
   },
 }
 
-export const SearchInput: StoryObj = {
-  name: 'Search',
-  render: () => {
-    const schema = insane.group({
-      q: SearchField.meta({ title: 'Search', placeholder: 'Search…' }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const NativeSelect: StoryObj = {
-  name: 'Native select',
-  render: () => {
-    const schema = insane.group({
-      tier: NativeSelectField.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({
-        title: 'Plan tier',
-      }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
 export const Radio: StoryObj = {
   render: () => {
     const schema = insane.group({
@@ -310,41 +272,6 @@ export const ToggleGroupControl: StoryObj = {
         .meta({
           title: 'Active days',
         }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const Otp: StoryObj = {
-  name: 'OTP',
-  render: () => {
-    const schema = insane.group({
-      code: OtpField.length(6).meta({
-        title: 'Verification code',
-        description: 'Check your email.',
-      }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const DatePicker: StoryObj = {
-  name: 'Calendar (date)',
-  render: () => {
-    const schema = insane.group({
-      when: DateField.meta({ title: 'Event date' }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>

@@ -93,11 +93,36 @@ export type FieldProps<T> = {
   schema: z.ZodType
 }
 
-/** A widget is just a render function over FieldProps (value type IS its
- *  self-init declaration); schema-derived config is read from `p.schema`. */
-export type Widget<T> = (p: FieldProps<T>) => ReactNode
+/** The attributes `derive` produces — each maps 1:1 from the binding with no
+ *  per-control decision (the pure `id={p.name}` boilerplate). */
+type DerivedAttrs = {
+  id: string
+  name: string
+  'aria-invalid': true | undefined
+  onBlur: () => void
+  readOnly: boolean
+}
+/** `derive('id', 'name', …)` → exactly those attributes, typed precisely so the
+ *  JSX spread stays checked. Bound to the field, so there's no `p` argument. */
+export type Derive = <K extends keyof DerivedAttrs>(...keys: K[]) => Pick<DerivedAttrs, K>
+
+/** The reverse-schema reader, bound to the field's schema: reads the facts the
+ *  schema DECLARED — number bounds, a fixed length, enum options, an array's
+ *  element, a `.meta` placeholder. Mirrors the Zod builder, inverted. */
+export type SchemaReader = {
+  number: () => { min: () => number | undefined; max: () => number | undefined }
+  string: () => { length: () => number | undefined }
+  enum: () => { options: () => readonly string[] }
+  array: () => { element: () => SchemaReader }
+  placeholder: () => string | undefined
+}
+
+/** A widget renders one control. Besides its FieldProps it gets two bound
+ *  helpers: `derive` (boilerplate attributes) and `hint` (the schema reader);
+ *  the value type IS its self-init declaration. */
+export type Widget<T> = (p: FieldProps<T>, derive: Derive, hint: SchemaReader) => ReactNode
 /** Constraint used in signatures: bottom-typed param so ANY widget matches (contravariance-safe). */
-export type AnyWidget = (p: never) => ReactNode
+export type AnyWidget = (p: never, derive: Derive, hint: SchemaReader) => ReactNode
 
 /** A shell arranges chrome around one widget: same knowledge + the rendered widget. */
 export type ShellProps = FieldProps<unknown> & { children: ReactNode }
@@ -138,7 +163,7 @@ export type DraftOf<S extends z.ZodType> =
  * constant definition site), never inside the widget. Every field must be able
  * to render from blank: (a) widget value type admits undefined, or (b) the
  * schema carries .default(value), or (c) an explicit `initial` is in the spec. */
-export type ValueOf<R> = R extends (p: infer P) => ReactNode
+export type ValueOf<R> = R extends (p: infer P, ...args: never[]) => ReactNode
   ? P extends { value: infer V }
     ? V
     : never

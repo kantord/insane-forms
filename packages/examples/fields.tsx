@@ -2,7 +2,7 @@
  * Mirrors examples/profile.tsx: widgets, a shell, and a list wrapper are all user
  * code, so swapping the bureau chrome for shadcn touches zero library lines. */
 
-import type { CollectionWrapper, FieldProps, Shell } from 'insane-forms'
+import type { CollectionWrapper, Derive, FieldProps, SchemaReader, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
 import { Search as SearchIcon, XIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -43,7 +43,6 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { readSchema } from './schema-read'
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -161,30 +160,28 @@ const CellShell: Shell = ({ error, children }) => (
   </TableCell>
 )
 
-const CellTextWidget = (p: FieldProps<string | undefined>) => (
+const CellTextWidget = (p: FieldProps<string | undefined>, derive: Derive, hint: SchemaReader) => (
   <Input
-    id={p.name}
-    name={p.name}
+    {...derive('id', 'name', 'aria-invalid', 'onBlur')}
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={readSchema(p.schema).placeholder()}
-    aria-invalid={p.error !== undefined || undefined}
+    placeholder={hint.placeholder()}
     onChange={(e) => p.onChange(e.target.value)}
-    onBlur={p.onBlur}
   />
 )
 
-const CellNumberWidget = (p: FieldProps<number | undefined>) => (
+const CellNumberWidget = (
+  p: FieldProps<number | undefined>,
+  derive: Derive,
+  hint: SchemaReader,
+) => (
   <Input
-    id={p.name}
-    name={p.name}
+    {...derive('id', 'name', 'aria-invalid', 'onBlur')}
     type="number"
     aria-label={p.label}
     value={p.value ?? ''}
-    placeholder={readSchema(p.schema).placeholder()}
-    aria-invalid={p.error !== undefined || undefined}
+    placeholder={hint.placeholder()}
     onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-    onBlur={p.onBlur}
   />
 )
 
@@ -259,18 +256,16 @@ export const tableList =
 
 export const InputField = insane.field({
   schema: z.string(),
-  // No widget annotation: the value type is inferred from the schema as
-  // DraftOf<z.ZodString> = string | undefined (raw draft + unset state).
-  widget: (p) => (
+  // Core hands the widget bound helpers: `derive` pulls the boilerplate
+  // attributes off the binding, `hint` reads schema-declared facts. `value`/
+  // `onChange` stay explicit (the real per-control decision). `p` infers its
+  // value type from the schema (DraftOf<z.ZodString> = string | undefined).
+  widget: (p, derive, hint) => (
     <Input
-      id={p.name}
-      name={p.name}
+      {...derive('id', 'name', 'aria-invalid', 'onBlur', 'readOnly')}
       value={p.value ?? ''}
-      placeholder={readSchema(p.schema).placeholder()}
-      aria-invalid={p.error !== undefined || undefined}
-      readOnly={p.readonly}
+      placeholder={hint.placeholder()}
       onChange={(e) => p.onChange(e.target.value)}
-      onBlur={p.onBlur}
     />
   ),
   shell: FieldShell,
@@ -280,22 +275,19 @@ export const InputField = insane.field({
  * (clearing is just onChange('')); the native search clear is hidden. */
 export const SearchField = insane.field({
   schema: z.string(),
-  widget: (p) => (
+  widget: (p, derive, hint) => (
     <div className="relative">
       <SearchIcon
         className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
         aria-hidden="true"
       />
       <Input
-        id={p.name}
-        name={p.name}
+        {...derive('id', 'name', 'aria-invalid', 'onBlur')}
         type="search"
         value={p.value ?? ''}
-        placeholder={readSchema(p.schema).placeholder()}
+        placeholder={hint.placeholder()}
         className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
-        aria-invalid={p.error !== undefined || undefined}
         onChange={(e) => p.onChange(e.target.value)}
-        onBlur={p.onBlur}
       />
       {p.value ? (
         <button
@@ -314,16 +306,12 @@ export const SearchField = insane.field({
 
 export const TextareaField = insane.field({
   schema: z.string(),
-  widget: (p) => (
+  widget: (p, derive, hint) => (
     <Textarea
-      id={p.name}
-      name={p.name}
+      {...derive('id', 'name', 'aria-invalid', 'onBlur', 'readOnly')}
       value={p.value ?? ''}
-      placeholder={readSchema(p.schema).placeholder()}
-      aria-invalid={p.error !== undefined || undefined}
-      readOnly={p.readonly}
+      placeholder={hint.placeholder()}
       onChange={(e) => p.onChange(e.target.value)}
-      onBlur={p.onBlur}
     />
   ),
   shell: FieldShell,
@@ -331,16 +319,13 @@ export const TextareaField = insane.field({
 
 export const NumberField = insane.field({
   schema: z.number(),
-  widget: (p) => (
+  widget: (p, derive, hint) => (
     <Input
-      id={p.name}
-      name={p.name}
+      {...derive('id', 'name', 'aria-invalid', 'onBlur')}
       type="number"
       value={p.value ?? ''}
-      placeholder={readSchema(p.schema).placeholder()}
-      aria-invalid={p.error !== undefined || undefined}
+      placeholder={hint.placeholder()}
       onChange={(e) => p.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-      onBlur={p.onBlur}
     />
   ),
   shell: FieldShell,
@@ -349,12 +334,10 @@ export const NumberField = insane.field({
 /* Strict: a checkbox is never "unset" — the schema says what unchecked means. */
 export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
-  widget: (p) => (
+  widget: (p, derive) => (
     <Checkbox
-      id={p.name}
-      name={p.name}
+      {...derive('id', 'name', 'aria-invalid')}
       checked={p.value}
-      aria-invalid={p.error !== undefined || undefined}
       onCheckedChange={(checked) => p.onChange(checked === true)}
     />
   ),
@@ -370,13 +353,15 @@ export const SelectField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      widget: (p: FieldProps<string | undefined>) => (
+      // Generic enum schema → p is annotated (the bare inference defers over the
+      // method's generic); derive/hint are still handed in by core.
+      widget: (p: FieldProps<string | undefined>, derive, hint) => (
         <Select value={p.value ?? null} onValueChange={(v) => p.onChange(v as string)}>
-          <SelectTrigger id={p.name}>
+          <SelectTrigger {...derive('id', 'aria-invalid')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {readSchema(p.schema)
+            {hint
               .enum()
               .options()
               .map((o) => (
@@ -416,12 +401,10 @@ const GroupShell: Shell = ({ name, label, description, required, error, children
 /* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
 export const SwitchField = insane.field({
   schema: z.boolean().default(false),
-  widget: (p) => (
+  widget: (p, derive) => (
     <Switch
-      id={p.name}
-      name={p.name}
+      {...derive('id', 'name', 'aria-invalid')}
       checked={p.value}
-      aria-invalid={p.error !== undefined || undefined}
       onCheckedChange={(checked) => p.onChange(checked)}
     />
   ),
@@ -433,13 +416,13 @@ export const RadioField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      widget: (p: FieldProps<string | undefined>) => (
+      widget: (p: FieldProps<string | undefined>, derive, hint) => (
         <RadioGroup
+          {...derive('aria-invalid')}
           value={p.value ?? null}
-          aria-invalid={p.error !== undefined || undefined}
           onValueChange={(v) => p.onChange(v as string)}
         >
-          {readSchema(p.schema)
+          {hint
             .enum()
             .options()
             .map((o) => (
@@ -461,9 +444,9 @@ export const ToggleGroupField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.array(z.enum(values)),
-      widget: (p: FieldProps<string[] | undefined>) => (
+      widget: (p: FieldProps<string[] | undefined>, _derive, hint) => (
         <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
-          {readSchema(p.schema)
+          {hint
             .array()
             .element()
             .enum()
@@ -484,9 +467,9 @@ export const ToggleGroupField = insane.field({
  * shadcn wrapper render two thumbs); the thumb is labelled by the shell legend. */
 export const SliderField = insane.field({
   schema: z.number(),
-  widget: (p) => {
-    // min/max come from the schema's .min()/.max() — read them off p.schema.
-    const num = readSchema(p.schema).number()
+  widget: (p, _derive, hint) => {
+    // min/max come from the schema's .min()/.max() — read them off `hint`.
+    const num = hint.number()
     return (
       <Slider
         value={[p.value ?? num.min() ?? 0]}
@@ -505,16 +488,13 @@ export const NativeSelectField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
       schema: z.enum(values),
-      widget: (p: FieldProps<string | undefined>) => (
+      widget: (p: FieldProps<string | undefined>, derive, hint) => (
         <NativeSelect
-          id={p.name}
-          name={p.name}
+          {...derive('id', 'name', 'aria-invalid', 'onBlur')}
           value={p.value ?? ''}
-          aria-invalid={p.error !== undefined || undefined}
           onChange={(e) => p.onChange(e.target.value)}
-          onBlur={p.onBlur}
         >
-          {readSchema(p.schema)
+          {hint
             .enum()
             .options()
             .map((o) => (
@@ -532,16 +512,15 @@ export const NativeSelectField = insane.field({
 /* One-time-code — fixed-length string; `length` comes from the schema's max. */
 export const OtpField = insane.field({
   schema: z.string(),
-  widget: (p) => {
-    // fixed length comes from the schema's .length(n) — read it off p.schema.
-    const length = readSchema(p.schema).string().length() ?? 6
+  widget: (p, derive, hint) => {
+    // fixed length comes from the schema's .length(n) — read it off `hint`.
+    const length = hint.string().length() ?? 6
     return (
       <InputOTP
-        id={p.name}
+        {...derive('id', 'onBlur')}
         maxLength={length}
         value={p.value ?? ''}
         onChange={(v) => p.onChange(v)}
-        onBlur={p.onBlur}
       >
         <InputOTPGroup>
           {Array.from({ length }, (_, i) => (
