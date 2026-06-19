@@ -42,6 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
@@ -396,6 +397,32 @@ const GroupShell: Shell = ({ name, label, description, required, error, children
   </FieldSet>
 )
 
+/* Single toggle — a boolean rendered as one pressable button that carries its
+ * OWN label (the button text), so its shell renders no separate label, only the
+ * description/error. Contrast Checkbox/Switch, where the shell labels beside. */
+const ToggleFieldShell: Shell = ({ description, error, children }) => (
+  <Field data-invalid={error !== undefined || undefined}>
+    {children}
+    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
+    {error !== undefined && <FieldError errors={[{ message: error }]} />}
+  </Field>
+)
+
+export const ToggleField = insane.field({
+  schema: z.boolean().default(false),
+  widget: (p, derive) => (
+    <Toggle
+      {...derive('aria-invalid')}
+      variant="outline"
+      pressed={p.value}
+      onPressedChange={(pressed) => p.onChange(pressed)}
+    >
+      {p.label ?? p.name}
+    </Toggle>
+  ),
+  shell: ToggleFieldShell,
+})
+
 /* Switch — boolean, like the checkbox but a toggle. id ties it to the shell label. */
 export const SwitchField = insane.field({
   schema: z.boolean().default(false),
@@ -436,14 +463,44 @@ export const RadioField = insane.field({
   },
 })
 
-/* Toggle group — MULTI-select: `.enum(values)` builds an ARRAY of that enum
- * (Base UI toggle groups are array-valued). */
+/* Toggle group — one control, two base types (Base UI toggle groups are always
+ * array-valued; `multiple` decides arity):
+ *   .enum(values)  → single-select, value is a `string`  (z.enum)
+ *   .array(values) → multi-select,  value is a `string[]` (z.array(z.enum))
+ * The single variant maps the schema's `string` onto Base UI's array shape. */
 export const ToggleGroupField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
     return insane.field({
+      schema: z.enum(values),
+      widget: (p, _derive, hint) => (
+        <ToggleGroup
+          variant="outline"
+          value={p.value !== undefined ? [p.value] : []}
+          onValueChange={(v) => p.onChange(v.at(-1))}
+        >
+          {hint
+            .enum()
+            .options()
+            .map((o) => (
+              <ToggleGroupItem key={o} value={o} aria-label={o}>
+                {o}
+              </ToggleGroupItem>
+            ))}
+        </ToggleGroup>
+      ),
+      shell: GroupShell,
+    })
+  },
+  array<const T extends readonly [string, ...string[]]>(values: T) {
+    return insane.field({
       schema: z.array(z.enum(values)),
       widget: (p, _derive, hint) => (
-        <ToggleGroup variant="outline" value={p.value ?? []} onValueChange={(v) => p.onChange(v)}>
+        <ToggleGroup
+          variant="outline"
+          multiple
+          value={p.value ?? []}
+          onValueChange={(v) => p.onChange(v)}
+        >
           {hint
             .array()
             .element()

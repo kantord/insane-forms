@@ -22,6 +22,7 @@ import type { Plugin } from 'vite'
 const THEME = 'github-dark-default'
 
 const FIELD_DEF_MARKER = '@code-panel:field-definition'
+const SHELL_DEF_MARKER = '@code-panel:shell-definition'
 
 /** Index of the char matching the bracket that opens at `open`. */
 const matchBracket = (src: string, open: number, openCh: string, closeCh: string): number => {
@@ -93,6 +94,44 @@ const extractFieldDefs = (src: string): Record<string, string> => {
   return defs
 }
 
+/** Shell definitions from fields.tsx, by name. A shell is `const X: Shell =
+ *  (props) => …` (exported or not — we read the source text, not the module).
+ *  Slice from `const X` to the close of the arrow body (balance its `(`/`{`). */
+const extractShellDefs = (src: string): Record<string, string> => {
+  const defs: Record<string, string> = {}
+  const re = /(?:export )?const (\w+): Shell = /g
+  for (let m = re.exec(src); m !== null; m = re.exec(src)) {
+    const arrowAt = src.indexOf('=>', m.index + m[0].length)
+    if (arrowAt === -1) continue
+    let i = arrowAt + 2
+    while (i < src.length && src[i] !== '(' && src[i] !== '{') i++
+    const open = src[i]
+    if (open !== '(' && open !== '{') continue
+    const close = matchBracket(src, i, open, open === '(' ? ')' : '}')
+    if (close !== -1) defs[m[1]] = src.slice(m.index, close + 1)
+  }
+  return defs
+}
+
+/** Shell-definition view: the shell(s) the story's fields use (each field def
+ * carries `shell: X`), followed by the story's render body as a usage example. */
+const shellDefView = (
+  body: string,
+  fieldDefs: Record<string, string>,
+  shellDefs: Record<string, string>,
+): string => {
+  const retAt = body.search(/\n\s*return[\s(]/)
+  const schema = (retAt === -1 ? body : body.slice(0, retAt)).trim()
+  const usedFields = Object.keys(fieldDefs).filter((name) =>
+    new RegExp(`\\b${name}\\b`).test(schema),
+  )
+  const shells = new Set<string>()
+  for (const f of usedFields)
+    for (const m of fieldDefs[f].matchAll(/shell:\s*(\w+)/g)) if (shellDefs[m[1]]) shells.add(m[1])
+  const defs = [...shells].map((s) => shellDefs[s]).join('\n\n')
+  return defs ? `${defs}\n\n${body.trim()}` : body.trim()
+}
+
 /** Field-definition view: each featured binding's definition + the example
  * schema, boilerplate (the ZodForm/Button render) dropped. */
 const fieldDefView = (body: string, fieldDefs: Record<string, string>): string => {
@@ -122,7 +161,9 @@ export function codePanelPlugin(): Plugin {
       const dir = path.resolve(import.meta.dirname, '../stories')
       const fieldsFile = path.resolve(import.meta.dirname, '../../../packages/examples/fields.tsx')
       this.addWatchFile(fieldsFile)
-      const fieldDefs = extractFieldDefs(readFileSync(fieldsFile, 'utf8'))
+      const fieldsSrc = readFileSync(fieldsFile, 'utf8')
+      const fieldDefs = extractFieldDefs(fieldsSrc)
+      const shellDefs = extractShellDefs(fieldsSrc)
 
       const files = readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'))
       const highlighter = await createHighlighter({ langs: ['tsx'], themes: [THEME] })
@@ -133,9 +174,14 @@ export function codePanelPlugin(): Plugin {
         this.addWatchFile(full)
         const raw = readFileSync(full, 'utf8')
         const fieldDefMode = raw.includes(FIELD_DEF_MARKER)
+        const shellDefMode = raw.includes(SHELL_DEF_MARKER)
         const byName: Record<string, string> = {}
         for (const { name, body } of extractStories(raw)) {
-          const code = fieldDefMode ? fieldDefView(body, fieldDefs) : body
+          const code = shellDefMode
+            ? shellDefView(body, fieldDefs, shellDefs)
+            : fieldDefMode
+              ? fieldDefView(body, fieldDefs)
+              : body
           byName[name] = highlighter.codeToHtml(code, { lang: 'tsx', theme: THEME })
         }
         map[file] = byName

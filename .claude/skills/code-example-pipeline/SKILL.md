@@ -42,10 +42,17 @@ from a real, compiled, tested module — so docs cannot drift from working code.
     hooks from `storybook/manager-api` (`useAddonState`/`useChannel`), never
     React's hooks.
   - The plugin slices each story's render body (brace-balanced from the raw file).
-    Files marked `@code-panel:field-definition` (the Base widgets) get a different
-    view: each featured `insane.field()` binding's definition (sliced from the real
-    `fields.tsx`) + the example schema, with the `return (<form…>)` boilerplate
-    dropped — "how the field is built" is the lesson there, not the wrapper.
+    THREE per-file view modes (chosen by marker, see `code-panel.plugin.ts`):
+    - default (no marker): the render body verbatim (the composition is the lesson).
+    - `@code-panel:field-definition` (the shadcn Widgets): each featured
+      `insane.field()` binding's definition (sliced from the real `fields.tsx`) +
+      the example schema, with the `return (<form…>)` boilerplate dropped — "how
+      the field is built" is the lesson there, not the wrapper.
+    - `@code-panel:shell-definition` (the shadcn Shells): the shell(s) the story's
+      fields use — found by mapping each field-in-schema to the `shell: X` in its
+      binding def, then slicing that `const X: Shell = …` from `fields.tsx` — then
+      the render body as a usage example. "What a shell IS + one use." (`extractShellDefs`
+      reads source text, so shells need not be exported.)
 
 ## Code annotations (hover explanations)
 

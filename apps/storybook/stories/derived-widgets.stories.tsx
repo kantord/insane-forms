@@ -35,7 +35,7 @@ export const SearchInput: StoryObj = {
 }
 
 export const Otp: StoryObj = {
-  name: 'OTP',
+  name: 'Input OTP',
   render: () => {
     const schema = insane.group({
       code: OtpField.length(6).meta({
@@ -54,7 +54,7 @@ export const Otp: StoryObj = {
 }
 
 export const DatePicker: StoryObj = {
-  name: 'Calendar (date)',
+  name: 'Calendar',
   render: () => {
     const schema = insane.group({
       when: DateField.meta({ title: 'Event date' }),

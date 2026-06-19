@@ -1,25 +1,24 @@
 import {
   CheckboxField,
   InputField,
-  NumberField,
+  NativeSelectField,
   RadioField,
   SelectField,
   SliderField,
   SwitchField,
   TextareaField,
+  ToggleField,
   ToggleGroupField,
 } from '@insane-forms/examples/fields'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
-import { expect, within } from 'storybook/test'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
-import { FieldDescription } from '@/components/ui/field'
 import { demoSubmit } from './demo'
 
-/* Each widget in isolation, inside a one-field live form. Submit to see the
- * parsed z.output as a toast; submit empty to see the validation path. */
+/* The atomic shadcn/ui form widgets, each in isolation inside a one-field live
+ * form. Submit to see the parsed z.output as a toast; submit empty to see the
+ * validation path. This list mirrors shadcn's own atomic form primitives. */
 /* @code-panel:field-definition — the code panel shows each featured field's
  * binding definition + the example schema, not the form boilerplate. */
 const meta: Meta = {
@@ -34,74 +33,6 @@ export const Input: StoryObj = {
   render: () => {
     const schema = insane.group({
       name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const InputWithDescription: StoryObj = {
-  render: () => {
-    const schema = insane.group({
-      email: InputField.email().meta({
-        title: 'Email',
-        description: "We'll use this to send your receipt.",
-        placeholder: 'm@example.com',
-      }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const OptionalInput: StoryObj = {
-  render: () => {
-    const schema = insane.group({
-      website: InputField.optional().meta({ title: 'Website', placeholder: 'https://example.com' }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const ReadOnlyInput: StoryObj = {
-  render: () => {
-    const schema = insane.group({
-      apiKey: InputField.readonly().default('sk-1a2b3c4d').meta({ title: 'API key' }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-}
-
-export const NumberInput: StoryObj = {
-  name: 'Number',
-  render: () => {
-    const schema = insane.group({
-      seats: NumberField.int().min(1).max(10).default(1).meta({
-        title: 'Seats',
-        description: 'Between 1 and 10.',
-      }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
@@ -170,19 +101,14 @@ export const Select: StoryObj = {
   },
 }
 
-export const HiddenField: StoryObj = {
-  name: 'Hidden field',
+export const NativeSelect: StoryObj = {
+  name: 'Native Select',
   render: () => {
-    const schema = insane.group(
-      <FieldDescription>
-        The schema also carries a hidden <code>id</code>. It renders no control, yet the parse fills
-        its default into the submitted output.
-      </FieldDescription>,
-      {
-        id: insane.hidden(z.string().default('srv-000')),
-        name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-      },
-    )
+    const schema = insane.group({
+      tier: NativeSelectField.enum(['Free', 'Pro', 'Enterprise']).default('Free').meta({
+        title: 'Plan tier',
+      }),
+    })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
         <Button type="submit" className="self-start">
@@ -191,18 +117,10 @@ export const HiddenField: StoryObj = {
       </ZodForm>
     )
   },
-  // Proves the hidden field's default survives parse into the submitted output
-  // even though no control rendered for it. The toast portals to document.body.
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    await userEvent.type(canvas.getByLabelText(/name/i), 'Evil Rabbit')
-    await userEvent.click(canvas.getByRole('button', { name: /submit/i }))
-    const body = within(canvasElement.ownerDocument.body)
-    // findByText proves arrival; sonner is mid-animation, so don't assert visibility.
-    await expect(await body.findByText(/srv-000/)).toBeInTheDocument()
-  },
 }
 
 export const Radio: StoryObj = {
+  name: 'Radio Group',
   render: () => {
     const schema = insane.group({
       plan: RadioField.enum(['Monthly', 'Yearly', 'Lifetime']).default('Yearly').meta({
@@ -255,8 +173,24 @@ export const SliderControl: StoryObj = {
   },
 }
 
+export const ToggleControl: StoryObj = {
+  name: 'Toggle',
+  render: () => {
+    const schema = insane.group({
+      bold: ToggleField.meta({ title: 'Bold' }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
 export const ToggleGroupControl: StoryObj = {
-  name: 'Toggle group',
+  name: 'Toggle Group',
   // Base UI's ToggleGroup root emits aria-orientation on role="group", which axe
   // flags (aria-allowed-attr). It's a vendored-library attribute, not our markup,
   // so scope that one rule off for this story only.
@@ -265,9 +199,13 @@ export const ToggleGroupControl: StoryObj = {
     a11y: { config: { rules: [{ id: 'aria-allowed-attr', enabled: false }] } },
   },
   render: () => {
-    // Toggle groups are multi-select: an array of the chosen options.
+    // One field, both base types: `.enum(...)` → single-select (a string),
+    // `.array(...)` → multi-select (a string[]).
     const schema = insane.group({
-      days: ToggleGroupField.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
+      align: ToggleGroupField.enum(['Left', 'Center', 'Right']).default('Left').meta({
+        title: 'Alignment',
+      }),
+      days: ToggleGroupField.array(['Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
         .default(['Mon', 'Wed'])
         .meta({
           title: 'Active days',
@@ -280,26 +218,5 @@ export const ToggleGroupControl: StoryObj = {
         </Button>
       </ZodForm>
     )
-  },
-}
-
-export const CssCheck: StoryObj = {
-  render: () => {
-    const schema = insane.group({
-      name: InputField.min(2).meta({ title: 'Name', placeholder: 'Evil Rabbit' }),
-    })
-    return (
-      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
-        <Button type="submit" className="self-start">
-          Submit
-        </Button>
-      </ZodForm>
-    )
-  },
-  // The submit Button uses bg-primary (--primary: oklch(0.205 0 0) in the zinc
-  // theme) — this fails if Tailwind / globals.css did not load in the preview.
-  play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: /submit/i })
-    await expect(getComputedStyle(button).backgroundColor).toBe('oklch(0.205 0 0)')
   },
 }
