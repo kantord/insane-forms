@@ -56,14 +56,13 @@ const CodePanel = ({ active }: { active: boolean }) => {
          font-size: 13px; line-height: 1.6; tab-size: 2;
          font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
        }
-       /* Referenced identifiers: a clearly-visible link marker + hover popover +
-          click-through. Distinct accent (not currentColor) so it's unmissable. */
+       /* Referenced identifiers: a subtle dotted-accent underline (findable, not
+          loud) + hover popover + click-through. Mirrors the landing @note look. */
        .insane-code-panel .code-note {
          position: relative; cursor: pointer;
-         text-decoration: underline dashed #58a6ff; text-underline-offset: 3px;
-         border-radius: 2px; background: rgba(88, 166, 255, 0.14);
+         text-decoration: underline dotted #58a6ff; text-underline-offset: 3px;
        }
-       .insane-code-panel .code-note:hover { background: rgba(88, 166, 255, 0.28); }
+       .insane-code-panel .code-note:hover { text-decoration-color: #79c0ff; }
        .insane-code-panel .code-note::after {
          content: attr(data-note); position: absolute; bottom: calc(100% + 6px); left: 0;
          z-index: 30; width: max-content; max-width: 26rem; padding: .5rem .6rem;
