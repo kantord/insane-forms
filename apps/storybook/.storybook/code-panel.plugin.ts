@@ -94,6 +94,23 @@ const extractFieldDefs = (src: string): Record<string, string> => {
   return defs
 }
 
+/** Slice a top-level `const NAME = (…) => …` arrow definition (a widget helper
+ *  like DatePickerWidget) by name — from `const NAME` to the close of its arrow
+ *  body. Lets a binding that delegates to a named widget (`widget: DatePickerWidget`)
+ *  show that widget's composition in the panel. undefined if NAME isn't such a const. */
+const extractConstArrow = (src: string, name: string): string | undefined => {
+  const m = new RegExp(`(?:export )?const ${name} = `).exec(src)
+  if (!m) return undefined
+  const arrowAt = src.indexOf('=>', m.index + m[0].length)
+  if (arrowAt === -1) return undefined
+  let i = arrowAt + 2
+  while (i < src.length && src[i] !== '(' && src[i] !== '{') i++
+  const open = src[i]
+  if (open !== '(' && open !== '{') return undefined
+  const close = matchBracket(src, i, open, open === '(' ? ')' : '}')
+  return close === -1 ? undefined : src.slice(m.index, close + 1)
+}
+
 /** Shell definitions from fields.tsx, by name. A shell is `const X: Shell =
  *  (props) => …` (exported or not — we read the source text, not the module).
  *  Slice from `const X` to the close of the arrow body (balance its `(`/`{`). */
@@ -133,8 +150,10 @@ const shellDefView = (
 }
 
 /** Field-definition view: each featured binding's definition + the example
- * schema, boilerplate (the ZodForm/Button render) dropped. */
-const fieldDefView = (body: string, fieldDefs: Record<string, string>): string => {
+ * schema, boilerplate (the ZodForm/Button render) dropped. A binding that
+ * delegates to a named widget const (`widget: DatePickerWidget`) also gets that
+ * widget's body prepended, so the panel shows the real composition, not a ref. */
+const fieldDefView = (body: string, fieldDefs: Record<string, string>, src: string): string => {
   // Slice off everything from the `return (…)` onward — keep the schema setup.
   const retAt = body.search(/\n\s*return[\s(]/)
   const schema = (retAt === -1 ? body : body.slice(0, retAt)).trim()
@@ -143,7 +162,17 @@ const fieldDefView = (body: string, fieldDefs: Record<string, string>): string =
     .map((name) => ({ name, at: schema.search(new RegExp(`\\b${name}\\b`)) }))
     .filter((x) => x.at !== -1)
     .sort((a, b) => a.at - b.at)
-  const defs = used.map((x) => fieldDefs[x.name]).join('\n\n')
+  // Widget consts referenced by `widget: Name` in those bindings — show their body.
+  const helpers: string[] = []
+  const seen = new Set<string>()
+  for (const x of used)
+    for (const m of fieldDefs[x.name].matchAll(/widget:\s*([A-Z]\w+)/g)) {
+      if (seen.has(m[1])) continue
+      seen.add(m[1])
+      const def = extractConstArrow(src, m[1])
+      if (def) helpers.push(def)
+    }
+  const defs = [...helpers, ...used.map((x) => fieldDefs[x.name])].join('\n\n')
   return defs ? `${defs}\n\n${schema}` : schema
 }
 
@@ -180,7 +209,7 @@ export function codePanelPlugin(): Plugin {
           const code = shellDefMode
             ? shellDefView(body, fieldDefs, shellDefs)
             : fieldDefMode
-              ? fieldDefView(body, fieldDefs)
+              ? fieldDefView(body, fieldDefs, fieldsSrc)
               : body
           byName[name] = highlighter.codeToHtml(code, { lang: 'tsx', theme: THEME })
         }

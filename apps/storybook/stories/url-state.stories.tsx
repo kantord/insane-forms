@@ -2,7 +2,7 @@ import { CheckboxField, SearchField, SelectField } from '@insane-forms/examples/
 import { reactHookFormEngine, useZodForm, ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
-import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs'
+import { useQueryStates } from 'nuqs'
 import { NuqsAdapter } from 'nuqs/adapters/react'
 import { FormProvider, useWatch } from 'react-hook-form'
 import { expect, waitFor } from 'storybook/test'
@@ -38,12 +38,6 @@ export default meta
 export const ProductFilters: StoryObj = {
   name: 'Filters — apply on submit',
   render: () => {
-    const filterParsers = {
-      q: parseAsString.withDefault(''),
-      category: parseAsStringEnum(['All', 'Audio', 'Video', 'Accessories']).withDefault('All'),
-      inStock: parseAsBoolean.withDefault(false),
-    }
-
     const schema = insane.group({
       q: SearchField.default('').meta({ title: 'Search', placeholder: 'Search products…' }),
       category: SelectField.enum(['All', 'Audio', 'Video', 'Accessories']).default('All').meta({
@@ -51,6 +45,10 @@ export const ProductFilters: StoryObj = {
       }),
       inStock: CheckboxField.meta({ title: 'In stock only' }),
     })
+
+    // The schema's fields ARE the nuqs parsers — one codec per field, each
+    // validating its own value and carrying its own default. No re-declaration.
+    const filterParsers = insane.queryParams(schema)
 
     function Filters() {
       // nuqs IS the submit target: URL seeds the draft, submit writes it back.

@@ -47,7 +47,10 @@ from a real, compiled, tested module — so docs cannot drift from working code.
     - `@code-panel:field-definition` (the shadcn Widgets): each featured
       `insane.field()` binding's definition (sliced from the real `fields.tsx`) +
       the example schema, with the `return (<form…>)` boilerplate dropped — "how
-      the field is built" is the lesson there, not the wrapper.
+      the field is built" is the lesson there, not the wrapper. A binding that
+      delegates to a named widget const (`widget: DatePickerWidget`) also gets that
+      const's body prepended (`extractConstArrow`), so the panel shows the real
+      composition, not just the reference.
     - `@code-panel:shell-definition` (the shadcn Shells): the shell(s) the story's
       fields use — found by mapping each field-in-schema to the `shell: X` in its
       binding def, then slicing that `const X: Shell = …` from `fields.tsx` — then

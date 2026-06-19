@@ -4,8 +4,8 @@
 
 import type { CollectionWrapper, Derive, FieldProps, SchemaReader, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
-import { Search as SearchIcon, XIcon } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { CalendarIcon, Search as SearchIcon, XIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -21,8 +21,15 @@ import {
   FieldSet,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
@@ -272,35 +279,32 @@ export const InputField = insane.field({
   shell: FieldShell,
 })
 
-/* Search input: leading magnifier + a clear (✕) button once there's a value
- * (clearing is just onChange('')); the native search clear is hidden. */
+/* Search input — shadcn's canonical pattern: an InputGroup with a leading
+ * magnifier addon and a trailing clear button that appears once there's a value
+ * (clearing is just onChange('')). The native search clear is hidden. */
 export const SearchField = insane.field({
   schema: z.string(),
   widget: (p, derive, hint) => (
-    <div className="relative">
-      <SearchIcon
-        className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-4 text-muted-foreground"
-        aria-hidden="true"
-      />
-      <Input
+    <InputGroup>
+      <InputGroupAddon align="inline-start">
+        <SearchIcon aria-hidden="true" />
+      </InputGroupAddon>
+      <InputGroupInput
         {...derive('id', 'name', 'aria-invalid', 'onBlur')}
         type="search"
         value={p.value ?? ''}
         placeholder={hint.placeholder()}
-        className="px-8 [&::-webkit-search-cancel-button]:appearance-none"
+        className="[&::-webkit-search-cancel-button]:appearance-none"
         onChange={(e) => p.onChange(e.target.value)}
       />
       {p.value ? (
-        <button
-          type="button"
-          aria-label="Clear search"
-          onClick={() => p.onChange('')}
-          className="-translate-y-1/2 absolute top-1/2 right-1.5 rounded-sm p-1 text-muted-foreground hover:text-foreground"
-        >
-          <XIcon className="size-4" />
-        </button>
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton size="icon-xs" aria-label="Clear search" onClick={() => p.onChange('')}>
+            <XIcon />
+          </InputGroupButton>
+        </InputGroupAddon>
       ) : null}
-    </div>
+    </InputGroup>
   ),
   shell: FieldShell,
 })
@@ -589,16 +593,44 @@ export const OtpField = insane.field({
   shell: FieldShell,
 })
 
-/* Calendar — inline date picker bound to a z.date(). */
+/* Date picker — shadcn's canonical date form field: a Button trigger that opens
+ * a Popover holding a Calendar (there is no DatePicker root component). The
+ * trigger shows the chosen date; selecting one writes it back and closes the
+ * popover. A named component (like CellTextWidget) so the open/close `useState`
+ * sits in a real component — Biome forbids hooks in a bare widget arrow. */
+const DatePickerWidget = (p: FieldProps<Date | undefined>, derive: Derive) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            {...derive('id', 'aria-invalid')}
+            variant="outline"
+            className="w-56 justify-start font-normal data-[empty=true]:text-muted-foreground"
+            data-empty={p.value === undefined || undefined}
+          >
+            <CalendarIcon />
+            {p.value ? p.value.toLocaleDateString() : 'Pick a date'}
+          </Button>
+        }
+      />
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={p.value}
+          onSelect={(d) => {
+            p.onChange(d)
+            setOpen(false)
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export const DateField = insane.field({
   schema: z.date(),
-  widget: (p) => (
-    <Calendar
-      mode="single"
-      selected={p.value}
-      onSelect={(d) => p.onChange(d)}
-      className="rounded-lg border"
-    />
-  ),
-  shell: GroupShell,
+  widget: DatePickerWidget,
+  shell: FieldShell,
 })

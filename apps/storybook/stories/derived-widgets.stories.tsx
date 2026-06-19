@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { demoSubmit } from './demo'
 
 /* Derived widgets: bindings that compose MORE than a single stock shadcn
- * primitive — a custom overlay (Search's icon + clear button) or a control that
- * wraps an external library (OTP → input-otp, Calendar → react-day-picker). The
- * widget is still one insane.field() binding; only the React it emits is richer. */
+ * primitive — a multi-part shadcn composition (Search → InputGroup with icon +
+ * clear button) or a control that wraps an external library (OTP → input-otp,
+ * Calendar → react-day-picker). Still one insane.field() binding; only the React
+ * it emits is richer. */
 /* @code-panel:field-definition — the code panel shows each featured field's
  * binding definition + the example schema, not the form boilerplate. */
 const meta: Meta = {
@@ -54,7 +55,7 @@ export const Otp: StoryObj = {
 }
 
 export const DatePicker: StoryObj = {
-  name: 'Calendar',
+  name: 'Date Picker',
   render: () => {
     const schema = insane.group({
       when: DateField.meta({ title: 'Event date' }),
