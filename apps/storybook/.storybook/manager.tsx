@@ -30,9 +30,17 @@ const CodePanel = ({ active }: { active: boolean }) => {
     emit(CODE_PANEL_REQUEST)
   }, [emit])
 
+  // "No black boxes": a referenced identifier (e.g. a shadcn primitive) is marked
+  // `.code-note` with a `data-href`; clicking it opens that reference's docs.
+  const openRef = (e: { target: unknown }) => {
+    const el = (e.target as HTMLElement | null)?.closest?.('[data-href]')
+    const href = el?.getAttribute('data-href')
+    if (href) window.open(href, '_blank', 'noopener')
+  }
+
   const body = h(
     'div',
-    { className: 'insane-code-panel' },
+    { className: 'insane-code-panel', onClick: openRef },
     html
       ? h('div', { dangerouslySetInnerHTML: { __html: html } })
       : h('p', { style: { padding: 16, opacity: 0.6 } }, 'No code for this story.'),
@@ -47,7 +55,24 @@ const CodePanel = ({ active }: { active: boolean }) => {
          flex: 1; margin: 0; padding: 16px; overflow: auto; box-sizing: border-box;
          font-size: 13px; line-height: 1.6; tab-size: 2;
          font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-       }`,
+       }
+       /* Referenced identifiers: a clearly-visible link marker + hover popover +
+          click-through. Distinct accent (not currentColor) so it's unmissable. */
+       .insane-code-panel .code-note {
+         position: relative; cursor: pointer;
+         text-decoration: underline dashed #58a6ff; text-underline-offset: 3px;
+         border-radius: 2px; background: rgba(88, 166, 255, 0.14);
+       }
+       .insane-code-panel .code-note:hover { background: rgba(88, 166, 255, 0.28); }
+       .insane-code-panel .code-note::after {
+         content: attr(data-note); position: absolute; bottom: calc(100% + 6px); left: 0;
+         z-index: 30; width: max-content; max-width: 26rem; padding: .5rem .6rem;
+         font-size: 11px; line-height: 1.5; white-space: normal; color: #fff;
+         background: #1c2128; border: 1px solid #444c56; border-radius: 4px;
+         opacity: 0; pointer-events: none; transition: opacity .12s;
+       }
+       .insane-code-panel .code-note:hover::after,
+       .insane-code-panel .code-note:focus-visible::after { opacity: 1; }`,
     ),
   )
   return h(AddonPanel, { active, children: body })

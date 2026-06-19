@@ -71,6 +71,27 @@ NEXT code line (Biome relocates long trailing comments, so both are handled).
 Move panes strip notes without rendering them (keyed tokens can't carry
 decorations). The e2e suite asserts notes exist and `@note` never leaks.
 
+## Direction: no black boxes, no dead ends
+
+North star for the whole displayed-code system: every token that refers to a real
+project concept is reachable — shown inline, or hover-doc'd + linked to its
+playground page. Only non-lessons may be silently hidden (example data, demo-app
+chrome, the `ZodForm` harness). Three treatments: (1) inline-expand our own small
+compositions on their own page (e.g. `extractConstArrow` showing `DatePickerWidget`);
+(2) reference + hover-link for vendored shadcn primitives / cross-refs to other
+insane pages / "field extends field"; (3) silently hide non-lessons. Treatment is
+contextual — an identifier is inlined on its OWN page but a link elsewhere.
+
+PILOTED (not yet rolled out): the Storybook code panel marks referenced identifiers
+via a `REFERENCES` registry in `code-panel.plugin.ts` (identifier → {doc, href}) that
+emits Shiki `code-note` decorations carrying `data-note` + `data-href`; `manager.tsx`
+supplies the popover CSS + a click handler that opens `data-href`. Seeded with one
+entry (`Checkbox` → shadcn docs). NOT YET DONE for full rollout (see the
+[[code-example-no-black-boxes]] memory): link-target policy by origin, deriving the
+hover text from a doc-comment at the definition (not hand-authored), a "meaningful
+reference" allowlist, and a completeness TEST (every meaningful identifier is shown/
+noted/linked) — the teeth that keep the property from rotting.
+
 ## Authoring rules
 
 - Biome formats everything (`pnpm run format`); the verbatim pipeline means

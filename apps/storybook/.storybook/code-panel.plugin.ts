@@ -24,6 +24,51 @@ const THEME = 'github-dark-default'
 const FIELD_DEF_MARKER = '@code-panel:field-definition'
 const SHELL_DEF_MARKER = '@code-panel:shell-definition'
 
+/** "No black boxes": identifiers in displayed code that refer to something we
+ *  DON'T show inline (a vendored shadcn primitive, another showcase page) get a
+ *  hover doc + a link to where they live, so nothing displayed is opaque. Pilot
+ *  seed — one entry; extend per the no-black-boxes direction (see the skill). */
+const REFERENCES: Record<string, { doc: string; href: string }> = {
+  Checkbox: {
+    doc: 'shadcn/ui Checkbox — the primitive this field wraps. Opens its docs.',
+    href: 'https://ui.shadcn.com/docs/components/checkbox',
+  },
+}
+
+type Decoration = {
+  start: { line: number; character: number }
+  end: { line: number; character: number }
+  properties: Record<string, string>
+}
+
+/** Shiki decorations marking the first occurrence of each REFERENCES identifier
+ *  (whole-word) as a hoverable, clickable `code-note` link. Sorted, non-overlapping. */
+const referenceDecorations = (code: string): Decoration[] => {
+  const lines = code.split('\n')
+  const decos: Decoration[] = []
+  for (const [name, ref] of Object.entries(REFERENCES)) {
+    const re = new RegExp(`\\b${name}\\b`)
+    for (let line = 0; line < lines.length; line++) {
+      const at = lines[line].search(re)
+      if (at === -1) continue
+      decos.push({
+        start: { line, character: at },
+        end: { line, character: at + name.length },
+        properties: {
+          class: 'code-note',
+          'data-note': ref.doc,
+          'data-href': ref.href,
+          tabindex: '0',
+          role: 'link',
+          'aria-label': ref.doc,
+        },
+      })
+      break // first occurrence only
+    }
+  }
+  return decos.sort((a, b) => a.start.line - b.start.line || a.start.character - b.start.character)
+}
+
 /** Index of the char matching the bracket that opens at `open`. */
 const matchBracket = (src: string, open: number, openCh: string, closeCh: string): number => {
   let depth = 0
@@ -211,7 +256,11 @@ export function codePanelPlugin(): Plugin {
             : fieldDefMode
               ? fieldDefView(body, fieldDefs, fieldsSrc)
               : body
-          byName[name] = highlighter.codeToHtml(code, { lang: 'tsx', theme: THEME })
+          byName[name] = highlighter.codeToHtml(code, {
+            lang: 'tsx',
+            theme: THEME,
+            decorations: referenceDecorations(code),
+          })
         }
         map[file] = byName
       }
