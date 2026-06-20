@@ -1,0 +1,20 @@
+{
+  "InputField": "?path=/story/integration-examples-shadcn-ui-widgets--input",
+  "TextareaField": "?path=/story/integration-examples-shadcn-ui-widgets--textarea",
+  "CheckboxField": "?path=/story/integration-examples-shadcn-ui-widgets--checkbox",
+  "SelectField": "?path=/story/integration-examples-shadcn-ui-widgets--select",
+  "NativeSelectField": "?path=/story/integration-examples-shadcn-ui-widgets--native-select",
+  "RadioField": "?path=/story/integration-examples-shadcn-ui-widgets--radio",
+  "SwitchField": "?path=/story/integration-examples-shadcn-ui-widgets--switch-control",
+  "SliderField": "?path=/story/integration-examples-shadcn-ui-widgets--slider-control",
+  "ToggleField": "?path=/story/integration-examples-shadcn-ui-widgets--toggle-control",
+  "ToggleGroupField": "?path=/story/integration-examples-shadcn-ui-widgets--toggle-group-control",
+  "SearchField": "?path=/story/integration-examples-shadcn-ui-derived-widgets--search-input",
+  "OtpField": "?path=/story/integration-examples-shadcn-ui-derived-widgets--otp",
+  "DateField": "?path=/story/integration-examples-shadcn-ui-derived-widgets--date-picker",
+  "FieldShell": "?path=/story/integration-examples-shadcn-ui-shells--field-shell-story",
+  "CheckboxFieldShell": "?path=/story/integration-examples-shadcn-ui-shells--checkbox-shell-story",
+  "CellText": "?path=/story/examples-editable-table--invoice-line-items",
+  "CellNumber": "?path=/story/examples-editable-table--invoice-line-items",
+  "FieldSetList": "?path=/story/examples-collections--bounded-list"
+}

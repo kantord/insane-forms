@@ -288,6 +288,14 @@ export function codePanelPlugin(): Plugin {
       const registryFile = path.resolve(import.meta.dirname, 'shadcn-registry.json')
       this.addWatchFile(registryFile)
       const references = extractReferences(fieldsSrc, loadRegistry(registryFile))
+      // "No black boxes" for OUR OWN symbols: bindings/shells link to their Storybook
+      // page. Same crossref file the code-panel-coverage skill reads, so a symbol is
+      // "covered" iff it actually renders a link here. Registry links win on clashes.
+      const crossrefFile = path.resolve(import.meta.dirname, 'code-panel-crossref.json')
+      this.addWatchFile(crossrefFile)
+      const crossref = JSON.parse(readFileSync(crossrefFile, 'utf8')) as Record<string, string>
+      for (const [name, href] of Object.entries(crossref))
+        references[name] ??= { doc: `insane-forms ${name} — opens its Storybook page.`, href }
 
       const files = readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'))
       const highlighter = await createHighlighter({ langs: ['tsx'], themes: [THEME] })

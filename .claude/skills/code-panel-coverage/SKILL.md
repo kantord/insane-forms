@@ -25,8 +25,11 @@ No network, nothing in the repo is modified (it only reads `fields.tsx` + the re
 
 Each task names a shown symbol, its auto-classification (`class`/`source`/`exported`), and
 asks you to resolve **one** of:
-- **`crossref.json`** — `"Symbol": "<doc or Storybook story URL>"` → it should be linked.
-- **`exempt.json`** — `"Symbol"` → it's an internal detail not worth documenting.
+- **`code-panel-crossref.json`** — `"Symbol": "<doc or Storybook story URL>"` → it should be linked.
+- **`code-panel-exempt.json`** — `"Symbol"` → it's an internal detail not worth documenting.
+
+Both live in `apps/storybook/.storybook/` and are the SAME files the code panel plugin reads,
+so a symbol is "covered" here iff it actually renders a link in the panel.
 
 Re-run `detect.sh` after edits; resolved symbols drop off (the list converges to empty).
 For more than a couple, fan out one sub-agent per task — but most cluster into bulk decisions
@@ -48,18 +51,17 @@ We use the `typescript` compiler (already a dep) rather than adding `ts-morph`, 
 supply-chain policy (see quality-gates skill). `ts-morph` is a clean swap-in if deeper symbol
 resolution is ever needed.
 
-## Config
+## Config (shared with the plugin, in `apps/storybook/.storybook/`)
 
-- `crossref.json` — `{ "Symbol": "url" }`, symbols that should link and where.
-- `exempt.json` — `[ "Symbol", … ]`, symbols deliberately not documented (internal helpers).
+- `code-panel-crossref.json` — `{ "Symbol": "url" }`, symbols that should link and where.
+- `code-panel-exempt.json` — `[ "Symbol", … ]`, symbols deliberately not documented.
 
 ## Scope & follow-up
 
 - v1 enumerates symbols in `fields.tsx` (the binding/shell/widget definitions the panel shows
   for the widget & shell stories). Extending the enumerator to story render bodies is a follow-up.
-- The reconcile produces the **coverage decisions**. Making `crossref.json` actually *render*
-  links for our own symbols requires a small `code-panel.plugin.ts` change (read `crossref.json`,
-  add `code-note` decorations the same way registry imports are linked today). That plugin wiring
-  is the natural next PR — this skill gives it the exact, converging list of what to wire.
+- Plugin wiring is DONE: `code-panel.plugin.ts` reads `code-panel-crossref.json` and links our own
+  symbols the same way registry imports are linked (registry wins on a name clash). So the reconcile
+  and the rendered links share one source of truth — keep them that way.
 - This is the basis for the long-open "completeness test": a non-empty result = fail, gating the
   "no black boxes" invariant in CI.

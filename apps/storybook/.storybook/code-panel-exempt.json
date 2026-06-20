@@ -8,5 +8,12 @@
   "FieldLabelRow",
   "HelpTooltip",
   "GroupShell",
-  "ToggleFieldShell"
+  "ToggleFieldShell",
+  "Shell",
+  "FieldProps",
+  "Derive",
+  "SchemaReader",
+  "CollectionWrapper",
+  "insane.field",
+  "NumberField"
 ]

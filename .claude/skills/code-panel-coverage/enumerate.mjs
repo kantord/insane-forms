@@ -19,10 +19,8 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 
-const HERE = path.dirname(fileURLToPath(import.meta.url))
 const REPO = process.env.REPO || process.cwd()
 const COVERAGE_DIR = process.env.COVERAGE_DIR || '/tmp/code-panel-coverage'
 
@@ -35,8 +33,11 @@ const readJson = (p, fallback) => {
     return fallback
   }
 }
-const crossref = readJson(path.join(HERE, 'crossref.json'), {}) // symbol -> doc URL
-const exempt = new Set(readJson(path.join(HERE, 'exempt.json'), [])) // symbols to ignore
+// Shared with code-panel.plugin.ts — a symbol is "covered" iff it actually renders
+// a link there. Single source of truth lives next to the plugin.
+const storybookDir = path.join(REPO, 'apps/storybook/.storybook')
+const crossref = readJson(path.join(storybookDir, 'code-panel-crossref.json'), {}) // symbol -> URL
+const exempt = new Set(readJson(path.join(storybookDir, 'code-panel-exempt.json'), [])) // symbols to ignore
 
 // registry: components/ui/<file> basename -> has Base/Radix docs (i.e. linkable)
 const registry = new Set()
@@ -53,10 +54,38 @@ for (const item of readJson(registryFile, [])) {
 
 // JS/TS globals + common utility types — PascalCase but never "black boxes".
 const BUILTINS = new Set([
-  'Array', 'Object', 'Date', 'Number', 'String', 'Boolean', 'Promise', 'Map', 'Set',
-  'WeakMap', 'WeakSet', 'RegExp', 'Error', 'Symbol', 'BigInt', 'Math', 'JSON', 'Proxy',
-  'Reflect', 'Function', 'Partial', 'Required', 'Readonly', 'Record', 'Pick', 'Omit',
-  'Exclude', 'Extract', 'NonNullable', 'ReturnType', 'Parameters', 'Awaited',
+  'Array',
+  'Object',
+  'Date',
+  'Number',
+  'String',
+  'Boolean',
+  'Promise',
+  'Map',
+  'Set',
+  'WeakMap',
+  'WeakSet',
+  'RegExp',
+  'Error',
+  'Symbol',
+  'BigInt',
+  'Math',
+  'JSON',
+  'Proxy',
+  'Reflect',
+  'Function',
+  'Partial',
+  'Required',
+  'Readonly',
+  'Record',
+  'Pick',
+  'Omit',
+  'Exclude',
+  'Extract',
+  'NonNullable',
+  'ReturnType',
+  'Parameters',
+  'Awaited',
 ])
 
 const src = readFileSync(fieldsFile, 'utf8')
@@ -76,13 +105,16 @@ for (const st of sf.statements) {
     if (nb && ts.isNamedImports(nb)) for (const e of nb.elements) importModule.set(e.name.text, mod)
     continue
   }
-  const isExport = ts.canHaveModifiers(st) && ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
+  const isExport =
+    ts.canHaveModifiers(st) &&
+    ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
   if (!isExport) continue
-  if (ts.isVariableStatement(st))
+  if (ts.isVariableStatement(st)) {
     for (const d of st.declarationList.declarations)
       if (ts.isIdentifier(d.name)) exported.add(d.name.text)
-  else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st)) && st.name)
+  } else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st)) && st.name) {
     exported.add(st.name.text)
+  }
 }
 
 // One walk: collect shown symbols + ALL local declaration names (any depth) +
@@ -99,7 +131,12 @@ const visit = (node) => {
     const n = declName(node.name)
     if (n) localDecls.add(n)
   }
-  if ((ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isClassDeclaration(node)) && node.name)
+  if (
+    (ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
+      ts.isClassDeclaration(node)) &&
+    node.name
+  )
     localDecls.add(node.name.text)
   if (
     ts.isPropertyAccessExpression(node) &&
@@ -122,14 +159,17 @@ const classify = (sym) => {
     return { class: 'shadcn', source: mod, file: mod.split('/').pop() }
   if (mod === 'insane-forms') return { class: 'core', source: mod }
   if (mod) return { class: 'external', source: mod }
-  if (localDecls.has(sym)) return { class: 'local', source: 'fields.tsx', exported: exported.has(sym) }
+  if (localDecls.has(sym))
+    return { class: 'local', source: 'fields.tsx', exported: exported.has(sym) }
   return { class: 'unknown', source: '?' }
 }
 
 const SUGGEST = {
-  shadcn: 'shadcn primitive missing from the registry — refresh shadcn-registry.json (vendor:registry).',
+  shadcn:
+    'shadcn primitive missing from the registry — refresh shadcn-registry.json (vendor:registry).',
   core: 'insane-forms core symbol — add a doc URL in crossref.json, or add to exempt.json if not doc-worthy.',
-  local: 'our own symbol — exported bindings/shells: add a cross-ref to its Storybook page in crossref.json; internal helpers: add to exempt.json.',
+  local:
+    'our own symbol — exported bindings/shells: add a cross-ref to its Storybook page in crossref.json; internal helpers: add to exempt.json.',
   external: 'external lib — auto-exempt by policy; add a crossref URL only if you want it linked.',
   builtin: 'JS/TS built-in — auto-exempt.',
   unknown: 'unresolved — inspect manually; add to crossref.json or exempt.json.',
@@ -165,7 +205,9 @@ mkdirSync(COVERAGE_DIR, { recursive: true })
 writeFileSync(path.join(COVERAGE_DIR, 'classify.json'), JSON.stringify(detail, null, 2))
 // TSV sidecar so the worker needs no JSON parsing: sym<TAB>class<TAB>source<TAB>exported<TAB>suggestion
 const tsv = Object.entries(detail)
-  .map(([k, v]) => [k, v.class, v.source, v.exported ?? '', (v.suggestion || '').replace(/\t/g, ' ')].join('\t'))
+  .map(([k, v]) =>
+    [k, v.class, v.source, v.exported ?? '', (v.suggestion || '').replace(/\t/g, ' ')].join('\t'),
+  )
   .join('\n')
 writeFileSync(path.join(COVERAGE_DIR, 'classify.tsv'), tsv + (tsv ? '\n' : ''))
 process.stdout.write(rows.join('\n') + (rows.length ? '\n' : ''))
