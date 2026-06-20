@@ -12,11 +12,14 @@ command -v esto >/dev/null 2>&1 || {
 }
 
 rm -rf "$RECONCILE_TASKS"; mkdir -p "$RECONCILE_TASKS"
+# esto simple mode (default): worker invoked once per item with positional args.
+# esto runs `sh -c "$cmd" _ key old new`, so forward "$@" to the script — a bare
+# path would drop the args. (Use `esto --dry-run …` to preview the diff first.)
 esto --once \
   --from "$HERE/from.sh" \
   --to   "$HERE/to.sh" \
-  --update "$HERE/worker.sh update" \
-  --exit   "$HERE/worker.sh exit"
+  --update "$HERE/worker.sh update \"\$@\"" \
+  --exit   "$HERE/worker.sh exit \"\$@\""
 
 shopt -s nullglob
 tasks=("$RECONCILE_TASKS"/*.md)

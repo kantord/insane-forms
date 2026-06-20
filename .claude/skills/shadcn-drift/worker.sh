@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
-# esto worker. $1 = mode: "update" (key<TAB>old<TAB>new) | "exit" (key<TAB>value).
-# Emits one markdown reconcile task per item to $SHADCN_DRIFT_TASKS, then acks.
-mode="${1:-update}"
+# esto SIMPLE-mode worker (one invocation per item; exit 0 = ok). Args:
+#   update:  $1=mode("update")  $2=key  $3=old_hash  $4=new_hash
+#   exit:    $1=mode("exit")    $2=key  $3=value
+# Emits one markdown reconcile task per item to $SHADCN_DRIFT_TASKS.
+set -u
+mode="$1"
+key="$2"
 TASKS_DIR="${SHADCN_DRIFT_TASKS:-/tmp/shadcn-drift-tasks}"
 mkdir -p "$TASKS_DIR"
+[ -z "$key" ] && exit 0
 
-while IFS=$'\t' read -r key a b; do
-  [ -z "$key" ] && continue
-  if [ "$mode" = "exit" ]; then
-    cat >"$TASKS_DIR/$key.md" <<TASK
+if [ "$mode" = "exit" ]; then
+  value="${3:-}"
+  cat >"$TASKS_DIR/$key.md" <<TASK
 # shadcn drift: \`$key\` — gone from upstream
 
 A fresh \`shadcn add $key\` did not produce a file, but we still vendor
-\`packages/ui/components/ui/$key.tsx\` (committed hash: $a).
+\`packages/ui/components/ui/$key.tsx\` (committed hash: $value).
 
 Decide:
 1. Grep usages of $key across packages/examples + apps.
@@ -20,14 +24,16 @@ Decide:
    document why; if unused, remove it.
 3. Run the quality gates (quality-gates skill) before declaring done.
 TASK
-  else
-    cat >"$TASKS_DIR/$key.md" <<TASK
+else
+  old="${3:-}"
+  new="${4:-}"
+  cat >"$TASKS_DIR/$key.md" <<TASK
 # shadcn drift: \`$key\` — changed upstream
 
 \`packages/ui/components/ui/$key.tsx\` no longer matches a fresh \`shadcn add $key\`
 (normalized content hash differs).
-  old (committed): $a
-  new (upstream):  $b
+  old (committed): $old
+  new (upstream):  $new
 
 Reconcile:
 1. Re-vendor just this component:
@@ -41,6 +47,4 @@ Reconcile:
 4. Grep usages of <$key> across packages/examples + apps; confirm none break.
 5. Run the quality gates (quality-gates skill) before declaring done.
 TASK
-  fi
-  printf 'done\t%s\n' "$key"
-done
+fi

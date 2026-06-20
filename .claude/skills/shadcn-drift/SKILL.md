@@ -44,6 +44,11 @@ hash per component:
 - `--update` fires when a component's hash differs (drift); `--exit` fires when a
   component we vendor no longer installs from upstream (removed/renamed).
 
+The workers run in esto's **simple mode** (the default): each is invoked once per item with
+positional args (`worker.sh <mode> key [old] [new]`), exit 0 = ok — no long-lived stdin/stdout
+protocol. `detect.sh` forwards `"$@"` to the worker (a bare path would drop the args). Preview a
+run without writing tasks via `esto --dry-run …`.
+
 The desired state must be the *re-vendor output*, NOT the registry's per-item
 `content`: that payload is a template — it ships `@/registry/<style>/lib/utils` aliases
 and `<IconPlaceholder lucide=… tabler=… />` placeholders that the `shadcn add` CLI

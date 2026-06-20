@@ -1,27 +1,31 @@
 #!/usr/bin/env bash
-# __NAME__ worker. $1 = mode: "update" (key<TAB>old<TAB>new) | "exit" (key<TAB>value).
-# Emits one markdown task per delta item, then acks. EDIT the task bodies for your job.
-# (For a mechanical reconcile, replace the cat/heredoc with the actual fix and still ack.)
-mode="${1:-update}"
+# __NAME__ esto SIMPLE-mode worker (one invocation per item; exit 0 = ok, nonzero = error).
+# Args (esto runs it as `worker.sh <mode> key [old] [new]` via the "$@" in detect.sh):
+#   update:  $1="update"  $2=key  $3=old_value  $4=new_value
+#   exit:    $1="exit"    $2=key  $3=value
+# Emits one markdown task per delta item. EDIT the bodies for your job.
+# (For a MECHANICAL reconcile, replace the heredoc with the actual fix and just exit 0.)
+set -u
+mode="$1"
+key="$2"
 TASKS_DIR="${RECONCILE_TASKS:-/tmp/__NAME__/tasks}"
 mkdir -p "$TASKS_DIR"
+[ -z "$key" ] && exit 0
 
-while IFS=$'\t' read -r key a b; do
-  [ -z "$key" ] && continue
-  safe="$(printf '%s' "$key" | tr '/. ' '___')"
-  if [ "$mode" = "exit" ]; then
-    cat >"$TASKS_DIR/$safe.md" <<TASK
+if [ "$mode" = "exit" ]; then
+  value="${3:-}"
+  cat >"$TASKS_DIR/$key.md" <<TASK
 # __NAME__: \`$key\` removed
-value: $a
+value: $value
 TODO: describe the reaction for a removed item.
 TASK
-  else
-    cat >"$TASKS_DIR/$safe.md" <<TASK
+else
+  old="${3:-}"
+  new="${4:-}"
+  cat >"$TASKS_DIR/$key.md" <<TASK
 # __NAME__: \`$key\` changed
-old: $a
-new: $b
+old: $old
+new: $new
 TODO: describe the reaction for a changed item.
 TASK
-  fi
-  printf 'done\t%s\n' "$key"
-done
+fi

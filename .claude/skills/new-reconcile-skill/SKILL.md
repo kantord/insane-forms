@@ -53,9 +53,12 @@ for the invariant shape `to.sh` is already complete). Refuses to overwrite (use 
 1. Implement `from.sh` (and `to.sh` for the fingerprint shape) — copy the matching reference
    skill (`shadcn-drift` or `code-panel-coverage`). Keep `--to` non-destructive (worktree, not
    in-place) if it regenerates.
-2. Edit `worker.sh`'s task body (or make it apply the fix and ack, for a mechanical reconcile).
-3. Dry-run `bash .claude/skills/<name>/detect.sh` and iterate until the task set is right. Tip:
-   keep a log+ack worker as a pure planner while iterating (plan/apply separation).
+2. Edit `worker.sh`'s task body (or make it apply the fix and exit 0, for a mechanical reconcile).
+   It's a SIMPLE-mode worker: invoked once per item with positional args (`$1`=mode, `$2`=key,
+   `$3`=old/value, `$4`=new), exit 0 = ok. No stdin/stdout protocol. detect.sh forwards `"$@"`.
+3. Preview with `esto --dry-run …` (shows the enter/exit/update diff, dispatches nothing), then
+   run `bash .claude/skills/<name>/detect.sh` and iterate until the task set is right. esto prints
+   its own `--once` summary (`reconciled: N enter, N update, N exit (N unchanged)`).
 4. **Verify convergence**: fix/exempt a couple of items, re-run, confirm they drop off.
 5. Fill in the generated `SKILL.md` (it ships with TODOs).
 

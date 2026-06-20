@@ -14,11 +14,14 @@ command -v esto >/dev/null 2>&1 || {
 rm -rf "$SHADCN_DRIFT_TASKS"; mkdir -p "$SHADCN_DRIFT_TASKS"
 echo "Detecting shadcn drift — re-vendoring in a throwaway worktree (hits the network)…" >&2
 
+# esto simple mode (default): each worker is invoked once per item with positional
+# args. esto runs `sh -c "$cmd" _ key old new`, so the command must forward "$@"
+# to the script (a bare path would drop the args). esto prints its own --once summary.
 esto --once \
   --from "$HERE/from.sh" \
   --to   "$HERE/to.sh" \
-  --update "$HERE/worker.sh update" \
-  --exit   "$HERE/worker.sh exit"
+  --update "$HERE/worker.sh update \"\$@\"" \
+  --exit   "$HERE/worker.sh exit \"\$@\""
 
 shopt -s nullglob
 tasks=("$SHADCN_DRIFT_TASKS"/*.md)
