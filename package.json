@@ -7,6 +7,9 @@
     "node": ">=22.18"
   },
   "scripts": {
+    "vendor": "pnpm run vendor:ui && pnpm run vendor:registry && pnpm run format",
+    "vendor:ui": "pnpm --filter @insane-forms/ui run vendor",
+    "vendor:registry": "curl -fsS https://ui.shadcn.com/r/index.json -o apps/storybook/.storybook/shadcn-registry.json",
     "play": "pnpm --filter @insane-forms/landing run play",
     "build:docs": "pnpm --filter @insane-forms/landing run build",
     "storybook": "pnpm --filter @insane-forms/storybook run storybook",

@@ -4,6 +4,9 @@
   "type": "module",
   "version": "0.0.0",
   "description": "Vendored shadcn/ui (Base UI flavor) components — installed via the shadcn CLI, kept unchanged.",
+  "scripts": {
+    "vendor": "pnpm dlx shadcn@latest add --yes --overwrite $(for f in components/ui/*.tsx; do basename \"$f\" .tsx; done)"
+  },
   "exports": {
     "./globals.css": "./globals.css",
     "./components/*": "./components/*",

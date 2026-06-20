@@ -84,13 +84,17 @@ contextual — an identifier is inlined on its OWN page but a link elsewhere.
 
 DONE for shadcn base components: the Storybook code panel marks every shadcn
 primitive shown in displayed code as a hover-doc'd, clickable link to its docs.
-NOT hand-authored — `extractReferences(fieldsSrc)` in `code-panel.plugin.ts` reads
-every `import { X, Y } from '@/components/ui/<file>'` in fields.tsx and maps each
-name → `…/docs/components/<file>` (the filename IS the docs slug). `referenceDecorations`
-emits Shiki `code-note` decorations (`data-note` + `data-href`, first occurrence per
-identifier); `manager.tsx` supplies the dotted-accent popover CSS + a click handler
-that opens `data-href`. So any base component a widget imports is linked automatically
-— add a component, it's covered, zero upkeep. (~43 identifiers / 17 families today.)
+REGISTRY-DRIVEN, not hand-authored — `.storybook/shadcn-registry.json` is a vendored
+copy of `https://ui.shadcn.com/r/index.json` (refresh: `curl -fsS that-url -o
+.storybook/shadcn-registry.json`). `loadRegistry` maps each item's `files[].path`
+basename → its `meta.links.base.docs` (BASE UI docs — our components are the Base UI
+`base-nova` flavor; falls back to radix). `extractReferences(fieldsSrc, registry)`
+resolves every `import { X, Y } from '@/components/ui/<file>'` against it: only
+components that exist in the registry get linked (validation), each to its Base UI docs
+URL. `referenceDecorations` emits Shiki `code-note` decorations (`data-note` +
+`data-href`, first occurrence per identifier); `manager.tsx` supplies the dotted-accent
+popover CSS + a click handler that opens `data-href`. Import a component → it's linked
+automatically; zero upkeep beyond refreshing the registry copy. (17 families today.)
 STILL NOT DONE (see [[code-example-no-black-boxes]]): the same treatment for cross-refs
 to OUR own pages (a field used in a form → its Widgets story) — needs an identifier→
 story-id map; deriving prose hover text from a definition doc-comment (today it's a

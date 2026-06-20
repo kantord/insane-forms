@@ -26,24 +26,57 @@ const SHELL_DEF_MARKER = '@code-panel:shell-definition'
 
 type Reference = { doc: string; href: string }
 
+/** shadcn registry (a vendored copy of https://ui.shadcn.com/r/index.json) → a
+ *  map from a `components/ui/<file>` basename to that component's canonical name
+ *  and Base UI docs URL. Refresh with:
+ *    curl -fsS https://ui.shadcn.com/r/index.json -o .storybook/shadcn-registry.json
+ *  We use the `base` (Base UI) docs because this project's vendored components are
+ *  the Base UI flavor (components.json style `base-nova`); fall back to radix. */
+type RegistryItem = {
+  name: string
+  files?: { path: string }[]
+  meta?: { links?: { base?: { docs?: string }; radix?: { docs?: string } } }
+}
+const loadRegistry = (file: string): Record<string, { name: string; docs: string }> => {
+  const items = JSON.parse(readFileSync(file, 'utf8')) as RegistryItem[]
+  const byFile: Record<string, { name: string; docs: string }> = {}
+  for (const item of items) {
+    const docs = item.meta?.links?.base?.docs ?? item.meta?.links?.radix?.docs
+    if (!docs) continue
+    for (const f of item.files ?? []) {
+      const base = f.path
+        .split('/')
+        .pop()
+        ?.replace(/\.tsx?$/, '')
+      if (base) byFile[base] = { name: item.name, docs }
+    }
+  }
+  return byFile
+}
+
 /** "No black boxes": every shadcn primitive shown in displayed code links to its
  *  docs. DERIVED, not hand-authored — each `import { X, Y } from '@/components/ui/<file>'`
- *  in fields.tsx maps every imported name to `…/docs/components/<file>` (the
- *  filename IS the docs slug). So any base component a widget uses is linked
- *  automatically, and a new one is covered the moment it's imported — zero upkeep. */
-const extractReferences = (src: string): Record<string, Reference> => {
+ *  in fields.tsx is resolved against the vendored registry: <file> → its Base UI
+ *  docs URL, and every imported name maps to it. Only components that actually
+ *  exist in the registry are linked (validation); a new one is covered the moment
+ *  it's imported — zero upkeep beyond refreshing the registry copy. */
+const extractReferences = (
+  src: string,
+  registry: Record<string, { name: string; docs: string }>,
+): Record<string, Reference> => {
   const refs: Record<string, Reference> = {}
   const importRe = /import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/([\w-]+)'/g
   for (let m = importRe.exec(src); m !== null; m = importRe.exec(src)) {
-    const slug = m[2]
-    const href = `https://ui.shadcn.com/docs/components/${slug}`
+    const entry = registry[m[2]]
+    if (!entry) continue // not a real shadcn registry component → don't link
     for (const raw of m[1].split(',')) {
       const name = raw
         .trim()
         .replace(/^type\s+/, '')
         .split(/\s+as\s+/)[0]
         .trim()
-      if (name) refs[name] = { doc: `shadcn/ui ${name} — opens its docs.`, href }
+      if (name)
+        refs[name] = { doc: `shadcn/ui ${name} — opens the Base UI docs.`, href: entry.docs }
     }
   }
   return refs
@@ -252,7 +285,9 @@ export function codePanelPlugin(): Plugin {
       const fieldsSrc = readFileSync(fieldsFile, 'utf8')
       const fieldDefs = extractFieldDefs(fieldsSrc)
       const shellDefs = extractShellDefs(fieldsSrc)
-      const references = extractReferences(fieldsSrc)
+      const registryFile = path.resolve(import.meta.dirname, 'shadcn-registry.json')
+      this.addWatchFile(registryFile)
+      const references = extractReferences(fieldsSrc, loadRegistry(registryFile))
 
       const files = readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'))
       const highlighter = await createHighlighter({ langs: ['tsx'], themes: [THEME] })
