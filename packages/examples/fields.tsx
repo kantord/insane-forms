@@ -71,7 +71,7 @@ const HelpTooltip = ({ content, label }: { content: ReactNode; label?: string })
         <button
           type="button"
           aria-label={label ? `Help: ${label}` : 'Help'}
-          className="-my-1.5 -ml-1 inline-flex p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+          className="-my-1 inline-flex items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
         >
           <InfoIcon className="size-3" />
         </button>
@@ -96,7 +96,9 @@ const FieldLabelRow = ({
   required: boolean
 }) => (
   <div className="flex items-center">
-    <FieldLabel htmlFor={name}>{label}</FieldLabel>
+    <FieldLabel htmlFor={name} className="leading-none">
+      {label}
+    </FieldLabel>
     {help !== undefined && <HelpTooltip content={help} label={label} />}
     {required ? (
       <span aria-hidden="true" className="ml-1">
@@ -446,7 +448,7 @@ const GroupShell: Shell = ({ name, label, description, help, required, error, ch
       // id lets a composite control (e.g. the slider thumb) reference the legend
       // as its accessible name via aria-labelledby. Help/required live INSIDE the
       // legend — it must stay a direct child of the fieldset.
-      <FieldLegend id={`${name}-legend`} className="flex items-center">
+      <FieldLegend id={`${name}-legend`} className="flex items-center leading-none">
         {label}
         {help !== undefined && <HelpTooltip content={help} label={label} />}
         {required ? (
