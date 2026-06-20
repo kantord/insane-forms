@@ -6,6 +6,7 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build -o ../landing/dist/storybook",
+    "check:code-panel": "node .storybook/code-panel-coverage.mjs",
     "test": "vitest run"
   },
   "dependencies": {

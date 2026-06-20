@@ -13,6 +13,21 @@ Generates a new reconcile skill under `.claude/skills/<name>/` from two referenc
 
 Background: the reconcile-pattern memory and the esto `COOKBOOK.md`.
 
+## 0. First: does this even need esto? (don't reach for it by default)
+esto earns its keep only when **both sides genuinely vary** and the **enter/exit/update lifecycle
+maps to real reactions** (e.g. `shadcn-drift`: upstream changes → re-vendor; component removed → flag).
+
+If the **desired state is a constant** — an invariant like "every X must be covered / have a header /
+match a pattern" — the diff degenerates to "filter the violators." Then:
+- **Reaction is simple** (fail CI, or one mechanical fix) → **write a plain build-time check**, not esto.
+  A single script that enumerates, filters, exits non-zero, wired into `ci`. Fewer moving parts. The
+  `code-panel-coverage` skill is exactly this — it was rebuilt from esto into one `*.mjs` check.
+- **Reaction is heavy** (an AI agent per violator, across many items, where you want task files +
+  loop-until-dry + worker pooling) → the esto **invariant** shape still pays off as orchestration.
+
+Reach for full esto (both sides vary) when enter/exit/update map to distinct real reactions.
+When unsure, prefer the plain check — it's the cheaper default.
+
 ## 1. Confirm the 3 ingredients with the user (don't scaffold if any fails)
 1. **Enumerable** — both "current" and "desired" can be listed as `key<TAB>value`.
 2. **Fingerprintable** — the value captures *"has this changed"* (hash | predicate | version).

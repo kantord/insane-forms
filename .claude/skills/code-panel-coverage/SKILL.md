@@ -1,67 +1,51 @@
 ---
 name: code-panel-coverage
-description: Detect "black boxes" in the Storybook code panel — symbols shown in displayed code that are neither linked to docs nor exempt. Use to enforce the "no black boxes" direction, when adding field bindings/widgets, or to drive the "cross-refs to our own pages" work.
+description: The "no black boxes" coverage gate for the Storybook code panel — every symbol shown in displayed code must link to docs or be exempt. Use when adding field bindings/widgets, or when the check:code-panel gate fails.
 ---
 
 # Code-panel coverage ("no black boxes")
 
-The code panel (`apps/storybook/.storybook/code-panel.plugin.ts`) auto-links every shadcn
-primitive shown in displayed code to its Base UI docs, derived from the vendored registry.
-The "no black boxes" direction wants *every* meaningful symbol shown to be linked/hover-doc'd
-— including our own bindings (→ their Storybook pages) and core symbols. This skill finds the
-gaps and turns each into a task.
+The code panel (`apps/storybook/.storybook/code-panel.plugin.ts`) auto-links symbols shown in
+displayed code to their docs: shadcn primitives → Base UI docs (from the vendored registry), and
+our own bindings/shells → their Storybook pages (from `code-panel-crossref.json`). This gate
+checks that **every** meaningful symbol shown is either linked or deliberately exempt.
 
-## Run it
+## This is a plain build-time check (no esto)
+
+The desired state is a constant — "everything covered" — so it's a single pass, not a reconcile.
+The whole thing is `apps/storybook/.storybook/code-panel-coverage.mjs` (TypeScript compiler API),
+run as a script:
 
 ```bash
-bash .claude/skills/code-panel-coverage/detect.sh
+pnpm run check:code-panel          # repo root; also part of `pnpm run ci`
+node apps/storybook/.storybook/code-panel-coverage.mjs --json   # machine-readable
 ```
 
-Prints a summary and writes one task per black box to `$CODE_PANEL_TASKS`
-(default `/tmp/code-panel-coverage/tasks/`), then cats them. Requires `esto` on PATH.
-No network, nothing in the repo is modified (it only reads `fields.tsx` + the registry).
+It parses `packages/examples/fields.tsx`, collects every PascalCase identifier + `insane.*` call
+shown, classifies each by import source / declaration (shadcn / core / local / external / builtin),
+and exits non-zero listing any that are neither linked nor exempt.
 
-## What to do with the tasks
+> Why not esto? An earlier version wired this through the `esto` reconcile engine. But with a
+> constant target the diff degenerates to "filter the uncovered set" and the enter/exit/update
+> lifecycle goes unused — plain build-time code is simpler. Reserve esto for drift where both
+> sides genuinely vary (see the `shadcn-drift` skill).
 
-Each task names a shown symbol, its auto-classification (`class`/`source`/`exported`), and
-asks you to resolve **one** of:
-- **`code-panel-crossref.json`** — `"Symbol": "<doc or Storybook story URL>"` → it should be linked.
-- **`code-panel-exempt.json`** — `"Symbol"` → it's an internal detail not worth documenting.
+## Resolving a failure
 
-Both live in `apps/storybook/.storybook/` and are the SAME files the code panel plugin reads,
-so a symbol is "covered" here iff it actually renders a link in the panel.
+The gate lists each black box with its class. Resolve **one** of (both files live in
+`apps/storybook/.storybook/`, and are the SAME files the plugin reads — so a symbol is "covered"
+iff it actually renders a link):
 
-Re-run `detect.sh` after edits; resolved symbols drop off (the list converges to empty).
-For more than a couple, fan out one sub-agent per task — but most cluster into bulk decisions
-(e.g. "exempt all internal helpers", "cross-ref every exported `*Field` to its widget story").
+- `code-panel-crossref.json` — `"Symbol": "<doc or Storybook story URL>"` → it should link.
+- `code-panel-exempt.json` — `"Symbol"` → an internal detail not worth documenting.
 
-## How it works
-
-`esto --once` with the **invariant-as-constant-target** idiom:
-- `--from` (`enumerate.mjs`) measures reality: parses `fields.tsx` with the TypeScript
-  compiler API, collects every PascalCase identifier + `insane.*` call shown, and classifies
-  each by import source / declaration:
-  - `shadcn` (`@/components/ui/*`) → covered iff the file is in the registry (auto-linked)
-  - `external` (react/lucide/zod) / `builtin` (JS/TS globals) → auto-exempt
-  - `core` (`insane-forms`) / `local` (defined in `fields.tsx`) → **uncovered** unless in crossref/exempt
-- `--to` (`to.sh`) is the constant invariant: every shown symbol → `covered`.
-- `--update` fires for each `uncovered → covered` mismatch = a black box → one task.
-
-We use the `typescript` compiler (already a dep) rather than adding `ts-morph`, to respect the
-supply-chain policy (see quality-gates skill). `ts-morph` is a clean swap-in if deeper symbol
-resolution is ever needed.
-
-## Config (shared with the plugin, in `apps/storybook/.storybook/`)
-
-- `code-panel-crossref.json` — `{ "Symbol": "url" }`, symbols that should link and where.
-- `code-panel-exempt.json` — `[ "Symbol", … ]`, symbols deliberately not documented.
+`external` (react/lucide/zod) and `builtin` (JS/TS globals) are auto-exempt.
 
 ## Scope & follow-up
 
-- v1 enumerates symbols in `fields.tsx` (the binding/shell/widget definitions the panel shows
-  for the widget & shell stories). Extending the enumerator to story render bodies is a follow-up.
-- Plugin wiring is DONE: `code-panel.plugin.ts` reads `code-panel-crossref.json` and links our own
-  symbols the same way registry imports are linked (registry wins on a name clash). So the reconcile
-  and the rendered links share one source of truth — keep them that way.
-- This is the basis for the long-open "completeness test": a non-empty result = fail, gating the
-  "no black boxes" invariant in CI.
+- Covers symbols in `fields.tsx` (the binding/shell/widget definitions the panel shows for the
+  widget & shell stories). It does NOT yet scan story render bodies, so symbols used only there
+  (e.g. `ZodForm`, `demoSubmit`) are shown in the panel but not gated — a known gap. Extending the
+  enumerator to story bodies + their imports is the follow-up that makes the claim fully true.
+- We use the `typescript` compiler (already a dep), not `ts-morph`, per the supply-chain policy
+  (quality-gates skill). One analysis tool; `ts-morph` is a clean swap-in if deeper resolution is needed.

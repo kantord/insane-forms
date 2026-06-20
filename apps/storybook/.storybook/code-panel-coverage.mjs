@@ -1,31 +1,31 @@
 #!/usr/bin/env node
-// Enumerator for the code-panel "no black boxes" reconcile.
+// Build-time coverage gate for the code-panel "no black boxes" invariant.
 //
-// Parses packages/examples/fields.tsx (the binding/shell/widget definitions the
-// code panel displays) with the TypeScript compiler API, collects every
-// "meaningful" symbol shown (PascalCase identifiers + `insane.*` calls), and
-// classifies each by its import source / declaration:
-//   shadcn   – imported from @/components/ui/<file> (covered iff <file> is in the registry → it auto-links)
-//   core     – imported from insane-forms (or an `insane.*` member)
-//   external – imported from react/lucide/zod/etc (auto-exempt by policy)
-//   local    – defined in fields.tsx (our binding/shell/widget → wants a cross-ref to its page)
-//   unknown  – none of the above
+// Parses packages/examples/fields.tsx with the TypeScript compiler, collects every
+// "meaningful" symbol shown in the code panel (PascalCase identifiers + `insane.*`),
+// classifies each by import source / declaration, and reports the ones that are
+// neither linked nor exempt. Exits non-zero if any remain (CI gate).
 //
-// Emits TSV `symbol<TAB>covered|uncovered` on stdout (this is esto's --from), and
-// a sidecar classify.json (symbol → {class,source,status,suggestion}) the worker reads.
+//   node check.mjs            # report + exit 1 if uncovered
+//   node check.mjs --json     # machine-readable {covered,uncovered:[...]}
 //
-// "covered" = shadcn-linked OR external OR listed in crossref.json OR exempt.json.
-// v1 scope: symbols in fields.tsx. Extending to story render bodies is a follow-up.
+// This is a plain invariant check (desired = "everything covered", a constant), so it
+// is a single pass — no reconcile engine needed. Coverage decisions live in the two
+// shared config files next to the plugin, so a symbol is "covered" here iff it actually
+// renders a link in the panel.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 
-const REPO = process.env.REPO || process.cwd()
-const COVERAGE_DIR = process.env.COVERAGE_DIR || '/tmp/code-panel-coverage'
+const asJson = process.argv.includes('--json')
 
+// This file lives in apps/storybook/.storybook/ — resolve the repo root from here.
+const storybookDir = path.dirname(fileURLToPath(import.meta.url))
+const REPO = path.resolve(storybookDir, '../../..')
 const fieldsFile = path.join(REPO, 'packages/examples/fields.tsx')
-const registryFile = path.join(REPO, 'apps/storybook/.storybook/shadcn-registry.json')
+const registryFile = path.join(storybookDir, 'shadcn-registry.json')
 const readJson = (p, fallback) => {
   try {
     return JSON.parse(readFileSync(p, 'utf8'))
@@ -33,9 +33,6 @@ const readJson = (p, fallback) => {
     return fallback
   }
 }
-// Shared with code-panel.plugin.ts — a symbol is "covered" iff it actually renders
-// a link there. Single source of truth lives next to the plugin.
-const storybookDir = path.join(REPO, 'apps/storybook/.storybook')
 const crossref = readJson(path.join(storybookDir, 'code-panel-crossref.json'), {}) // symbol -> URL
 const exempt = new Set(readJson(path.join(storybookDir, 'code-panel-exempt.json'), [])) // symbols to ignore
 
@@ -167,47 +164,40 @@ const classify = (sym) => {
 const SUGGEST = {
   shadcn:
     'shadcn primitive missing from the registry — refresh shadcn-registry.json (vendor:registry).',
-  core: 'insane-forms core symbol — add a doc URL in crossref.json, or add to exempt.json if not doc-worthy.',
+  core: 'insane-forms core symbol — add a URL to code-panel-crossref.json, or list in code-panel-exempt.json.',
   local:
-    'our own symbol — exported bindings/shells: add a cross-ref to its Storybook page in crossref.json; internal helpers: add to exempt.json.',
-  external: 'external lib — auto-exempt by policy; add a crossref URL only if you want it linked.',
+    'our own symbol — exported bindings/shells: add to code-panel-crossref.json; internal helpers: code-panel-exempt.json.',
+  external: 'external lib — auto-exempt; add a crossref URL only if you want it linked.',
   builtin: 'JS/TS built-in — auto-exempt.',
-  unknown: 'unresolved — inspect manually; add to crossref.json or exempt.json.',
+  unknown: 'unresolved — inspect; add to code-panel-crossref.json or code-panel-exempt.json.',
 }
 
-const detail = {}
-const rows = []
+const uncovered = []
+let covered = 0
 for (const sym of [...shown].sort()) {
   const c = classify(sym)
-  let status, reason
-  if (c.class === 'shadcn') {
-    const linked = registry.has(c.file)
-    status = linked ? 'covered' : 'uncovered'
-    reason = linked ? 'shadcn-linked' : 'shadcn-missing-from-registry'
-  } else if (crossref[sym]) {
-    status = 'covered'
-    reason = 'crossref'
-  } else if (exempt.has(sym)) {
-    status = 'covered'
-    reason = 'exempt'
-  } else if (c.class === 'external' || c.class === 'builtin') {
-    status = 'covered'
-    reason = `${c.class}-auto-exempt`
-  } else {
-    status = 'uncovered'
-    reason = 'no-link'
-  }
-  detail[sym] = { ...c, status, reason, suggestion: SUGGEST[c.class] }
-  rows.push(`${sym}\t${status}`)
+  const ok =
+    (c.class === 'shadcn' && registry.has(c.file)) ||
+    crossref[sym] ||
+    exempt.has(sym) ||
+    c.class === 'external' ||
+    c.class === 'builtin'
+  if (ok) covered++
+  else uncovered.push({ symbol: sym, ...c, suggestion: SUGGEST[c.class] })
 }
 
-mkdirSync(COVERAGE_DIR, { recursive: true })
-writeFileSync(path.join(COVERAGE_DIR, 'classify.json'), JSON.stringify(detail, null, 2))
-// TSV sidecar so the worker needs no JSON parsing: sym<TAB>class<TAB>source<TAB>exported<TAB>suggestion
-const tsv = Object.entries(detail)
-  .map(([k, v]) =>
-    [k, v.class, v.source, v.exported ?? '', (v.suggestion || '').replace(/\t/g, ' ')].join('\t'),
+if (asJson) {
+  console.log(JSON.stringify({ covered, uncovered }, null, 2))
+} else if (uncovered.length === 0) {
+  console.log(`✓ code-panel coverage: ${covered} symbols, no black boxes.`)
+} else {
+  console.error(`✗ code-panel coverage: ${uncovered.length} black box(es) (${covered} covered):\n`)
+  for (const u of uncovered)
+    console.error(
+      `  ${u.symbol}  [${u.class}${u.exported === false ? ', internal' : ''}]\n    ${u.suggestion}`,
+    )
+  console.error(
+    '\nResolve each via apps/storybook/.storybook/code-panel-crossref.json (link) or code-panel-exempt.json (ignore).',
   )
-  .join('\n')
-writeFileSync(path.join(COVERAGE_DIR, 'classify.tsv'), tsv + (tsv ? '\n' : ''))
-process.stdout.write(rows.join('\n') + (rows.length ? '\n' : ''))
+}
+process.exit(uncovered.length === 0 ? 0 : 1)
