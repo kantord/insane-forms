@@ -28,6 +28,7 @@
   "scripts": {
     "build": "tsdown",
     "check:package": "publint && attw --pack . --profile esm-only",
+    "check:docs": "node scripts/check-docs.mjs",
     "measure": "sh scripts/measure-core.sh"
   },
   "peerDependencies": {

@@ -48,6 +48,9 @@ export type FieldMeta = {
 /* URL query-param codec types.                                        */
 /* ------------------------------------------------------------------ */
 
+/** Codec for one URL query-param: parse (raw→value or null on bad input),
+ *  serialize, equality (to skip redundant URL writes), and the default value
+ *  that stands in when the param is absent. */
 export type QueryParam<T> = {
   parse: (raw: string) => T | null
   serialize: (value: T) => string
@@ -59,6 +62,9 @@ export type QueryParam<T> = {
 /* Render runtime types.                                               */
 /* ------------------------------------------------------------------ */
 
+/** Props every node renderer receives — the schema (raw + unwrapped), its name
+ *  and required/readonly flags, and the engine threaded down the render tree.
+ *  This is what `FieldMeta.component` is rendered with. */
 export type NodeProps = {
   /** The original (possibly wrapped) schema — renderers resolve their own keys off it. */
   schema: z.ZodType
@@ -134,8 +140,13 @@ export type AnyWidget = (p: never, derive: Derive, hint: SchemaReader) => ReactN
 
 /** A shell arranges chrome around one widget: same knowledge + the rendered widget. */
 export type ShellProps = FieldProps<unknown> & { children: ReactNode }
+/** A shell component: wraps one widget and renders its chrome (label,
+ *  description, error, required marker, layout) while the widget renders only
+ *  the bare control. */
 export type Shell = React.ComponentType<ShellProps>
 
+/** The named-argument spec passed to `field()`: the widget (required) plus an
+ *  optional schema, shell, and explicit `initial` seed. */
 export type FieldSpec = {
   schema?: z.ZodType
   widget: AnyWidget
@@ -230,12 +241,18 @@ export type CleanShape<T> = {
 export type ShapeOf<A extends readonly Part[]> =
   CleanShape<Merged<A>> extends z.core.$ZodShape ? CleanShape<Merged<A>> : never
 
+/** One rendered row of an array field: a stable `key`, its rendered `node`, and
+ *  a bound `remove` handler — the latter absent when removal would breach
+ *  minItems. */
 export type CollectionItem = {
   key: string
   node: ReactNode
   /** Bound per-item handler; absent when removal would violate minItems. */
   remove?: () => void
 }
+/** Props a CollectionWrapper receives: the rendered rows plus the list chrome —
+ *  `add` (absent when adding would breach maxItems), header/footer slots, and
+ *  the engine for wrappers that observe their own array. */
 export type CollectionProps = {
   /** The array's field path — wrappers use it to label or OBSERVE the array
    *  (e.g. an auto-add list watches its own last row via `engine.useWatch`). */
@@ -250,8 +267,12 @@ export type CollectionProps = {
    *  its own array (auto-add, live previews) without context or a global. */
   engine: FieldEngine
 }
+/** A collection-wrapper component: renders the chrome around a repeating/array
+ *  field group (add/remove controls, header, footer) given the rendered rows. */
 export type CollectionWrapper = React.ComponentType<CollectionProps>
 
+/** Per-list configuration: the wrapper to use, header/footer elements, and a
+ *  `seed` factory overriding the append template for new rows. */
 export type ListOpts = {
   wrapper?: CollectionWrapper
   header?: ReactElement

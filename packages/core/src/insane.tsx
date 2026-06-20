@@ -80,8 +80,11 @@ export const resolve = <T,>(visit: (s: z.ZodType, d: Def) => T | undefined) =>
 export const resolveMeta = <K extends keyof FieldMeta>(key: K) =>
   resolve<FieldMeta[K]>((s) => (s.meta() as FieldMeta | undefined)?.[key])
 
+/** The widget id declared via `.meta({ component })`, nearest definition wins, else undefined. */
 export const resolveComponent = (s: z.ZodType) => resolveMeta('component')(s)
+/** The label declared via `.meta({ title })`, nearest definition wins, else undefined. */
 export const resolveTitle = (s: z.ZodType) => resolveMeta('title')(s)
+/** The help text declared via `.meta({ description })`, nearest definition wins, else undefined. */
 export const resolveDescription = (s: z.ZodType) => resolveMeta('description')(s)
 
 /** The first non-wrapper schema in the chain (object / array / leaf type). */
@@ -104,8 +107,11 @@ const containsWrapper =
   (s: z.ZodType): boolean =>
     resolve<true>((_n, d) => (kinds.includes(d.type) ? true : undefined))(s) ?? false
 
+/** True if the schema chain carries an `optional` or `nullable` wrapper. */
 export const isOptional = (s: z.ZodType): boolean => containsWrapper('optional', 'nullable')(s)
+/** True if the schema chain carries a `readonly` wrapper. */
 export const isReadonly = (s: z.ZodType): boolean => containsWrapper('readonly')(s)
+/** True if the schema is not optional — the inverse of {@link isOptional}. */
 export const isRequired = (s: z.ZodType): boolean => !isOptional(s)
 
 /* ------------------------------------------------------------------ */
@@ -146,6 +152,9 @@ const checkValue = (s: z.ZodType, check: string): number | undefined =>
 const placeholderOf = resolve<string>(
   (s) => (s.meta() as { placeholder?: string } | undefined)?.placeholder,
 )
+/** Returns a `SchemaReader` bound to `schema`: a reverse reader exposing the facts
+ *  the schema DECLARED (`.number().min()`, `.string().length()`, `.enum().options()`,
+ *  `.array().element()`, `.placeholder()`), built on the `resolve` toolkit. */
 export const readSchema = (schema: z.ZodType): SchemaReader => ({
   // Zod 4 number .min()/.max() are greater_than/less_than checks.
   number: () => ({
@@ -295,8 +304,10 @@ export function Render({
 /** No-op shell: renders the widget bare. The default — the core owns no chrome. */
 const BareShell: Shell = ({ children }) => <Fragment>{children}</Fragment>
 
-/* Three call shapes, one name. The first three `function field` lines are overload
- * SIGNATURES — types only, no bodies; the last is the implementation.
+/**
+ * The leaf constructor: stitches a Zod schema + widget + shell + initial value
+ * into a single named field binding. Three call shapes, one name, discriminated
+ * by whether the spec carries a top-level `widget`:
  *   one-go:     field({ schema, widget, … })          → the bound schema
  *   curried:    field({ widget, … })                  → (schema) => bound schema
  *   parametric: field({ enum: (v) => field({ schema: z.enum(v), widget, … }) })
@@ -304,7 +315,8 @@ const BareShell: Shell = ({ children }) => <Fragment>{children}</Fragment>
  *               the one-go form, so it returns a bound schema AND keeps its own
  *               generic (e.g. the enum's literal members) — the outer call adds
  *               no transform, just the shared name + a typed shape.
- * Discriminated by whether the spec carries a top-level `widget`. */
+ * The first three `function field` lines are overload SIGNATURES (types only, no
+ * bodies); the last is the implementation. */
 export function field<const S extends z.ZodType>(spec: {
   schema: S
   widget: Widget<DraftOf<S>>
@@ -362,15 +374,16 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
   return schema.meta({ component: Leaf } satisfies FieldMeta)
 }
 
-/**
- * Value the form keeps and submits, but never shows. Renders null — not an
- * <input type="hidden">: in a controlled form the value lives in JS state (and
- * .default() fills it at parse), so a DOM node adds nothing; hidden inputs only
- * matter for native (no-JS) posts, which a controlled library doesn't do. If you
- * need one (progressive enhancement), it's just a widget:
- *   field({ schema, widget: (p) => <input type="hidden" name={p.name} value={String(p.value)} /> })
- */
+// Renders null — not an <input type="hidden">: in a controlled form the value
+// lives in JS state (and .default() fills it at parse), so a DOM node adds
+// nothing; hidden inputs only matter for native (no-JS) posts, which a controlled
+// library doesn't do. If you need one (progressive enhancement), it's just a widget:
+//   field({ schema, widget: (p) => <input type="hidden" name={p.name} value={String(p.value)} /> })
 const HiddenRenderer = () => null
+/**
+ * Marks a schema as a hidden field: the form keeps and submits its value but
+ * renders no control — its `.default()` still flows into the parsed output.
+ */
 export const hidden = <S extends z.ZodType>(s: S): S =>
   s.meta({ component: HiddenRenderer } satisfies FieldMeta) as S
 
