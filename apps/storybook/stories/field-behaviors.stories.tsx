@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
 import { expect, within } from 'storybook/test'
 import * as z from 'zod'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FieldDescription } from '@/components/ui/field'
 import { demoSubmit } from './demo'
@@ -26,6 +27,47 @@ export const InputWithDescription: StoryObj = {
         title: 'Email',
         description: "We'll use this to send your receipt.",
         placeholder: 'm@example.com',
+      }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const HelpTooltipField: StoryObj = {
+  name: 'Help tooltip',
+  render: () => {
+    // `.meta({ help })` → an info icon beside the label with on-demand help,
+    // distinct from `description` (always-visible). The shell renders it. `help`
+    // is a ReactNode, so a tooltip can hold rich content (here: a Badge).
+    const schema = insane.group({
+      apiKey: InputField.min(1).meta({
+        title: 'API key', // required → asterisk after the icon
+        help: 'Find this in Settings → Developer → API keys. Treat it like a password.',
+        placeholder: 'sk-…',
+      }),
+      nickname: InputField.optional().meta({
+        title: 'Nickname', // optional → no asterisk
+        help: 'Shown to other members instead of your full name.',
+        placeholder: 'evilrabbit',
+      }),
+      coupon: InputField.optional().meta({
+        title: 'Coupon',
+        help: (
+          <span>
+            Codes are case-insensitive. Try{' '}
+            <Badge variant="secondary" className="font-mono">
+              WELCOME10
+            </Badge>
+            .
+          </span>
+        ),
+        placeholder: 'WELCOME10',
       }),
     })
     return (

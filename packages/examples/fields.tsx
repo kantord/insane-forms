@@ -4,8 +4,8 @@
 
 import type { CollectionWrapper, Derive, FieldProps, SchemaReader, Shell } from 'insane-forms'
 import * as insane from 'insane-forms'
-import { CalendarIcon, Search as SearchIcon, XIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { CalendarIcon, Info as InfoIcon, Search as SearchIcon, XIcon } from 'lucide-react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -51,22 +51,68 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
-export const FieldShell: Shell = ({ name, label, description, required, error, children }) => (
-  <Field data-invalid={error !== undefined || undefined}>
-    {label !== undefined && (
-      <FieldLabel htmlFor={name}>
-        {label}
-        {required ? <span aria-hidden="true">*</span> : null}
-      </FieldLabel>
-    )}
-    {children}
-    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-    {error !== undefined && <FieldError errors={[{ message: error }]} />}
-  </Field>
+/* Help tooltip — an info icon beside the label revealing ON-DEMAND help (distinct
+ * from `description`, the always-visible helper text). shadcn ships no first-class
+ * field-help pattern, so this DIY-composes its Tooltip with an info-icon trigger.
+ * Fed by `.meta({ help })`; a slot in the shell's label row, not a separate shell. */
+const HelpTooltip = ({ content, label }: { content: ReactNode; label?: string }) => (
+  <TooltipProvider delay={150}>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          // p-1.5 enlarges the hover/click target; the negative margins keep the
+          // icon visually in place and hugging the label (left) while the right
+          // padding adds breathing room before the required marker.
+          <button
+            type="button"
+            aria-label={label ? `Help: ${label}` : 'Help'}
+            className="-my-1.5 -ml-1 inline-flex p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <InfoIcon className="size-3" />
+          </button>
+        }
+      />
+      <TooltipContent>{content}</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 )
+
+export const FieldShell: Shell = ({
+  name,
+  label,
+  description,
+  required,
+  error,
+  schema,
+  children,
+}) => {
+  // On-demand help comes from the schema's `.meta({ help })` — read it here so any
+  // field using this shell gets the tooltip for free.
+  const help = insane.resolveMeta('help')(schema)
+  return (
+    <Field data-invalid={error !== undefined || undefined}>
+      {label !== undefined && (
+        // Label, then the help icon (hugging the label), then the required marker.
+        <div className="flex items-center">
+          <FieldLabel htmlFor={name}>{label}</FieldLabel>
+          {help !== undefined && <HelpTooltip content={help} label={label} />}
+          {required ? (
+            <span aria-hidden="true" className="ml-1">
+              *
+            </span>
+          ) : null}
+        </div>
+      )}
+      {children}
+      {description !== undefined && <FieldDescription>{description}</FieldDescription>}
+      {error !== undefined && <FieldError errors={[{ message: error }]} />}
+    </Field>
+  )
+}
 
 /* Checkbox-shaped fields use shadcn's horizontal Field idiom: box first, label
  * beside it. A shell is per-binding, so this costs one constant. */

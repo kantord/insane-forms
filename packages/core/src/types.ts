@@ -38,6 +38,10 @@ export type FieldMeta = {
   component?: React.ComponentType<NodeProps>
   title?: string
   description?: string
+  /** On-demand help — a shell may render it as an info-icon tooltip by the label
+   *  (distinct from `description`, which is always-visible helper text). ReactNode
+   *  so the tooltip can hold rich content (formatting, a Badge, code, etc.). */
+  help?: ReactNode
 }
 
 /* ------------------------------------------------------------------ */
