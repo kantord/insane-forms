@@ -121,6 +121,9 @@ const fieldDerivers = {
   id: (p: FieldProps<unknown>) => p.name,
   name: (p: FieldProps<unknown>) => p.name,
   'aria-invalid': (p: FieldProps<unknown>) => p.error !== undefined || undefined,
+  // aria-required (not the native `required` attr — that would trigger the
+  // browser's own validation; Zod owns validation here).
+  'aria-required': (p: FieldProps<unknown>) => p.required || undefined,
   onBlur: (p: FieldProps<unknown>) => p.onBlur,
   readOnly: (p: FieldProps<unknown>) => p.readonly,
 } satisfies Record<string, (p: FieldProps<unknown>) => unknown>
@@ -346,6 +349,7 @@ function annotateLeaf(schema: z.ZodType, spec: FieldSpec): z.ZodType {
       onBlur: binding.onBlur,
       label: resolveTitle(p.schema),
       description: resolveDescription(p.schema),
+      help: resolveMeta('help')(p.schema),
       error: binding.error,
       required: p.required,
       readonly: p.readonly,

@@ -51,7 +51,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 /* ---------- 1. Chrome: shadcn's Field family IS the shell contract. ---------- */
 
@@ -60,59 +60,70 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
  * field-help pattern, so this DIY-composes its Tooltip with an info-icon trigger.
  * Fed by `.meta({ help })`; a slot in the shell's label row, not a separate shell. */
 const HelpTooltip = ({ content, label }: { content: ReactNode; label?: string }) => (
-  <TooltipProvider delay={150}>
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          // p-1.5 enlarges the hover/click target; the negative margins keep the
-          // icon visually in place and hugging the label (left) while the right
-          // padding adds breathing room before the required marker.
-          <button
-            type="button"
-            aria-label={label ? `Help: ${label}` : 'Help'}
-            className="-my-1.5 -ml-1 inline-flex p-1.5 text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <InfoIcon className="size-3" />
-          </button>
-        }
-      />
-      <TooltipContent>{content}</TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  // Standard shadcn usage: a bare Tooltip; the TooltipProvider lives once at the
+  // app root (mounted in the Storybook preview decorator).
+  <Tooltip>
+    <TooltipTrigger
+      render={
+        // p-1.5 enlarges the hover/click target; the negative margins keep the
+        // icon visually in place and hugging the label (left) while the right
+        // padding adds breathing room before the required marker.
+        <button
+          type="button"
+          aria-label={label ? `Help: ${label}` : 'Help'}
+          className="-my-1.5 -ml-1 inline-flex p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <InfoIcon className="size-3" />
+        </button>
+      }
+    />
+    <TooltipContent>{content}</TooltipContent>
+  </Tooltip>
+)
+
+/* The label row shared by labelable shells: label, then the help icon (hugging
+ * the label), then the required marker. `help` comes from `.meta({ help })` via
+ * FieldProps; the asterisk is decorative — `aria-required` is set on the control. */
+const FieldLabelRow = ({
+  name,
+  label,
+  help,
+  required,
+}: {
+  name: string
+  label: string
+  help?: ReactNode
+  required: boolean
+}) => (
+  <div className="flex items-center">
+    <FieldLabel htmlFor={name}>{label}</FieldLabel>
+    {help !== undefined && <HelpTooltip content={help} label={label} />}
+    {required ? (
+      <span aria-hidden="true" className="ml-1">
+        *
+      </span>
+    ) : null}
+  </div>
 )
 
 export const FieldShell: Shell = ({
   name,
   label,
   description,
+  help,
   required,
   error,
-  schema,
   children,
-}) => {
-  // On-demand help comes from the schema's `.meta({ help })` — read it here so any
-  // field using this shell gets the tooltip for free.
-  const help = insane.resolveMeta('help')(schema)
-  return (
-    <Field data-invalid={error !== undefined || undefined}>
-      {label !== undefined && (
-        // Label, then the help icon (hugging the label), then the required marker.
-        <div className="flex items-center">
-          <FieldLabel htmlFor={name}>{label}</FieldLabel>
-          {help !== undefined && <HelpTooltip content={help} label={label} />}
-          {required ? (
-            <span aria-hidden="true" className="ml-1">
-              *
-            </span>
-          ) : null}
-        </div>
-      )}
-      {children}
-      {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-      {error !== undefined && <FieldError errors={[{ message: error }]} />}
-    </Field>
-  )
-}
+}) => (
+  <Field data-invalid={error !== undefined || undefined}>
+    {label !== undefined && (
+      <FieldLabelRow name={name} label={label} help={help} required={required} />
+    )}
+    {children}
+    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
+    {error !== undefined && <FieldError errors={[{ message: error }]} />}
+  </Field>
+)
 
 /* Checkbox-shaped fields use shadcn's horizontal Field idiom: box first, label
  * beside it. A shell is per-binding, so this costs one constant. */
@@ -120,6 +131,7 @@ export const CheckboxFieldShell: Shell = ({
   name,
   label,
   description,
+  help,
   required,
   error,
   children,
@@ -128,10 +140,7 @@ export const CheckboxFieldShell: Shell = ({
     {children}
     <FieldContent>
       {label !== undefined && (
-        <FieldLabel htmlFor={name}>
-          {label}
-          {required ? <span aria-hidden="true">*</span> : null}
-        </FieldLabel>
+        <FieldLabelRow name={name} label={label} help={help} required={required} />
       )}
       {description !== undefined && <FieldDescription>{description}</FieldDescription>}
       {error !== undefined && <FieldError errors={[{ message: error }]} />}
@@ -216,7 +225,7 @@ const CellShell: Shell = ({ error, children }) => (
 
 const CellTextWidget = (p: FieldProps<string | undefined>, derive: Derive, hint: SchemaReader) => (
   <Input
-    {...derive('id', 'name', 'aria-invalid', 'onBlur')}
+    {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur')}
     aria-label={p.label}
     value={p.value ?? ''}
     placeholder={hint.placeholder()}
@@ -230,7 +239,7 @@ const CellNumberWidget = (
   hint: SchemaReader,
 ) => (
   <Input
-    {...derive('id', 'name', 'aria-invalid', 'onBlur')}
+    {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur')}
     type="number"
     aria-label={p.label}
     value={p.value ?? ''}
@@ -316,7 +325,7 @@ export const InputField = insane.field({
   // value type from the schema (DraftOf<z.ZodString> = string | undefined).
   widget: (p, derive, hint) => (
     <Input
-      {...derive('id', 'name', 'aria-invalid', 'onBlur', 'readOnly')}
+      {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur', 'readOnly')}
       value={p.value ?? ''}
       placeholder={hint.placeholder()}
       onChange={(e) => p.onChange(e.target.value)}
@@ -336,7 +345,7 @@ export const SearchField = insane.field({
         <SearchIcon aria-hidden="true" />
       </InputGroupAddon>
       <InputGroupInput
-        {...derive('id', 'name', 'aria-invalid', 'onBlur')}
+        {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur')}
         type="search"
         value={p.value ?? ''}
         placeholder={hint.placeholder()}
@@ -359,7 +368,7 @@ export const TextareaField = insane.field({
   schema: z.string(),
   widget: (p, derive, hint) => (
     <Textarea
-      {...derive('id', 'name', 'aria-invalid', 'onBlur', 'readOnly')}
+      {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur', 'readOnly')}
       value={p.value ?? ''}
       placeholder={hint.placeholder()}
       onChange={(e) => p.onChange(e.target.value)}
@@ -372,7 +381,7 @@ export const NumberField = insane.field({
   schema: z.number(),
   widget: (p, derive, hint) => (
     <Input
-      {...derive('id', 'name', 'aria-invalid', 'onBlur')}
+      {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur')}
       type="number"
       value={p.value ?? ''}
       placeholder={hint.placeholder()}
@@ -387,7 +396,7 @@ export const CheckboxField = insane.field({
   schema: z.boolean().default(false),
   widget: (p, derive) => (
     <Checkbox
-      {...derive('id', 'name', 'aria-invalid')}
+      {...derive('id', 'name', 'aria-invalid', 'aria-required')}
       checked={p.value}
       onCheckedChange={(checked) => p.onChange(checked === true)}
     />
@@ -406,7 +415,7 @@ export const SelectField = insane.field({
       schema: z.enum(values),
       widget: (p, derive, hint) => (
         <Select value={p.value ?? null} onValueChange={(v) => p.onChange(v as string)}>
-          <SelectTrigger {...derive('id', 'aria-invalid')}>
+          <SelectTrigger {...derive('id', 'aria-invalid', 'aria-required')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -431,14 +440,20 @@ export const SelectField = insane.field({
 /* Group shell: a fieldset+legend for composite controls that have no single
  * labelable element (radio group, toggle group, slider) — the legend names the
  * group, individual items carry their own labels. */
-const GroupShell: Shell = ({ name, label, description, required, error, children }) => (
+const GroupShell: Shell = ({ name, label, description, help, required, error, children }) => (
   <FieldSet data-invalid={error !== undefined || undefined}>
     {label !== undefined && (
       // id lets a composite control (e.g. the slider thumb) reference the legend
-      // as its accessible name via aria-labelledby.
-      <FieldLegend id={`${name}-legend`}>
+      // as its accessible name via aria-labelledby. Help/required live INSIDE the
+      // legend — it must stay a direct child of the fieldset.
+      <FieldLegend id={`${name}-legend`} className="flex items-center">
         {label}
-        {required ? <span aria-hidden="true">*</span> : null}
+        {help !== undefined && <HelpTooltip content={help} label={label} />}
+        {required ? (
+          <span aria-hidden="true" className="ml-1">
+            *
+          </span>
+        ) : null}
       </FieldLegend>
     )}
     {children}
@@ -478,7 +493,7 @@ export const SwitchField = insane.field({
   schema: z.boolean().default(false),
   widget: (p, derive) => (
     <Switch
-      {...derive('id', 'name', 'aria-invalid')}
+      {...derive('id', 'name', 'aria-invalid', 'aria-required')}
       checked={p.value}
       onCheckedChange={(checked) => p.onChange(checked)}
     />
@@ -493,7 +508,7 @@ export const RadioField = insane.field({
       schema: z.enum(values),
       widget: (p, derive, hint) => (
         <RadioGroup
-          {...derive('aria-invalid')}
+          {...derive('aria-invalid', 'aria-required')}
           value={p.value ?? null}
           onValueChange={(v) => p.onChange(v as string)}
         >
@@ -595,7 +610,7 @@ export const NativeSelectField = insane.field({
       schema: z.enum(values),
       widget: (p, derive, hint) => (
         <NativeSelect
-          {...derive('id', 'name', 'aria-invalid', 'onBlur')}
+          {...derive('id', 'name', 'aria-invalid', 'aria-required', 'onBlur')}
           value={p.value ?? ''}
           onChange={(e) => p.onChange(e.target.value)}
         >
@@ -622,7 +637,7 @@ export const OtpField = insane.field({
     const length = hint.string().length() ?? 6
     return (
       <InputOTP
-        {...derive('id', 'onBlur')}
+        {...derive('id', 'onBlur', 'aria-required')}
         maxLength={length}
         value={p.value ?? ''}
         onChange={(v) => p.onChange(v)}

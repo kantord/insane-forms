@@ -1,4 +1,4 @@
-import { InputField } from '@insane-forms/examples/fields'
+import { CheckboxField, InputField, RadioField } from '@insane-forms/examples/fields'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import * as insane from 'insane-forms'
@@ -69,6 +69,15 @@ export const HelpTooltipField: StoryObj = {
         ),
         placeholder: 'WELCOME10',
       }),
+      // The same `help` slot works on every labelable shell — here the horizontal
+      // checkbox shell and the fieldset/legend group shell, not just the vertical one.
+      terms: CheckboxField.meta({
+        title: 'I accept the terms',
+        help: 'You can read the full terms on the legal page before accepting.',
+      }),
+      plan: RadioField.enum(['Monthly', 'Yearly'])
+        .default('Yearly')
+        .meta({ title: 'Billing plan', help: 'Yearly saves ~20% versus monthly.' }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>

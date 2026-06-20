@@ -13,6 +13,7 @@ import '@insane-forms/examples/biomes.css'
 // Loaded after globals so the scoped `.theme-*` overrides win (see the file).
 import '@insane-forms/examples/demo-themes.css'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { type AppVariant, DEMO_APPS, type DemoParam } from '../stories/demo-shell'
 
 /* ------------------------------------------------------------------------- */
@@ -202,26 +203,31 @@ const preview: Preview = {
         // A tinted, padded "page" (--demo-page) with the app card floating on it.
         return (
           // Mobile: full-bleed card, no page margin. Desktop (sm+): tinted margin
-          // with the card floating, capped width.
-          <div className={`demo-frame ${themeClass} flex min-h-screen justify-center sm:p-6`}>
-            <div className="h-screen w-full max-w-[1760px] sm:h-[calc(100vh-3rem)]">
-              <Shell section={cfg.section} title={cfg.title} description={cfg.description}>
-                <Story />
-              </Shell>
+          // with the card floating, capped width. One TooltipProvider at the root
+          // (the standard shadcn pattern — field help tooltips need it as an ancestor).
+          <TooltipProvider delay={200}>
+            <div className={`demo-frame ${themeClass} flex min-h-screen justify-center sm:p-6`}>
+              <div className="h-screen w-full max-w-[1760px] sm:h-[calc(100vh-3rem)]">
+                <Shell section={cfg.section} title={cfg.title} description={cfg.description}>
+                  <Story />
+                </Shell>
+              </div>
+              <Toaster />
             </div>
-            <Toaster />
-          </div>
+          </TooltipProvider>
         )
       }
       // 'none' / unwrapped: thin wrapper on stock shadcn, bg filled so dark mode
       // covers the canvas.
       return (
-        <div className="min-h-screen bg-background p-4 text-foreground">
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <Story />
+        <TooltipProvider delay={200}>
+          <div className="min-h-screen bg-background p-4 text-foreground">
+            <div style={{ maxWidth: 640, margin: '0 auto' }}>
+              <Story />
+            </div>
+            <Toaster />
           </div>
-          <Toaster />
-        </div>
+        </TooltipProvider>
       )
     },
   ],

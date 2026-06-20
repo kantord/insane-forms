@@ -8,15 +8,15 @@
 
 | metric | value |
 | --- | --- |
-| **Gzipped (what ships over the wire)** | **2313 bytes (~2.3 kB)** |
-| Minified | 5035 bytes (~4.9 kB) |
-| Compiled JavaScript (formatted) | 301 lines |
-| Runtime TypeScript source | 346 lines |
+| **Gzipped (what ships over the wire)** | **2332 bytes (~2.3 kB)** |
+| Minified | 5098 bytes (~5.0 kB) |
+| Compiled JavaScript (formatted) | 303 lines |
+| Runtime TypeScript source | 348 lines |
 | Runtime **dependencies bundled** | **0** |
 
 A whole schema-driven forms engine — `field` / `group` / `list` / `wrap` /
 `hidden` / `ZodForm` / `useZodForm`, the `resolve` introspection toolkit, and
-the URL-state codecs — in **2313 gzipped bytes** with **zero** runtime
+the URL-state codecs — in **2332 gzipped bytes** with **zero** runtime
 dependencies. Every `import` in the bundle is an externalized peer
 (`react`, `react-hook-form`, `zod`, `@hookform/resolvers`) that the host app
 already ships; nothing third-party is inlined.
@@ -25,19 +25,19 @@ already ships; nothing third-party is inlined.
 
 | file | role | code lines |
 | --- | --- | --- |
-| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 346 |
-| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 165 |
+| [`src/insane.tsx`](src/insane.tsx) | the runtime engine — all logic | 348 |
+| [`src/types.ts`](src/types.ts) | type surface — **compile-time only, emits nothing** | 168 |
 | [`src/index.ts`](src/index.ts) | public barrel | 23 |
-| **total** | | **534** |
+| **total** | | **539** |
 
 The type module costs **0 runtime bytes**: it is `import type` throughout, so it
-disappears at compile time. That is why the compiled JavaScript (301 lines)
-is *smaller* than the runtime TypeScript (346 lines) — type
+disappears at compile time. That is why the compiled JavaScript (303 lines)
+is *smaller* than the runtime TypeScript (348 lines) — type
 annotations and JSX collapse away.
 
-## Why 2313 gzipped bytes, not fewer
+## Why 2332 gzipped bytes, not fewer
 
-There is no filler to remove. 5035 minified bytes ÷ 301 lines ≈
+There is no filler to remove. 5098 minified bytes ÷ 303 lines ≈
 16 bytes of irreducible tokens per line — already 1-char
 identifiers and stripped whitespace. gzip then roughly halves that (the standard
 ~40–50% ratio for already-minified JS, which has little redundancy left to
@@ -87,6 +87,9 @@ var fieldDerivers = {
   id: (p) => p.name,
   name: (p) => p.name,
   'aria-invalid': (p) => p.error !== void 0 || void 0,
+  // aria-required (not the native `required` attr — that would trigger the
+  // browser's own validation; Zod owns validation here).
+  'aria-required': (p) => p.required || void 0,
   onBlur: (p) => p.onBlur,
   readOnly: (p) => p.readonly,
 }
@@ -192,6 +195,7 @@ function annotateLeaf(schema, spec) {
       onBlur: binding.onBlur,
       label: resolveTitle(p.schema),
       description: resolveDescription(p.schema),
+      help: resolveMeta('help')(p.schema),
       error: binding.error,
       required: p.required,
       readonly: p.readonly,

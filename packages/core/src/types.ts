@@ -87,6 +87,9 @@ export type FieldProps<T> = {
   onBlur: () => void
   label?: string
   description?: string
+  /** On-demand help (from `.meta({ help })`) — a shell may render it as an
+   *  info-icon tooltip by the label. Distinct from `description` (always-visible). */
+  help?: ReactNode
   error?: string
   required: boolean
   readonly: boolean
@@ -103,6 +106,7 @@ type DerivedAttrs = {
   id: string
   name: string
   'aria-invalid': true | undefined
+  'aria-required': true | undefined
   onBlur: () => void
   readOnly: boolean
 }
