@@ -231,7 +231,23 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react-day-picker:
+        specifier: ^10.0.1
+        version: 10.0.1(@types/react@19.2.16)(react@19.2.7)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
 
 packages:
 
