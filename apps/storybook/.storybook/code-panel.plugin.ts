@@ -24,15 +24,29 @@ const THEME = 'github-dark-default'
 const FIELD_DEF_MARKER = '@code-panel:field-definition'
 const SHELL_DEF_MARKER = '@code-panel:shell-definition'
 
-/** "No black boxes": identifiers in displayed code that refer to something we
- *  DON'T show inline (a vendored shadcn primitive, another showcase page) get a
- *  hover doc + a link to where they live, so nothing displayed is opaque. Pilot
- *  seed — one entry; extend per the no-black-boxes direction (see the skill). */
-const REFERENCES: Record<string, { doc: string; href: string }> = {
-  Checkbox: {
-    doc: 'shadcn/ui Checkbox — the primitive this field wraps. Opens its docs.',
-    href: 'https://ui.shadcn.com/docs/components/checkbox',
-  },
+type Reference = { doc: string; href: string }
+
+/** "No black boxes": every shadcn primitive shown in displayed code links to its
+ *  docs. DERIVED, not hand-authored — each `import { X, Y } from '@/components/ui/<file>'`
+ *  in fields.tsx maps every imported name to `…/docs/components/<file>` (the
+ *  filename IS the docs slug). So any base component a widget uses is linked
+ *  automatically, and a new one is covered the moment it's imported — zero upkeep. */
+const extractReferences = (src: string): Record<string, Reference> => {
+  const refs: Record<string, Reference> = {}
+  const importRe = /import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/([\w-]+)'/g
+  for (let m = importRe.exec(src); m !== null; m = importRe.exec(src)) {
+    const slug = m[2]
+    const href = `https://ui.shadcn.com/docs/components/${slug}`
+    for (const raw of m[1].split(',')) {
+      const name = raw
+        .trim()
+        .replace(/^type\s+/, '')
+        .split(/\s+as\s+/)[0]
+        .trim()
+      if (name) refs[name] = { doc: `shadcn/ui ${name} — opens its docs.`, href }
+    }
+  }
+  return refs
 }
 
 type Decoration = {
@@ -41,12 +55,12 @@ type Decoration = {
   properties: Record<string, string>
 }
 
-/** Shiki decorations marking the first occurrence of each REFERENCES identifier
+/** Shiki decorations marking the first occurrence of each referenced identifier
  *  (whole-word) as a hoverable, clickable `code-note` link. Sorted, non-overlapping. */
-const referenceDecorations = (code: string): Decoration[] => {
+const referenceDecorations = (code: string, refs: Record<string, Reference>): Decoration[] => {
   const lines = code.split('\n')
   const decos: Decoration[] = []
-  for (const [name, ref] of Object.entries(REFERENCES)) {
+  for (const [name, ref] of Object.entries(refs)) {
     const re = new RegExp(`\\b${name}\\b`)
     for (let line = 0; line < lines.length; line++) {
       const at = lines[line].search(re)
@@ -63,7 +77,7 @@ const referenceDecorations = (code: string): Decoration[] => {
           'aria-label': ref.doc,
         },
       })
-      break // first occurrence only
+      break // first occurrence per identifier — avoids underlining every usage
     }
   }
   return decos.sort((a, b) => a.start.line - b.start.line || a.start.character - b.start.character)
@@ -238,6 +252,7 @@ export function codePanelPlugin(): Plugin {
       const fieldsSrc = readFileSync(fieldsFile, 'utf8')
       const fieldDefs = extractFieldDefs(fieldsSrc)
       const shellDefs = extractShellDefs(fieldsSrc)
+      const references = extractReferences(fieldsSrc)
 
       const files = readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'))
       const highlighter = await createHighlighter({ langs: ['tsx'], themes: [THEME] })
@@ -259,7 +274,7 @@ export function codePanelPlugin(): Plugin {
           byName[name] = highlighter.codeToHtml(code, {
             lang: 'tsx',
             theme: THEME,
-            decorations: referenceDecorations(code),
+            decorations: referenceDecorations(code, references),
           })
         }
         map[file] = byName

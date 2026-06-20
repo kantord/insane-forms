@@ -82,15 +82,21 @@ compositions on their own page (e.g. `extractConstArrow` showing `DatePickerWidg
 insane pages / "field extends field"; (3) silently hide non-lessons. Treatment is
 contextual — an identifier is inlined on its OWN page but a link elsewhere.
 
-PILOTED (not yet rolled out): the Storybook code panel marks referenced identifiers
-via a `REFERENCES` registry in `code-panel.plugin.ts` (identifier → {doc, href}) that
-emits Shiki `code-note` decorations carrying `data-note` + `data-href`; `manager.tsx`
-supplies the popover CSS + a click handler that opens `data-href`. Seeded with one
-entry (`Checkbox` → shadcn docs). NOT YET DONE for full rollout (see the
-[[code-example-no-black-boxes]] memory): link-target policy by origin, deriving the
-hover text from a doc-comment at the definition (not hand-authored), a "meaningful
-reference" allowlist, and a completeness TEST (every meaningful identifier is shown/
-noted/linked) — the teeth that keep the property from rotting.
+DONE for shadcn base components: the Storybook code panel marks every shadcn
+primitive shown in displayed code as a hover-doc'd, clickable link to its docs.
+NOT hand-authored — `extractReferences(fieldsSrc)` in `code-panel.plugin.ts` reads
+every `import { X, Y } from '@/components/ui/<file>'` in fields.tsx and maps each
+name → `…/docs/components/<file>` (the filename IS the docs slug). `referenceDecorations`
+emits Shiki `code-note` decorations (`data-note` + `data-href`, first occurrence per
+identifier); `manager.tsx` supplies the dotted-accent popover CSS + a click handler
+that opens `data-href`. So any base component a widget imports is linked automatically
+— add a component, it's covered, zero upkeep. (~43 identifiers / 17 families today.)
+STILL NOT DONE (see [[code-example-no-black-boxes]]): the same treatment for cross-refs
+to OUR own pages (a field used in a form → its Widgets story) — needs an identifier→
+story-id map; deriving prose hover text from a definition doc-comment (today it's a
+generated `"shadcn/ui X — opens its docs."` template); a "meaningful reference"
+allowlist beyond ui imports; and a completeness TEST (every meaningful identifier is
+shown/noted/linked) — the teeth that keep the property from rotting.
 
 ## Authoring rules
 
