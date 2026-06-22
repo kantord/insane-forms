@@ -11,8 +11,9 @@
       "!!**/dist",
       "!**/storybook-static",
       "!**/packages/ui/components",
-      "!**/*.eso.mjs",
-      "!**/*.eso.jsx"
+      "!**/*.op.tsx",
+      "!**/*.op.jsx",
+      "!**/*.op.mjs"
     ]
   },
   "formatter": {
