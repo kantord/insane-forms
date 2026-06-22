@@ -1,9 +1,11 @@
-// docs/doc-coverage.op.tsx — Tier-3 (agentic): every undocumented PUBLIC export of the core becomes
-// a GROUNDED prompt task (tasks/<name>.md) an agent fulfills — the reaction is a prompt, not a file
-// write. Enumerator: `pnpm api:json` (typedoc resolves the surface + jq shapes/flags hasDoc — no
-// custom script); we filter `!hasDoc`. observe() = [] (gaps to fill, not artifacts) → every desired
-// item is an `enter` → one grounded task.
-//   esto run docs/doc-coverage.op.tsx            # emit a grounded task per undocumented export
+// docs/doc-coverage.op.tsx — INVARIANT, stated positively: every public export of the core has a
+// JsDoc. You DESCRIBE the desired state — a <JsDoc/> for every export — and esto computes where it's
+// unmet (missing → `enter` → a grounded prompt task an agent fulfills). There is no "violation" list:
+// `observe()` returns the exports that ALREADY satisfy it; the diff is the gap.
+//
+// Enumerator: `pnpm api:json` (typedoc resolves the surface + jq shapes hasDoc — no custom script),
+// run once and shared by desired (all exports) and observe (the documented subset).
+//   esto run docs/doc-coverage.op.tsx            # emit a grounded task per export still missing a doc
 //   esto run --dry-run docs/doc-coverage.op.tsx  # list them, write nothing
 import { Context, defineTarget, Fragment, h, prompt, sh } from 'esto'
 
@@ -12,33 +14,32 @@ interface ApiItem {
   file: string
   hasDoc: boolean
 }
-interface Export {
-  name: string
-  file: string
-}
 
-const UndocumentedExport = defineTarget({
-  key: (i: Export): string => i.name,
-  value: (_i: Export): string => 'undocumented',
-  observe: (): Export[] => [],
-  enter: (i: Export) =>
-    prompt`Add a JSDoc \`/** … */\` comment to the public export \`${i.name}\` in \`packages/core/src/${i.file}\`.
+// One typedoc run, shared by the desired set (all exports) and observe (the satisfied subset).
+const API = JSON.parse(sh`pnpm -s api:json`) as ApiItem[]
+
+// A JsDoc is a constituent that SHOULD be present on each export. `observe()` = the exports that
+// already have one; esto diffs desired-vs-observe, so an export with no doc surfaces as `enter`.
+const JsDoc = defineTarget({
+  key: (x: ApiItem): string => x.name,
+  value: (_x: ApiItem): string => 'present',
+  observe: (): ApiItem[] => API.filter((x) => x.hasDoc),
+  enter: (x: ApiItem) =>
+    prompt`Add a JSDoc \`/** … */\` to the public export \`${x.name}\` in \`packages/core/src/${x.file}\`.
 Be concise and contract-focused: what it does, its parameters, what it returns. Match the voice of the
 already-documented siblings in that file. Then re-run \`pnpm run check:docs\` — it must pass.`,
 })
 
-// DESIRED: the undocumented public exports = `pnpm api:json` filtered to `!hasDoc`.
-const Undocumented = (): unknown =>
-  (JSON.parse(sh`pnpm -s api:json`) as ApiItem[])
-    .filter((x) => !x.hasDoc)
-    .map((x) => <UndocumentedExport name={x.name} file={x.file} />)
+// Subject scope: every public export should have a JsDoc. (Bare nesting <PublicExports><JsDoc/></…>
+// awaits esto's defineScope + structured item context; until then the scope emits the instances.)
+const PublicExports = (): unknown => API.map((x) => <JsDoc name={x.name} file={x.file} />)
 
 // Grounding: repo + package context flows down to every task (content-addressed, deduped across tasks).
 export default (): unknown => (
   <Context value="Repo: insane-forms — schema-driven React forms on Zod; pnpm monorepo. See CLAUDE.md / quality-gates skill.">
     <Context value="packages/core = the ONLY published package (`insane-forms`): named exports only, tree-shakeable, ZERO runtime deps, no DOM in core. Public surface = src/index.ts (resolved via the TS checker).">
       <Fragment>
-        <Undocumented />
+        <PublicExports />
       </Fragment>
     </Context>
   </Context>
