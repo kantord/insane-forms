@@ -6,7 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!**/dist", "!**/storybook-static", "!**/packages/ui/components"]
+    "includes": [
+      "**",
+      "!!**/dist",
+      "!**/storybook-static",
+      "!**/packages/ui/components",
+      "!**/*.eso.mjs",
+      "!**/*.eso.jsx"
+    ]
   },
   "formatter": {
     "enabled": true,
