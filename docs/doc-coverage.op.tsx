@@ -1,11 +1,17 @@
 // docs/doc-coverage.op.tsx — Tier-3 (agentic): every undocumented PUBLIC export of the core becomes
 // a GROUNDED prompt task (tasks/<name>.md) an agent fulfills — the reaction is a prompt, not a file
-// write. Enumerator: check-docs.mjs --json (TS checker). observe() = [] (these are gaps to fill, not
-// artifacts to track), so every desired item is an `enter` → one grounded task.
+// write. Enumerator: `pnpm api:json` (typedoc resolves the surface + jq shapes/flags hasDoc — no
+// custom script); we filter `!hasDoc`. observe() = [] (gaps to fill, not artifacts) → every desired
+// item is an `enter` → one grounded task.
 //   esto run docs/doc-coverage.op.tsx            # emit a grounded task per undocumented export
 //   esto run --dry-run docs/doc-coverage.op.tsx  # list them, write nothing
 import { Context, defineTarget, Fragment, h, prompt, sh } from 'esto'
 
+interface ApiItem {
+  name: string
+  file: string
+  hasDoc: boolean
+}
 interface Export {
   name: string
   file: string
@@ -21,15 +27,11 @@ Be concise and contract-focused: what it does, its parameters, what it returns. 
 already-documented siblings in that file. Then re-run \`pnpm run check:docs\` — it must pass.`,
 })
 
-interface DocsJson {
-  undocumented: Export[]
-}
-
-// DESIRED: the undocumented public exports, from the existing gate's --json output.
+// DESIRED: the undocumented public exports = `pnpm api:json` filtered to `!hasDoc`.
 const Undocumented = (): unknown =>
-  (JSON.parse(sh`node packages/core/scripts/check-docs.mjs --json || true`) as DocsJson).undocumented.map(
-    (x) => <UndocumentedExport name={x.name} file={x.file} />,
-  )
+  (JSON.parse(sh`pnpm -s api:json`) as ApiItem[])
+    .filter((x) => !x.hasDoc)
+    .map((x) => <UndocumentedExport name={x.name} file={x.file} />)
 
 // Grounding: repo + package context flows down to every task (content-addressed, deduped across tasks).
 export default (): unknown => (

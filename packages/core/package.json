@@ -28,7 +28,6 @@
   "scripts": {
     "build": "tsdown",
     "check:package": "publint && attw --pack . --profile esm-only",
-    "check:docs": "node scripts/check-docs.mjs",
     "check:api-tests": "node scripts/check-api-tests.mjs",
     "measure": "sh scripts/measure-core.sh"
   },
