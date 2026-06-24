@@ -9,13 +9,17 @@
 //   esto run docs/doc-coverage.op.tsx            # emit a grounded task per export missing a doc
 //   esto run --dry-run docs/doc-coverage.op.tsx  # list them, write nothing
 import { Context, h, prompt, sh, unit } from 'esto'
-import { GitRepo, rp } from './scopes.op.mjs'
+import { GitRepo } from 'esto/fs'
 
 interface ApiItem {
   name: string
   file: string
   hasDoc: boolean
 }
+
+// esto/fs locators unwrap render-prop children internally; userland render-props (TsExports) still do.
+const rp = (children: unknown) =>
+  (Array.isArray(children) ? children[0] : children) as (scope: { name: string; file: string }) => unknown
 
 // The resolved public surface (typedoc), run once and shared by desired (per file) and observe.
 const API = JSON.parse(sh`pnpm -s api:json`) as ApiItem[]
