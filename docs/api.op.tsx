@@ -1,59 +1,32 @@
-// docs/api.op.tsx — keep one generated API-doc stub (docs/api/<Name>.md) per public export of
-// the published core. Observe-the-world current (the stub's embedded sig IS the state — no persisted
-// file); full enter/update/exit lifecycle. Enumerator: `pnpm api:json` (typedoc resolves the surface,
-// jq shapes it — no custom script); `sig` = esto's hash() over each export's typedoc shape.
-// Effects via `sh`; observation via esto's owned read API (`read`/`ls`). No `node:*` imports.
+// docs/api.op.tsx — manage docs/api/ as a tree: one generated stub per public export of the core.
+// Supervisor-as-matcher form: <Folder name="docs/api"> is a scope; each <File name content> is a CLAIM.
+//   • create  — an export with no stub yet
+//   • update  — the stub's bytes differ from `content`
+//   • keep    — bytes match
+//   • prune   — a .md in docs/api claimed by no export (orphan) → deleted (within circuit-breaker limits)
+// The supervisor compares actual file bytes vs `content`, so no sig marker is needed. Enumerator:
+// `pnpm api:json` (typedoc + jq, no custom script).
 //   esto run docs/api.op.tsx            # apply
-//   esto run --dry-run docs/api.op.tsx  # show the diff
-import { unit, Fragment, h, hash, ls, read, sh } from 'esto'
+//   esto run --dry-run docs/api.op.tsx  # show create/update/keep/prune, write nothing
+import { h, sh } from 'esto'
+import { GitRepo } from 'esto/fs'
 
 interface ApiItem {
   name: string
   file: string
-  hasDoc: boolean
-  shape: unknown
-}
-interface Export {
-  name: string
-  file?: string
-  sig: string
 }
 
-const OUT = 'docs/api'
+const exports = JSON.parse(sh`pnpm -s api:json`) as ApiItem[]
 
-// EFFECT: build the body in JS, write it via `sh` (content shell-quoted by the tag).
-const writeStub = (i: Export): void => {
-  const body = `<!-- esto:sig=${i.sig} -->\n# \`${i.name}\`\n\nPublic API of \`insane-forms\` — declared in \`packages/core/src/${i.file}\`.\n`
-  sh`mkdir -p ${OUT}`
-  sh`printf '%s' ${body} > ${OUT}/${i.name}.md`
-}
-
-const ApiStub = unit({
-  key: (i: Export): string => i.name,
-  value: (i: Export): string => i.sig, // fingerprint → update when an export's shape changes
-  // CURRENT: observe the world — read each stub's embedded sig back out.
-  observe: (): Export[] =>
-    ls(OUT)
-      .filter((f: string) => f.endsWith('.md'))
-      .map((f: string) => {
-        const m = read(`${OUT}/${f}`).match(/^<!-- esto:sig=([a-f0-9]+) -->/m)
-        return { name: f.slice(0, -3), sig: m ? m[1] : '' }
-      }),
-  enter: (i: Export): void => writeStub(i),
-  update: (i: Export): void => writeStub(i),
-  exit: (i: Export): void => {
-    sh`rm -f ${OUT}/${i.name}.md`
-  },
-})
-
-// DESIRED: the public API surface from `pnpm api:json` (typedoc + jq). sig = hash of the shape.
-const PublicApi = (): unknown =>
-  (JSON.parse(sh`pnpm -s api:json`) as ApiItem[]).map((x) => (
-    <ApiStub name={x.name} file={x.file} sig={hash(JSON.stringify(x.shape))} />
-  ))
+const stub = (x: ApiItem): string =>
+  `# \`${x.name}\`\n\nPublic API of \`insane-forms\` — declared in \`packages/core/src/${x.file}\`.\n`
 
 export default (): unknown => (
-  <Fragment>
-    <PublicApi />
-  </Fragment>
+  <GitRepo>
+    {({ Folder }) => (
+      <Folder name="docs/api">
+        {({ File }) => exports.map((x) => <File name={`${x.name}.md`} content={stub(x)} />)}
+      </Folder>
+    )}
+  </GitRepo>
 )

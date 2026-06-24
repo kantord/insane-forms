@@ -140,6 +140,34 @@ reconcile (no nesting yet).
 The reactive JSX frontend (`useJSONStream`, components, `.map`, decorators), `plan`/`apply`/`watch`
 verbs, the recursive supervision tree (nesting/dependency), per-type concurrency, event wakeup.
 
+## Stress-test candidates (different shapes, to avoid over-fitting on coverage)
+
+Both built consumers (`api.op.tsx`, `doc-coverage.op.tsx`) are the same shape: typedoc symbol-scope →
+one kind → presence/sig. These deliberately exercise *different* axes:
+
+1. **shadcn-drift in the DSL** — the *drift* shape (update-on-value-change). Reuse the existing skill's
+   re-vendor (`.claude/skills/shadcn-drift/{from,to}.sh`): `observe` = committed component hashes,
+   `desired` = re-vendor hashes, `update` = drifted, `exit` = removed upstream. Network/slow.
+2. **no-any (ast-grep)** — the *filter + exit + empty-side* shape. `observe` = `as any` sites
+   (`ast-grep '$X as any'`), `desired` = an allowlist of justified ones → non-allowlisted sites `exit`
+   ("fix or justify"). Exercises ast-grep-as-a-scope and exit-as-the-point. ~10 real sites here.
+3. **Test/Gherkin matcher** ⭐ (flagship agentic demo) — a 4th enumerator backend: **assert → test
+   runner** (arbitrary runtime predicate, the thing ast-grep/typedoc can't express).
+   - Each parametric case (`test.each`, or a Gherkin `Scenario`/`Examples` row) is an item; scope cmd =
+     `vitest run --reporter=json | jq` / `cucumber-js --format json | jq`. `observe` = passing cases,
+     `desired` = all cases → **failing cases are the diff** (`enter`/fix). Fingerprint = case input.
+   - **Gherkin beats raw test.each:** the spec is already natural language, so a failing scenario *is*
+     the agent prompt verbatim; it's the literal "spec ↔ code" reconciler (edit `.feature` = edit
+     desired state in prose). Two-tier reaction from cucumber JSON: `undefined` step → agent scaffolds
+     the step def; `failed` → agent repairs the impl.
+   - **Layering (the prize):** the test can be *generated from* the Gherkin (generic — true for any
+     test). That makes it a CHAIN composing through the world:
+     `.feature ──R1:generate──▶ generated tests ──R2:satisfy──▶ implementation`.
+     R1 = the api-docs-stub idiom (`desired = transform(spec)`, observe-the-world the generated files,
+     reconcile-owned, do-not-edit, stable scenario-id keys). R2 = the assert matcher. First genuine
+     **multi-stage pipeline** consumer → stress-tests *composition* (the axis never run). A spec edit
+     then propagates *two hops* — the strongest form of "a spec change propagates like a type change."
+
 ## Acceptance tests that keep us honest
 
 - **Tier 0:** the api-docs reconcile produces correct enter/update/exit on real exports here.
