@@ -7,3 +7,4 @@ playwright-report
 .lighthouseci
 measure
 docs/api/
+docs/esto.d.ts
