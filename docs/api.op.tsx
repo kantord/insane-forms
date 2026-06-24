@@ -5,7 +5,7 @@
 // Effects via `sh`; observation via esto's owned read API (`read`/`ls`). No `node:*` imports.
 //   esto run docs/api.op.tsx            # apply
 //   esto run --dry-run docs/api.op.tsx  # show the diff
-import { defineTarget, Fragment, h, hash, ls, read, sh } from 'esto'
+import { unit, Fragment, h, hash, ls, read, sh } from 'esto'
 
 interface ApiItem {
   name: string
@@ -28,7 +28,7 @@ const writeStub = (i: Export): void => {
   sh`printf '%s' ${body} > ${OUT}/${i.name}.md`
 }
 
-const ApiStub = defineTarget({
+const ApiStub = unit({
   key: (i: Export): string => i.name,
   value: (i: Export): string => i.sig, // fingerprint → update when an export's shape changes
   // CURRENT: observe the world — read each stub's embedded sig back out.
