@@ -38,6 +38,11 @@ function ToggleGroup({
       data-size={size}
       data-spacing={spacing}
       data-orientation={orientation}
+      // a11y: Base UI's ToggleGroup root emits aria-orientation on role="group",
+      // but aria-orientation is only valid on roles like radiogroup/toolbar — axe
+      // flags it (aria-allowed-attr). Orientation is conveyed via data-orientation
+      // for styling; clear the invalid ARIA attribute. (Local patch vs upstream.)
+      aria-orientation={undefined}
       style={{ "--gap": spacing } as React.CSSProperties}
       className={cn(
         "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch",

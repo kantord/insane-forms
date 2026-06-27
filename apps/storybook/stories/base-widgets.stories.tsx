@@ -3,6 +3,7 @@ import {
   InputField,
   NativeSelectField,
   RadioField,
+  RangeField,
   SelectField,
   SliderField,
   SwitchField,
@@ -162,6 +163,25 @@ export const SliderControl: StoryObj = {
   render: () => {
     const schema = insane.group({
       volume: SliderField.min(0).max(100).default(40).meta({ title: 'Volume' }),
+    })
+    return (
+      <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>
+        <Button type="submit" className="self-start">
+          Submit
+        </Button>
+      </ZodForm>
+    )
+  },
+}
+
+export const RangeControl: StoryObj = {
+  name: 'Range',
+  render: () => {
+    const schema = insane.group({
+      price: RangeField.meta({
+        title: 'Price range',
+        description: 'A composite field: the legend names the pair; each input has its own label.',
+      }),
     })
     return (
       <ZodForm schema={schema} className="flex flex-col gap-6" onSubmit={demoSubmit}>

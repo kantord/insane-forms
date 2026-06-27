@@ -8,3 +8,5 @@ playwright-report
 measure
 docs/api/
 docs/esto.d.ts
+/tasks/
+/.esto/

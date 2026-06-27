@@ -644,6 +644,59 @@ export const SliderField = insane.field({
   shell: FieldSetShell,
 })
 
+/* Range — a COMPOSITE value (min–max) split across two number inputs: the clearest
+ * case for fieldset+legend. The legend (from FieldSetShell) names the pair ("Price
+ * range") while neither input alone IS the field, so each carries its own sr-only
+ * sub-label. Note this field can't use `derive('id')` — that yields one id for the
+ * whole field, but a composite has two controls, so it wires ids by hand. */
+type Range = { min?: number; max?: number }
+
+const rangeNumber = (s: string): number | undefined => (s === '' ? undefined : Number(s))
+
+export const RangeField = insane.field({
+  schema: z.object({ min: z.number().optional(), max: z.number().optional() }),
+  widget: (p: FieldProps<Range | undefined>) => {
+    const v = p.value ?? {}
+    const invalid = p.error !== undefined || undefined
+    return (
+      <div className="flex items-end gap-2">
+        <Field>
+          <FieldLabel htmlFor={`${p.name}-min`} className="sr-only">
+            Minimum
+          </FieldLabel>
+          <Input
+            id={`${p.name}-min`}
+            type="number"
+            aria-invalid={invalid}
+            value={v.min ?? ''}
+            placeholder="Min"
+            onChange={(e) => p.onChange({ ...v, min: rangeNumber(e.target.value) })}
+            onBlur={p.onBlur}
+          />
+        </Field>
+        <span aria-hidden="true" className="pb-2 text-muted-foreground">
+          –
+        </span>
+        <Field>
+          <FieldLabel htmlFor={`${p.name}-max`} className="sr-only">
+            Maximum
+          </FieldLabel>
+          <Input
+            id={`${p.name}-max`}
+            type="number"
+            aria-invalid={invalid}
+            value={v.max ?? ''}
+            placeholder="Max"
+            onChange={(e) => p.onChange({ ...v, max: rangeNumber(e.target.value) })}
+            onBlur={p.onBlur}
+          />
+        </Field>
+      </div>
+    )
+  },
+  shell: FieldSetShell,
+})
+
 /* Native select — plain <select>; the enum values come from the call site. */
 export const NativeSelectField = insane.field({
   enum<const T extends readonly [string, ...string[]]>(values: T) {
