@@ -13,7 +13,8 @@
       "!**/packages/ui/components",
       "!**/*.op.tsx",
       "!**/*.op.jsx",
-      "!**/*.op.mjs"
+      "!**/*.op.mjs",
+      "!**/tsconfig.esto.json"
     ]
   },
   "formatter": {

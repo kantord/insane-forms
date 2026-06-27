@@ -83,19 +83,23 @@ const HelpTooltip = ({ content, label }: { content: ReactNode; label?: string })
 
 /* The label row shared by labelable shells: label, then the help icon (hugging
  * the label), then the required marker. `help` comes from `.meta({ help })` via
- * FieldProps; the asterisk is decorative — `aria-required` is set on the control. */
+ * FieldProps; the asterisk is decorative — `aria-required` is set on the control.
+ * `srOnly` keeps the label accessible while hiding it visually (control labelled
+ * by context, e.g. a table column header). */
 const FieldLabelRow = ({
   name,
   label,
   help,
   required,
+  srOnly = false,
 }: {
   name: string
   label: string
   help?: ReactNode
   required: boolean
+  srOnly?: boolean
 }) => (
-  <div className="flex items-center">
+  <div className={srOnly ? 'sr-only' : 'flex items-center'}>
     <FieldLabel htmlFor={name} className="leading-none">
       {label}
     </FieldLabel>
@@ -108,47 +112,118 @@ const FieldLabelRow = ({
   </div>
 )
 
-export const FieldShell: Shell = ({
-  name,
-  label,
-  description,
-  help,
-  required,
-  error,
-  children,
-}) => (
-  <Field data-invalid={error !== undefined || undefined}>
-    {label !== undefined && (
-      <FieldLabelRow name={name} label={label} help={help} required={required} />
-    )}
-    {children}
-    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-    {error !== undefined && <FieldError errors={[{ message: error }]} />}
-  </Field>
-)
+/* ---------- The two shell primitives. ----------
+ * shadcn ships NO per-control shells, only a composable Field family. So a shell is
+ * a THIN parameterized layer over it. Because insane picks a shell per binding
+ * (`shell: X`), parameterization is a FACTORY returning a Shell. Two primitives —
+ * one for a single labelable control, one for a fieldset group — cover the whole
+ * composition catalog; the named presets below are just the factories pre-applied. */
 
-/* Checkbox-shaped fields use shadcn's horizontal Field idiom: box first, label
- * beside it. A shell is per-binding, so this costs one constant. */
-export const CheckboxFieldShell: Shell = ({
-  name,
-  label,
-  description,
-  help,
-  required,
-  error,
-  children,
-}) => (
-  <Field orientation="horizontal" data-invalid={error !== undefined || undefined}>
-    {children}
-    <FieldContent>
+type Orientation = 'vertical' | 'horizontal'
+type SlotOrder = 'label-first' | 'control-first'
+/* label MODE, not a separate shell: visible | screen-reader-only | none (the control
+ * supplies its own accessible name, e.g. a single Toggle's button text). */
+type LabelMode = 'visible' | 'sr-only' | 'none'
+
+/* fieldShell — wraps ONE labelable control. orientation (vertical | horizontal) and,
+ * when horizontal, slot order (control-first boolean vs label-first settings row);
+ * the label row renders only when the field has a title and label !== 'none'. */
+const fieldShell =
+  ({
+    orientation = 'vertical',
+    order = 'control-first',
+    label: labelMode = 'visible',
+  }: {
+    orientation?: Orientation
+    order?: SlotOrder
+    label?: LabelMode
+  } = {}): Shell =>
+  ({ name, label, description, help, required, error, children }) => {
+    const labelRow =
+      labelMode !== 'none' && label !== undefined ? (
+        <FieldLabelRow
+          name={name}
+          label={label}
+          help={help}
+          required={required}
+          srOnly={labelMode === 'sr-only'}
+        />
+      ) : null
+    const meta = (
+      <>
+        {description !== undefined && <FieldDescription>{description}</FieldDescription>}
+        {error !== undefined && <FieldError errors={[{ message: error }]} />}
+      </>
+    )
+    const invalid = error !== undefined || undefined
+    if (orientation === 'horizontal') {
+      const content = (
+        <FieldContent>
+          {labelRow}
+          {meta}
+        </FieldContent>
+      )
+      return (
+        <Field orientation="horizontal" data-invalid={invalid}>
+          {order === 'control-first' ? (
+            <>
+              {children}
+              {content}
+            </>
+          ) : (
+            <>
+              {content}
+              {children}
+            </>
+          )}
+        </Field>
+      )
+    }
+    return (
+      <Field data-invalid={invalid}>
+        {labelRow}
+        {children}
+        {meta}
+      </Field>
+    )
+  }
+
+/* fieldSetShell — wraps a GROUP/composite control (radio group, toggle group,
+ * slider) with no single labelable element: a semantic FieldSet + FieldLegend names
+ * the group; help/required live INSIDE the legend so it stays a direct fieldset child. */
+const fieldSetShell =
+  (): Shell =>
+  ({ name, label, description, help, required, error, children }) => (
+    <FieldSet data-invalid={error !== undefined || undefined}>
       {label !== undefined && (
-        <FieldLabelRow name={name} label={label} help={help} required={required} />
+        // id lets a composite control (e.g. the slider thumb) reference the legend
+        // as its accessible name via aria-labelledby.
+        <FieldLegend id={`${name}-legend`} className="flex items-center leading-none">
+          {label}
+          {help !== undefined && <HelpTooltip content={help} label={label} />}
+          {required ? (
+            <span aria-hidden="true" className="ml-1">
+              *
+            </span>
+          ) : null}
+        </FieldLegend>
       )}
+      {children}
       {description !== undefined && <FieldDescription>{description}</FieldDescription>}
       {error !== undefined && <FieldError errors={[{ message: error }]} />}
-    </FieldContent>
-  </Field>
-)
+    </FieldSet>
+  )
+
+/* Presets: the 2 factories with axes pre-applied, so bindings read well. */
+export const FieldShell: Shell = fieldShell()
+export const CheckboxFieldShell: Shell = fieldShell({
+  orientation: 'horizontal',
+  order: 'control-first',
+})
+/* Single toggle carries its OWN label (the button text), so the shell renders none. */
+const ToggleFieldShell: Shell = fieldShell({ label: 'none' })
+/* Groups: radio, toggle group, slider. */
+const FieldSetShell: Shell = fieldSetShell()
 
 export const FieldSetList: CollectionWrapper = ({ label, items, add, header, footer }) => (
   <FieldSet>
@@ -439,42 +514,6 @@ export const SelectField = insane.field({
 
 /* ---------- 4. More base shadcn controls. ---------- */
 
-/* Group shell: a fieldset+legend for composite controls that have no single
- * labelable element (radio group, toggle group, slider) — the legend names the
- * group, individual items carry their own labels. */
-const GroupShell: Shell = ({ name, label, description, help, required, error, children }) => (
-  <FieldSet data-invalid={error !== undefined || undefined}>
-    {label !== undefined && (
-      // id lets a composite control (e.g. the slider thumb) reference the legend
-      // as its accessible name via aria-labelledby. Help/required live INSIDE the
-      // legend — it must stay a direct child of the fieldset.
-      <FieldLegend id={`${name}-legend`} className="flex items-center leading-none">
-        {label}
-        {help !== undefined && <HelpTooltip content={help} label={label} />}
-        {required ? (
-          <span aria-hidden="true" className="ml-1">
-            *
-          </span>
-        ) : null}
-      </FieldLegend>
-    )}
-    {children}
-    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-    {error !== undefined && <FieldError errors={[{ message: error }]} />}
-  </FieldSet>
-)
-
-/* Single toggle — a boolean rendered as one pressable button that carries its
- * OWN label (the button text), so its shell renders no separate label, only the
- * description/error. Contrast Checkbox/Switch, where the shell labels beside. */
-const ToggleFieldShell: Shell = ({ description, error, children }) => (
-  <Field data-invalid={error !== undefined || undefined}>
-    {children}
-    {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-    {error !== undefined && <FieldError errors={[{ message: error }]} />}
-  </Field>
-)
-
 export const ToggleField = insane.field({
   schema: z.boolean().default(false),
   widget: (p, derive) => (
@@ -525,7 +564,7 @@ export const RadioField = insane.field({
             ))}
         </RadioGroup>
       ),
-      shell: GroupShell,
+      shell: FieldSetShell,
     })
   },
 })
@@ -555,7 +594,7 @@ export const ToggleGroupField = insane.field({
             ))}
         </ToggleGroup>
       ),
-      shell: GroupShell,
+      shell: FieldSetShell,
     })
   },
   array<const T extends readonly [string, ...string[]]>(values: T) {
@@ -580,7 +619,7 @@ export const ToggleGroupField = insane.field({
             ))}
         </ToggleGroup>
       ),
-      shell: GroupShell,
+      shell: FieldSetShell,
     })
   },
 })
@@ -602,7 +641,7 @@ export const SliderField = insane.field({
       />
     )
   },
-  shell: GroupShell,
+  shell: FieldSetShell,
 })
 
 /* Native select — plain <select>; the enum values come from the call site. */
