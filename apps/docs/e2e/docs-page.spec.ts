@@ -88,20 +88,30 @@ test.describe('docs page', () => {
 })
 
 test.describe('explore section (persistent sidebar + Storybook embed)', () => {
-  test('sidebar lists Storybook pages and is present on the landing page too', async ({ page }) => {
+  test('sidebar lists Storybook pages, collapsed until expanded', async ({ page }) => {
     await page.goto('./')
     const sidebar = page.locator('nav', { hasText: 'insane-forms' })
+    // Collapsed by default — nested entries aren't there until their
+    // ancestor categories are opened.
+    await expect(sidebar.getByRole('link', { name: 'Profile', exact: true })).toHaveCount(0)
+    await sidebar.getByRole('button', { name: 'Examples', exact: true }).click()
+    await sidebar.getByRole('button', { name: 'Forms', exact: true }).click()
     await expect(sidebar.getByRole('link', { name: 'Profile', exact: true })).toBeVisible()
-    // Still on the landing page — the sidebar didn't navigate away.
+    // Still on the landing page — expanding a category didn't navigate away.
     await expect(page.getByRole('heading', { level: 1 })).toContainText('the schema is the form')
   })
 
   test('clicking a sidebar entry embeds that Storybook page', async ({ page }) => {
     await page.goto('./')
-    await page.getByRole('link', { name: 'Profile', exact: true }).click()
+    const sidebar = page.locator('nav', { hasText: 'insane-forms' })
+    await sidebar.getByRole('button', { name: 'Examples', exact: true }).click()
+    await sidebar.getByRole('button', { name: 'Forms', exact: true }).click()
+    await sidebar.getByRole('link', { name: 'Profile', exact: true }).click()
     await expect(page).toHaveURL(/\/explore\?id=examples-forms--profile&mode=story/)
     const frame = page.frameLocator('iframe')
     await expect(frame.locator('input[id="name"]')).toBeVisible()
+    // The active page's ancestor category stays expanded after navigating.
+    await expect(sidebar.getByRole('link', { name: 'Profile', exact: true })).toBeVisible()
   })
 
   test('no page picked yet shows a placeholder, not a blank pane', async ({ page }) => {
@@ -111,13 +121,19 @@ test.describe('explore section (persistent sidebar + Storybook embed)', () => {
 })
 
 test.describe('docs section (content-docs)', () => {
-  test('sidebar link reaches the written docs, with their own nested sidebar', async ({ page }) => {
+  test('sidebar link reaches the written docs, merged into the one persistent sidebar', async ({
+    page,
+  }) => {
     await page.goto('./')
     const globalSidebar = page.locator('nav', { hasText: 'insane-forms' })
     await globalSidebar.getByRole('link', { name: 'guides', exact: true }).click()
     await expect(page).toHaveURL(/\/docs\/?$/)
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Introduction')
-    // content-docs' own sidebar, nested inside the persistent one's content pane.
-    await expect(page.getByRole('link', { name: 'Getting started' })).toBeVisible()
+    // The doc tree now lives IN the persistent sidebar, not a second one —
+    // "guides" (the category, from the docs/guides/ folder name) is
+    // collapsed until expanded.
+    await expect(globalSidebar.getByRole('link', { name: 'Getting started' })).toHaveCount(0)
+    await globalSidebar.getByRole('button', { name: 'guides', exact: true }).click()
+    await expect(globalSidebar.getByRole('link', { name: 'Getting started' })).toBeVisible()
   })
 })

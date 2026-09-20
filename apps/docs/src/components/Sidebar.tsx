@@ -2,63 +2,48 @@ import Link from '@docusaurus/Link'
 import { useLocation } from '@docusaurus/router'
 import useBaseUrl from '@docusaurus/useBaseUrl'
 import { useDocsSidebarSync } from '../contexts/DocsSidebarSync'
+import { type StorybookEntry, useStorybookIndex } from '../hooks/useStorybookIndex'
+import { type TreeItem, TreeItems } from './CollapsibleTree'
 import { DocSidebarItems } from './docs/DocSidebarItems'
-import { useStorybookIndex } from '../hooks/useStorybookIndex'
 
-type TreeNode = {
-  groups: Record<string, TreeNode>
-  leaves: Array<{ id: string; name: string; type: 'story' | 'docs' }>
-}
+/** Storybook's flat entry list, keyed by `title` (a slash-separated path,
+ * e.g. `Examples/Forms`), grouped into the shared CollapsibleTree shape.
+ * Category nodes are pure grouping (a folder is never itself a page); each
+ * entry becomes exactly one leaf link. */
+// Plain objects, deliberately NOT Map: a Map-keyed version of this exact
+// tree-building pattern crashed on first paint in production once before
+// (see the landing-page skill) — treat Map as off-limits in this render path.
+type Building = { categories: Record<string, Building>; leaves: TreeItem[] }
 
-const buildTree = (
-  entries: Array<{ id: string; title: string; name: string; type: 'story' | 'docs' }>,
-) => {
-  const root: TreeNode = { groups: {}, leaves: [] }
+const storybookToTreeItems = (entries: StorybookEntry[], activeId: string | null): TreeItem[] => {
+  const root: Building = { categories: {}, leaves: [] }
   for (const entry of entries) {
     let node = root
     for (const segment of entry.title.split('/')) {
-      node.groups[segment] ??= { groups: {}, leaves: [] }
-      node = node.groups[segment]
+      node.categories[segment] ??= { categories: {}, leaves: [] }
+      node = node.categories[segment]
     }
-    node.leaves.push(entry)
+    node.leaves.push({
+      type: 'link',
+      key: entry.id,
+      label: entry.name,
+      href: `/explore?id=${entry.id}&mode=${entry.type}`,
+      active: activeId === entry.id,
+    })
   }
-  return root
+  const toItems = (node: Building, keyPrefix: string): TreeItem[] => [
+    ...Object.entries(node.categories).map(
+      ([label, child]): TreeItem => ({
+        type: 'category',
+        key: `${keyPrefix}/${label}`,
+        label,
+        items: toItems(child, `${keyPrefix}/${label}`),
+      }),
+    ),
+    ...node.leaves,
+  ]
+  return toItems(root, '')
 }
-
-const Group = ({
-  name,
-  node,
-  depth,
-  activeId,
-}: {
-  name: string
-  node: TreeNode
-  depth: number
-  activeId: string | null
-}) => (
-  <div style={{ paddingLeft: depth ? '0.75rem' : 0 }}>
-    <div className="mt-3 mb-1 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-dim">
-      {name}
-    </div>
-    {Object.entries(node.groups).map(([childName, child]) => (
-      <Group key={childName} name={childName} node={child} depth={depth + 1} activeId={activeId} />
-    ))}
-    <ul className="m-0 list-none p-0">
-      {node.leaves.map((leaf) => (
-        <li key={leaf.id}>
-          <Link
-            to={`/explore?id=${leaf.id}&mode=${leaf.type}`}
-            className={`block border-l-2 py-1 pl-3 text-[0.82rem] no-underline hover:text-pop ${
-              activeId === leaf.id ? 'border-pop font-bold text-pop' : 'border-transparent text-ink'
-            }`}
-          >
-            {leaf.name}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  </div>
-)
 
 const SectionLink = ({
   to,
@@ -81,9 +66,10 @@ const SectionLink = ({
 
 /** The persistent, global sidebar (rendered by src/theme/Root.tsx) — present
  * on every route, landing page included (deliberate; see the landing-page
- * skill). Two sections, fed by two different mechanisms but rendered as ONE
- * merged nav (no separate doc-page-local sidebar — see DocRoot.tsx and
- * contexts/DocsSidebarSync.tsx):
+ * skill). Two sections, fed by two different mechanisms but rendered
+ * through the SAME hierarchical tree component (CollapsibleTree.tsx — a
+ * category auto-expands while it contains the active page, else collapsed
+ * but clickable open):
  *
  * - "docs": the real, hand-authored documentation
  *   (`@docusaurus/plugin-content-docs`, files under apps/docs/docs/). Its
@@ -98,7 +84,7 @@ export const Sidebar = () => {
   const entries = useStorybookIndex()
   const location = useLocation()
   const activeId = new URLSearchParams(location.search).get('id')
-  const tree = entries ? buildTree(entries) : null
+  const exploreItems = entries ? storybookToTreeItems(entries, activeId) : null
   const docsBase = useBaseUrl('/docs')
   const exploreBase = useBaseUrl('/explore')
   const onDocsPage = location.pathname.startsWith(docsBase)
@@ -127,11 +113,8 @@ export const Sidebar = () => {
       <SectionLink to="/explore" active={onExplorePage && !activeId}>
         overview
       </SectionLink>
-      {tree === null && <p className="mt-2 pl-3 text-[0.8rem] text-dim">loading…</p>}
-      {tree &&
-        Object.entries(tree.groups).map(([name, node]) => (
-          <Group key={name} name={name} node={node} depth={0} activeId={activeId} />
-        ))}
+      {exploreItems === null && <p className="mt-2 pl-3 text-[0.8rem] text-dim">loading…</p>}
+      {exploreItems && <TreeItems items={exploreItems} />}
     </nav>
   )
 }

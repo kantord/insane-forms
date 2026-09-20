@@ -20,7 +20,11 @@ const DocsSidebarSyncContext = createContext<Ctx | null>(null)
  * ELSE too, so it can be clicked into). */
 export const DocsSidebarSyncProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<PropSidebarItem[] | null>(null)
-  return <DocsSidebarSyncContext.Provider value={{ items, setItems }}>{children}</DocsSidebarSyncContext.Provider>
+  return (
+    <DocsSidebarSyncContext.Provider value={{ items, setItems }}>
+      {children}
+    </DocsSidebarSyncContext.Provider>
+  )
 }
 
 export const useDocsSidebarSync = () => {

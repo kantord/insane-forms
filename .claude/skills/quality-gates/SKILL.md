@@ -29,9 +29,14 @@ Root is a private workspace; the gate scripts at the root orchestrate across it.
   DocVersionRoot/DocRoot/DocItem/DocSidebarItems — our OWN minimal content-docs
   theme, no `@docusaurus/theme-classic`), `src/theme/Root.tsx` (the persistent
   sidebar layout wrapping every route), `src/components/Sidebar.tsx` (the
-  persistent sidebar itself: links into `/docs` + the full `/explore` tree),
-  `src/hooks/useStorybookIndex.ts` (fetches Storybook's own `index.json` —
-  the explore tree's source of truth), `plugins/` (Tailwind-via-postcss, a
+  persistent sidebar itself: docs + the full `/explore` tree, merged into
+  one — no separate doc-page-local sidebar), `src/components/CollapsibleTree.tsx`
+  (the one hierarchical tree renderer both trees adapt into — collapsed by
+  default, auto-expands the active branch), `src/contexts/DocsSidebarSync.tsx`
+  (bridges content-docs' sidebar data, only readable inside a `/docs/*`
+  route, out to the sibling persistent sidebar), `src/hooks/useStorybookIndex.ts`
+  (fetches Storybook's own `index.json` — the explore tree's source of
+  truth), `plugins/` (Tailwind-via-postcss, a
   workspace `resolve.alias` plugin, the Shiki snippets content plugin),
   `scripts/static-server.mjs` (dependency-free static server used for local
   e2e/Lighthouse — NOT `docusaurus serve`, which mangles the embedded
