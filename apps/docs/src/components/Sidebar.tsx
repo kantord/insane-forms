@@ -80,8 +80,17 @@ const SectionLink = ({
  * - "explore": every Storybook story/autodocs page, fetched from Storybook's
  *   own build-time-generated index.json (useStorybookIndex) and grouped by
  *   title path. See src/pages/explore.tsx for the embed side.
- */
-export const Sidebar = () => {
+ *
+ * `variant="inline"` (src/theme/Root.tsx's mobile menu, below `md`) reuses
+ * this exact nav — same links, same tree — inside the page's normal document
+ * flow instead of the permanent fixed-width rail: full width, no forced
+ * height, a rule-w border on all four sides so it reads as one more of the
+ * site's boxed grid sections rather than a floating panel. Two design-system
+ * rules ruled out a modal/overlay/drawer here instead: "nothing is
+ * `position: fixed`" and "both rails are permanent on every surface" (see
+ * the insane-forms-design skill's readme) — this is the in-flow
+ * equivalent of the same always-there nav, not a different mechanism. */
+export const Sidebar = ({ variant = 'rail' }: { variant?: 'rail' | 'inline' }) => {
   const entries = useStorybookIndex()
   const location = useLocation()
   const activeId = new URLSearchParams(location.search).get('id')
@@ -94,7 +103,13 @@ export const Sidebar = () => {
   const { mode, toggle } = useColorMode()
 
   return (
-    <nav className="flex h-full w-[266px] shrink-0 flex-col overflow-y-auto border-r-[length:var(--rule-w)] border-line bg-rail px-[18px] py-6 font-mono">
+    <nav
+      className={
+        variant === 'rail'
+          ? 'flex h-full w-[266px] shrink-0 flex-col overflow-y-auto border-r-[length:var(--rule-w)] border-line bg-rail px-[18px] py-6 font-mono'
+          : 'flex max-h-[70vh] w-full flex-col overflow-y-auto border-[length:var(--rule-w)] border-line bg-rail px-[18px] py-6 font-mono'
+      }
+    >
       <Link
         to="/"
         className="font-display text-base font-extrabold tracking-tight text-ink no-underline"

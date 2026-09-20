@@ -49,8 +49,6 @@
 @source "../../../../packages/examples/meadow.tsx";
 @source "../../../../packages/examples/morph.tsx";
 @source "../../../../packages/examples/react-hook-form.tsx";
-@source "../../../../packages/ui/components/ui/sheet.tsx";
-@source "../../../../packages/ui/components/ui/button.tsx";
 
 @theme {
   --color-carbon: #1b1916;
