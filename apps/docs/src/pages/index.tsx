@@ -103,68 +103,70 @@ export default function Home() {
       </Head>
       <div className="bg-paper font-mono text-[15px] leading-relaxed text-ink">
         {/* ---- hero + principles ---- */}
-        <div id="overview" className="mx-auto max-w-[1180px] px-6 pt-12 pb-16">
-          <header>
-            {/* TopBar organism (design system handoff §7): right-aligned
-             * external links only, no wordmark — the persistent sidebar
-             * (rendered alongside every page, landing included) already
-             * carries it, and this is the shared shell contract. */}
-            <div className="flex justify-end gap-6 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-dim">
-              <Link className="hover:text-pop" href="pathname://./storybook/">
-                storybook
-              </Link>
-              <a className="hover:text-pop" href="https://github.com/kantord/insane-forms">
-                github
-              </a>
-            </div>
+        <div id="overview" className="pt-12 pb-16">
+          <div className="mx-auto max-w-[1180px] px-6">
+            <header>
+              {/* TopBar organism (design system handoff §7): right-aligned
+               * external links only, no wordmark — the persistent sidebar
+               * (rendered alongside every page, landing included) already
+               * carries it, and this is the shared shell contract. */}
+              <div className="flex justify-end gap-6 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-dim">
+                <Link className="hover:text-pop" href="pathname://./storybook/">
+                  storybook
+                </Link>
+                <a className="hover:text-pop" href="https://github.com/kantord/insane-forms">
+                  github
+                </a>
+              </div>
 
-            <h1 className="my-9 flex flex-col font-display text-[clamp(3rem,8vw,6rem)] font-black leading-[0.9] tracking-tighter">
-              <span className="self-start">
-                the schema <span className="text-pop">is</span>{' '}
-              </span>
-              <span className="self-end">the form.</span>
-            </h1>
+              <h1 className="my-9 flex flex-col font-display text-[clamp(3rem,8vw,6rem)] font-black leading-[0.9] tracking-tighter">
+                <span className="self-start">
+                  the schema <span className="text-pop">is</span>{' '}
+                </span>
+                <span className="self-end">the form.</span>
+              </h1>
 
-            <p className="mb-7 max-w-2xl text-[1.02rem]">
-              <strong>insane-forms</strong> renders React forms straight from plain Zod schemas. No
-              JSON dialect, no renderer registry, no match statement — each schema node carries its
-              own component, and React does the traversal.
-            </p>
+              <p className="mb-7 max-w-2xl text-[1.02rem]">
+                <strong>insane-forms</strong> renders React forms straight from plain Zod schemas.
+                No JSON dialect, no renderer registry, no match statement — each schema node carries
+                its own component, and React does the traversal.
+              </p>
 
-            <div className="mb-10 flex flex-wrap items-center gap-6">
-              <span className="border-2 border-pop px-3 py-1.5 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-pop">
-                zod 4 · react 19
-              </span>
-              <code className="select-all bg-ink px-4 py-[13px] text-[0.9rem] text-paper">
-                pnpm add insane-forms
-              </code>
-            </div>
-          </header>
+              <div className="mb-10 flex flex-wrap items-center gap-6">
+                <span className="border-2 border-pop px-3 py-1.5 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-pop">
+                  zod 4 · react 19
+                </span>
+                <code className="select-all bg-ink px-4 py-[13px] text-[0.9rem] text-paper">
+                  pnpm add insane-forms
+                </code>
+              </div>
+            </header>
 
-          <ul
-            id="principles"
-            className="grid list-none grid-cols-1 border border-ink p-0 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {PRINCIPLES.map(([term, body]) => (
-              <li
-                key={term}
-                className="border-rule border-b p-5 last:border-b-0 sm:border-r lg:border-b-0"
-              >
-                <h3 className="mb-1.5 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-pop">
-                  {term}
-                </h3>
-                <p className="m-0 text-[0.84rem] text-dim">{body}</p>
-              </li>
-            ))}
-          </ul>
+            <ul
+              id="principles"
+              className="grid list-none grid-cols-1 border border-ink p-0 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {PRINCIPLES.map(([term, body]) => (
+                <li
+                  key={term}
+                  className="border-rule border-b p-5 last:border-b-0 sm:border-r lg:border-b-0"
+                >
+                  <h3 className="mb-1.5 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-pop">
+                    {term}
+                  </h3>
+                  <p className="m-0 text-[0.84rem] text-dim">{body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* ---- watch a schema become a form (click through the steps) ---- */}
         <SchemaMorph />
 
         {/* ---- part two: design biomes ---- */}
-        <section id="biomes" className="border-t-[length:var(--rule-w)] border-line px-6 py-24">
-          <div className="mx-auto max-w-[1180px]">
+        <section id="biomes" className="border-t-[length:var(--rule-w)] border-line py-24">
+          <div className="mx-auto max-w-[1180px] px-6">
             <div className="flex flex-wrap justify-between gap-4 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
               <span>part two</span>
               <span>design biomes</span>
@@ -237,16 +239,16 @@ export default function Home() {
         ))}
 
         {/* ---- footer ---- */}
-        <div className="mx-auto max-w-[1180px] px-6 pt-10 pb-20">
-          {/* FooterBar organism: repo link left, mono note right, above a
-           * single top rule (design system handoff §7). */}
-          <footer className="flex flex-wrap justify-between gap-4 border-t-[length:var(--rule-w)] border-line py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
-            <a className="text-pop hover:underline" href="https://github.com/kantord/insane-forms">
-              github.com/kantord/insane-forms
-            </a>
-            <span>the same example drives the automated suite</span>
-          </footer>
-        </div>
+        {/* FooterBar organism: repo link left, mono note right, above a
+         * single top rule (design system handoff §7) — full-width like
+         * TopBar, not capped/centered: the reference FooterBar has no
+         * max-width of its own, it's the content column's own edge. */}
+        <footer className="flex flex-wrap justify-between gap-4 border-t-[length:var(--rule-w)] border-line px-6 py-6 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
+          <a className="text-pop hover:underline" href="https://github.com/kantord/insane-forms">
+            github.com/kantord/insane-forms
+          </a>
+          <span>the same example drives the automated suite</span>
+        </footer>
       </div>
     </>
   )

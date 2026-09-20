@@ -1,6 +1,8 @@
 import { useLocation } from '@docusaurus/router'
+import useBaseUrl from '@docusaurus/useBaseUrl'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { Asides } from '../components/Asides'
 import { Sidebar } from '../components/Sidebar'
 import '../css/custom.css'
 import { ColorModeProvider } from '../contexts/ColorMode'
@@ -35,10 +37,25 @@ import { DocsSidebarSyncProvider } from '../contexts/DocsSidebarSync'
  * floating-panel pattern; reverted once the style mismatch was pointed out.
  * Closes on route change AND hash change (`useLocation()`) — most links in
  * this nav are same-page anchors, which change `hash` without changing
- * `pathname`. */
+ * `pathname`.
+ *
+ * `<Asides>` (the right rail) is ALSO persistent/global now, not just a
+ * docs-article thing — the design system's readme states "both rails are
+ * permanent on every surface... a deliberate corrective to sites whose
+ * marketing page and docs feel like different products," and its absence on
+ * the landing page was exactly why capped-width elements there (the "part
+ * two" bar, TopBar) read as floating in unbounded empty space on wide
+ * screens instead of sitting bounded between two rail edges. Hidden on
+ * `/explore`: that route is a full-bleed embedded Storybook iframe, and a
+ * generic "see also: component explorer" link makes no sense while already
+ * inside the explorer. DocItem.tsx used to render its own `<Asides>` scoped
+ * to just the article's height — removed in favor of this one, page-height
+ * instance. */
 export default function Root({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { pathname, hash } = useLocation()
+  const exploreBase = useBaseUrl('/explore')
+  const onExplorePage = pathname.startsWith(exploreBase)
 
   useEffect(() => {
     setMobileNavOpen(false)
@@ -68,6 +85,7 @@ export default function Root({ children }: { children: ReactNode }) {
             )}
             {children}
           </div>
+          {!onExplorePage && <Asides />}
         </div>
       </DocsSidebarSyncProvider>
     </ColorModeProvider>
