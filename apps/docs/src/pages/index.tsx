@@ -99,8 +99,11 @@ export default function Home() {
               <span>mit</span>
             </div>
 
-            <h1 className="my-9 font-serif text-[clamp(3rem,8vw,5.4rem)] leading-[1.02] font-normal tracking-tight">
-              the schema <em className="text-pop">is</em> the form.
+            <h1 className="my-9 flex flex-col font-display text-[clamp(3rem,8vw,6rem)] font-black leading-[0.9] tracking-tighter">
+              <span className="self-start">
+                the schema <span className="text-pop">is</span>{' '}
+              </span>
+              <span className="self-end">the form.</span>
             </h1>
 
             <p className="mb-7 max-w-2xl text-[1.02rem]">
@@ -143,7 +146,7 @@ export default function Home() {
             <span>part two</span>
             <span>design biomes</span>
           </div>
-          <h2 className="mt-10 mb-5 max-w-3xl font-serif text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.08] font-normal">
+          <h2 className="mt-10 mb-5 max-w-3xl font-display text-[clamp(2.2rem,5vw,3.6rem)] font-bold leading-[1.02] tracking-tight">
             Three biomes, one library
           </h2>
           <p className="m-0 max-w-2xl text-[1.02rem]">
@@ -152,7 +155,9 @@ export default function Home() {
             library underneath never changes.
           </p>
 
-          <h3 className="mt-16 mb-4 font-serif text-3xl font-normal">A biome is just tokens</h3>
+          <h3 className="mt-16 mb-4 font-display text-3xl font-bold tracking-tight">
+            A biome is just tokens
+          </h3>
           <p className="mb-4 max-w-2xl text-[0.98rem]">
             There is no theming API. A biome is a CSS class that remaps a handful of semantic design
             tokens — paper, ink, the pop accent, the fonts — and everything inside re-skins itself,
@@ -163,7 +168,9 @@ export default function Home() {
             <CodePane id="tokens" />
           </div>
 
-          <h3 className="mt-16 mb-4 font-serif text-3xl font-normal">Bind once, then forget</h3>
+          <h3 className="mt-16 mb-4 font-display text-3xl font-bold tracking-tight">
+            Bind once, then forget
+          </h3>
           <p className="mb-4 max-w-2xl text-[0.98rem]">
             A design system meets the library in exactly one place: a field binding. A widget (how a
             value is edited), a shell (how a field is dressed — label, description, error), and an
@@ -187,7 +194,7 @@ export default function Home() {
             <section className="w-full bg-paper-deep/40 py-16 text-ink">
               <div className="mx-auto max-w-[1180px] px-6">
                 <Kicker>{kicker}</Kicker>
-                <h2 className="mt-2 mb-5 max-w-3xl font-serif text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.08] font-normal">
+                <h2 className="mt-2 mb-5 max-w-3xl font-display text-[clamp(2rem,4.5vw,3.2rem)] font-bold leading-[1.02] tracking-tight">
                   {title}
                 </h2>
                 <p className="m-0 max-w-2xl text-[1rem]">{intro}</p>

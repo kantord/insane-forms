@@ -5,9 +5,9 @@ const DocItemContent = ({ content: Content }: { content: Props['content'] }) => 
   const { metadata, contentTitle, frontMatter } = useDoc()
   const showSyntheticTitle = !frontMatter.hide_title && contentTitle === undefined
   return (
-    <article className="docs-content font-mono text-ink">
+    <article className="docs-content text-ink">
       {showSyntheticTitle && (
-        <h1 className="mb-6 font-serif text-4xl font-normal">{metadata.title}</h1>
+        <h1 className="mb-6 font-display text-4xl font-black tracking-tight">{metadata.title}</h1>
       )}
       <Content />
     </article>

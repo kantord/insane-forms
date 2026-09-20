@@ -68,7 +68,9 @@ export const SchemaMorph = () => {
 
         <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <h3 className="mt-0 mb-3 font-serif text-3xl font-normal">{current?.title}</h3>
+            <h3 className="mt-0 mb-3 font-display text-3xl font-bold tracking-tight">
+              {current?.title}
+            </h3>
             <p className="m-0 max-w-md text-[0.95rem] text-dim">{current?.body}</p>
           </div>
 

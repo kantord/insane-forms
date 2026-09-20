@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Sidebar } from '../components/Sidebar'
 import '../css/custom.css'
+import { ColorModeProvider } from '../contexts/ColorMode'
 import { DocsSidebarSyncProvider } from '../contexts/DocsSidebarSync'
 
 /** Docusaurus renders this around EVERY route (the documented `src/theme/Root`
@@ -19,11 +20,13 @@ import { DocsSidebarSyncProvider } from '../contexts/DocsSidebarSync'
  * merged sidebar, not the doc page's own nested one next to a global one. */
 export default function Root({ children }: { children: ReactNode }) {
   return (
-    <DocsSidebarSyncProvider>
-      <div className="flex h-screen">
-        <Sidebar />
-        <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
-      </div>
-    </DocsSidebarSyncProvider>
+    <ColorModeProvider>
+      <DocsSidebarSyncProvider>
+        <div className="flex h-screen">
+          <Sidebar />
+          <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
+        </div>
+      </DocsSidebarSyncProvider>
+    </ColorModeProvider>
   )
 }

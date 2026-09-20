@@ -13,19 +13,25 @@
 @import "../../../../packages/examples/biomes.css";
 
 /* Self-hosted fonts (GDPR: no third-party font CDN). font-display: swap.
- * Latin-subset files only where the package ships them (instrument-serif,
- * ibm-plex-mono) — the plain package import pulls EVERY subset (latin-ext,
- * cyrillic, greek, vietnamese...) as separate @font-face url()s, and
- * Docusaurus's webpack config base64-inlines any font under its size
- * threshold, so unused subsets still cost real bytes in the render-blocking
- * CSS even though the browser would never fetch them over the network. The
- * three variable packages don't ship a latin-only file (Fontsource ships one
- * combined `wght.css` per variable family) — accepted as-is; revisit if the
- * Lighthouse LCP budget (quality-gates skill) gets tight again. */
+ * Latin-subset files only where the package ships them (instrument-serif) —
+ * the plain package import pulls EVERY subset (latin-ext, cyrillic, greek,
+ * vietnamese...) as separate @font-face url()s, and Docusaurus's webpack
+ * config base64-inlines any font under its size threshold, so unused
+ * subsets still cost real bytes in the render-blocking CSS even though the
+ * browser would never fetch them over the network. The variable packages
+ * don't ship a latin-only file (Fontsource ships one combined `wght.css`
+ * per variable family) — accepted as-is; revisit if the Lighthouse LCP
+ * budget (quality-gates skill) gets tight again.
+ *
+ * IBM Plex Mono was here before the rebrand (root's old --font-code) and is
+ * gone now — the site's own (bureau) code font is Spline Sans Mono, same as
+ * its UI font; only meadow (Fira Code) and terminal (JetBrains Mono) still
+ * pick their own. Instrument Serif stays for meadow alone (biomes.css pins
+ * it there explicitly) — it's no longer the site's own display font. */
 @import "@fontsource/instrument-serif/latin-400.css";
 @import "@fontsource/instrument-serif/latin-400-italic.css";
 @import "@fontsource-variable/spline-sans-mono";
-@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource-variable/archivo";
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/fira-code";
 
@@ -66,17 +72,23 @@ body,
  * etc. margins; this restores basic readability without pulling in a full
  * prose plugin. Scoped to `.docs-content` only — the rest of the site sets
  * every element's spacing explicitly via utility classes. */
+.docs-content {
+  font-family: var(--font-display);
+}
 .docs-content :is(h1, h2, h3, h4) {
   margin-top: 1.75em;
   margin-bottom: 0.5em;
-  font-family: var(--font-serif);
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .docs-content :is(h1, h2, h3, h4):first-child {
   margin-top: 0;
 }
 .docs-content h1 {
   font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
 }
 .docs-content h2 {
   font-size: 1.5rem;
@@ -102,6 +114,7 @@ body,
   padding: 0.1em 0.35em;
   border-radius: 0.25em;
   font-size: 0.9em;
+  font-family: var(--font-mono);
 }
 .docs-content pre {
   background: var(--color-carbon);
@@ -109,6 +122,7 @@ body,
   padding: 1em;
   overflow-x: auto;
   border-radius: 0.25em;
+  font-family: var(--font-mono);
 }
 .docs-content pre code {
   background: none;
@@ -163,7 +177,10 @@ body,
   opacity: 1;
 }
 
-/* paper grain — static atmosphere, zero JS/scroll cost. */
+/* paper grain — static atmosphere, zero JS/scroll cost. The light-mode
+ * grain is warm-tan speckle tuned for a cream background; reused as-is on
+ * dark it would just look muddy, so dark mode gets a lighter speckle at
+ * lower opacity instead of the same texture inverted. */
 body::after {
   content: "";
   position: fixed;
@@ -171,4 +188,9 @@ body::after {
   pointer-events: none;
   opacity: 0.35;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.52 0 0 0 0 0.45 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] body::after {
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.88 0 0 0 0 0.82 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }

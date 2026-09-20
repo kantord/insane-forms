@@ -271,6 +271,83 @@ Lighthouse CI (`.lighthouserc.json` `startServerCommand`) — NOT
 If you touch the static server, keep both properties: no clean-url
 redirects, gzip on when the client sends `Accept-Encoding: gzip`.
 
+## Design system: tokens, fonts, dark mode
+
+**2026-09-20 rebrand** (explicit user request, sourced from a Claude Design
+artifact the user built separately — see "Extracting a Claude Design
+artifact's real content" below if this needs doing again): new palette,
+Archivo as the site's display font, and a working light/dark toggle.
+
+- **Tokens live in `packages/examples/biomes.css`**, shared with Storybook —
+  not `apps/docs/src/css/custom.css` (site-only concerns: fonts, paper grain,
+  code-note styling). `:root` sets the light-mode values; `:root[data-theme="dark"]`
+  overrides them. The three biome classes (`.biome-terminal`, `.biome-meadow`)
+  layer their own token overrides on top and are unaffected by dark mode — they
+  were already their own fixed palettes.
+- **`--font-display`** (renamed from `--font-serif`) is Archivo Variable on the
+  bureau/site chrome, remapped per-biome (mono for terminal, Instrument Serif
+  for meadow). Use the `font-display` Tailwind class, not `font-serif`, for any
+  new heading.
+- **Dark mode is `data-theme` on `<html>`, NOT Docusaurus's own color-mode
+  system.** `src/contexts/ColorMode.tsx` is a standalone localStorage +
+  `matchMedia` + `data-theme` attribute toggle, wired in at `Root.tsx`. This is
+  deliberate, not an oversight: Docusaurus's own `ColorModeProvider` lives in
+  `@docusaurus/theme-classic`, which this site doesn't register (see "No
+  theme-classic, ever" above) — reaching for it means reaching for the preset
+  again. It's also independent from Storybook's own dark-mode toggle, which
+  uses a `.dark` CLASS on a different element — the two never collide because
+  they key off different attributes entirely; don't try to unify them.
+- **State always starts at `'light'`, corrected in an effect post-mount —
+  never compute it during the initial render.** The first version of this
+  read `localStorage`/`matchMedia` via `useState(initialMode)`, which runs
+  during BOTH the server's render (where `window` is undefined → `'light'`)
+  AND the client's hydration render (where `window` exists → often
+  `'dark'`) — two different outputs for the same render pass is a real React
+  hydration error (#418: text content mismatch), reproducible on every load
+  for a visitor whose system/stored preference is dark, not just a cosmetic
+  issue. Confirmed via `list_console_messages` before and after the fix.
+  Current code: `useState<Mode>('light')`, then one `useEffect(() => {
+  setMode(initialMode()); setHydrated(true) }, [])`, then a second effect
+  gated on `hydrated` that writes `data-theme`/localStorage — this keeps the
+  first client render's output identical to the server's, so hydration
+  succeeds, and only touches the DOM/storage once the corrected value is
+  known.
+- **Known gap: no anti-flash inline script.** Because state starts at
+  `'light'` (previous bullet), a visitor whose stored/system preference is
+  dark still sees one frame of the light-mode SSR output before the
+  post-mount effect flips it — a visual flash, not an error. Not yet fixed.
+  If this becomes worth fixing, the fix is a tiny inline `<script>` in
+  `docusaurus.config.ts`'s `scripts`/head injection that reads
+  `localStorage`/`matchMedia` and sets `data-theme` synchronously before the
+  stylesheet paints — note this alone would reintroduce the hydration
+  mismatch on the sidebar's "light mode"/"dark mode" TEXT unless that text
+  node also gets `suppressHydrationWarning`, since the inline script only
+  fixes the CSS-visible attribute, not React's own `mode` state. Don't reach
+  for `theme-classic`'s version of this for the same reason as above.
+- **Sidebar active-state is filled, not bordered**: `bg-pop text-paper
+  font-bold` for the active link (both `Sidebar.tsx`'s `SectionLink` and
+  `CollapsibleTree.tsx`'s leaf links) — replaced an earlier border-left
+  indicator style. Keep both in sync; they're two separate components
+  rendering the same visual language and there's no shared style helper for it.
+
+### Extracting a Claude Design artifact's real content
+
+The user works out design direction in a separate Claude Design (Artifact
+canvas) session, then hands over the resulting `claude.ai/artifact/<id>` link
+— not a `claude.ai/design/p/<id>` link (that's a different, inaccessible
+surface; ask for the artifact-format link instead if given that one). Reading
+a "single page" design artifact via the `Artifact` tool's `read` action
+returns only its compiled bundler JS (a client-side unpacking loader), not the
+rendered design — there are no separately published project files to read
+instead (`list scope:files` confirms this). The actual page markup, inline
+styles, real hex colors, and font-family names are inside the LOCALLY SAVED
+full HTML file the tool result points to: parse it directly (Python:
+base64-decode + gunzip each `__bundler/manifest` entry to confirm they're just
+runtime code, then find and JSON-parse the `__bundler/template` script tag's
+content — that's the actual rendered HTML with inline styles). Don't ask the
+user to re-describe the design instead of doing this extraction; it's slower
+and lossier than just reading the file.
+
 ## Code display
 
 Snippets and the schema-morph steps come from `apps/docs/plugins/snippets-plugin.ts`

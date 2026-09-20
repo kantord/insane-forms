@@ -60,8 +60,10 @@ export const TreeItems = ({ items, depth = 0 }: { items: TreeItem[]; depth?: num
         <div key={item.key} style={{ paddingLeft: depth ? '0.75rem' : 0 }}>
           <Link
             to={item.href}
-            className={`block border-l-2 py-1 pl-3 text-[0.82rem] no-underline hover:text-pop ${
-              item.active ? 'border-pop font-bold text-pop' : 'border-transparent text-ink'
+            className={`block px-2 py-1 text-[0.82rem] no-underline ${
+              item.active
+                ? 'bg-pop font-bold text-paper'
+                : 'font-medium text-ink hover:bg-paper-deep'
             }`}
           >
             {item.label}

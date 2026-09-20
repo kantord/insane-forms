@@ -1,6 +1,7 @@
 import Link from '@docusaurus/Link'
 import { useLocation } from '@docusaurus/router'
 import useBaseUrl from '@docusaurus/useBaseUrl'
+import { useColorMode } from '../contexts/ColorMode'
 import { useDocsSidebarSync } from '../contexts/DocsSidebarSync'
 import { type StorybookEntry, useStorybookIndex } from '../hooks/useStorybookIndex'
 import { type TreeItem, TreeItems } from './CollapsibleTree'
@@ -56,8 +57,8 @@ const SectionLink = ({
 }) => (
   <Link
     to={to}
-    className={`block border-l-2 py-1 pl-3 text-[0.78rem] font-bold uppercase tracking-[0.1em] no-underline hover:text-pop ${
-      active ? 'border-pop text-pop' : 'border-transparent text-ink'
+    className={`block px-2 py-1 text-[0.82rem] no-underline ${
+      active ? 'bg-pop font-bold text-paper' : 'font-medium text-ink hover:bg-paper-deep'
     }`}
   >
     {children}
@@ -90,12 +91,13 @@ export const Sidebar = () => {
   const onDocsPage = location.pathname.startsWith(docsBase)
   const onExplorePage = location.pathname.startsWith(exploreBase)
   const { items: docsItems } = useDocsSidebarSync()
+  const { mode, toggle } = useColorMode()
 
   return (
-    <nav className="h-full w-64 shrink-0 overflow-y-auto border-r border-ink bg-paper-deep px-4 py-6 font-mono">
+    <nav className="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-ink bg-paper-deep px-4 py-6 font-mono">
       <Link
         to="/"
-        className="text-[0.9rem] font-bold uppercase tracking-[0.14em] text-ink no-underline"
+        className="font-display text-base font-extrabold tracking-tight text-ink no-underline"
       >
         insane-forms
       </Link>
@@ -115,6 +117,16 @@ export const Sidebar = () => {
       </SectionLink>
       {exploreItems === null && <p className="mt-2 pl-3 text-[0.8rem] text-dim">loading…</p>}
       {exploreItems && <TreeItems items={exploreItems} />}
+
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="mt-auto flex items-center justify-between border-t border-rule pt-3 text-[0.72rem] text-dim hover:text-pop"
+      >
+        <span>{mode === 'dark' ? 'dark' : 'light'} mode</span>
+        <span aria-hidden="true">{mode === 'dark' ? '●○' : '○●'}</span>
+      </button>
     </nav>
   )
 }

@@ -6,17 +6,36 @@
  * everywhere — only the variables change. */
 
 @theme {
-  --color-paper: #f3efe6;
-  --color-paper-deep: #eae4d4;
-  --color-ink: #16140f;
-  --color-dim: #665f4e;
-  --color-rule: #d4ccb8;
-  --color-pop: #c93f21;
+  --color-paper: #efece3;
+  --color-paper-deep: #e2e2dc;
+  --color-ink: #111110;
+  --color-dim: #6b6b64;
+  --color-rule: #d9d4c2;
+  --color-pop: #3a35ff;
 
-  --font-serif: "Instrument Serif", "Instrument Serif Fallback", georgia, serif;
+  /* "Display" (was "serif" — the site's own look no longer uses a serif
+   * face; the name changed everywhere it's referenced, see the
+   * landing-page skill). Terminal/meadow keep their own distinct choice. */
+  --font-display: "Archivo Variable", "Archivo Fallback", ui-sans-serif, sans-serif;
   --font-mono: "Spline Sans Mono Variable", "Spline Sans Mono Fallback", ui-monospace, monospace;
-  /* Code panes get a coding font per biome. */
-  --font-code: "IBM Plex Mono", ui-monospace, monospace;
+  /* Code panes get a coding font per biome; the site's own (bureau) now
+   * shares the UI mono rather than a separate code face. */
+  --font-code: var(--font-mono);
+}
+
+/* Dark mode: same semantic tokens, different values — set by the docs
+ * site's theme toggle (src/contexts/ColorMode.tsx), never by Storybook's
+ * own separate light/dark toggle (a `.dark` class, not this attribute) so
+ * the two never collide. The accent flips color entirely (blue on light,
+ * gold on dark) rather than just dimming — matched for contrast against
+ * each mode's page background, not a mechanical invert. */
+:root[data-theme="dark"] {
+  --color-paper: #111110;
+  --color-paper-deep: #1c1b18;
+  --color-ink: #efece3;
+  --color-dim: #8a8578;
+  --color-rule: #35332d;
+  --color-pop: #d9a441;
 }
 
 .biome-terminal {
@@ -26,7 +45,7 @@
   --color-dim: #6fa284;
   --color-rule: #1f3a2c;
   --color-pop: #ffc163;
-  --font-serif: var(--font-mono);
+  --font-display: var(--font-mono);
   --font-code: "JetBrains Mono Variable", ui-monospace, monospace;
 }
 
@@ -37,6 +56,11 @@
   --color-dim: #6f6890;
   --color-rule: #e4dff2;
   --color-pop: #5b48d8;
+  /* Explicit, not inherited: before the site's own display font moved to
+   * Archivo, meadow got Instrument Serif "for free" from the root default.
+   * Pin it here so meadow's own look doesn't silently change with the
+   * site's rebrand — it's a deliberately different biome, not the site. */
+  --font-display: "Instrument Serif", "Instrument Serif Fallback", georgia, serif;
   --font-code: "Fira Code Variable", ui-monospace, monospace;
 }
 
@@ -46,7 +70,7 @@
  * a consumer would write for their own design system. */
 @layer components {
   .biome-bureau .demo-pane h3 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 400;
     font-size: 1.45rem;
     margin: 1.2rem 0 0.3rem;
@@ -93,7 +117,10 @@
   .biome-bureau .demo-pane input:not([type="checkbox"]):focus,
   .biome-bureau .demo-pane select:focus {
     border-bottom-color: var(--color-pop);
-    background: rgba(201, 63, 33, 0.05);
+    /* was a literal rgba() of the old, single, never-changing pop color —
+     * the accent is now different per light/dark mode, so this has to
+     * derive from the variable instead of a baked-in constant. */
+    background: color-mix(in srgb, var(--color-pop) 5%, transparent);
   }
 
   .biome-bureau .demo-pane input[type="checkbox"] {
