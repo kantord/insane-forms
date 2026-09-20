@@ -43,7 +43,10 @@ export const SchemaMorph = () => {
   const schema = current?.schema ?? null
 
   return (
-    <section id="morph" className="biome-bureau w-full bg-paper-deep/40 py-16 text-ink">
+    <section
+      id="morph"
+      className="biome-bureau w-full border-t-[length:var(--rule-w)] border-line bg-paper-deep/40 py-16 text-ink"
+    >
       <div className="mx-auto max-w-[1180px] px-6">
         <div className="mb-8 flex flex-wrap gap-2">
           {MORPH_STEPS.map((s, i) => (

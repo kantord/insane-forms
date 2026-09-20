@@ -19,7 +19,10 @@ export const Showcase = ({
   story: string
   children: ReactNode
 }) => (
-  <section id={id} className={`biome-${biome} w-full bg-paper py-16 text-ink`}>
+  <section
+    id={id}
+    className={`biome-${biome} w-full border-t-[length:var(--rule-w)] border-line bg-paper py-16 text-ink`}
+  >
     <div className="mx-auto flex max-w-[1180px] flex-col px-6">
       <h2 className="mb-1.5 font-display text-3xl font-bold tracking-tight">{title}</h2>
       <p className="m-0 mb-6 max-w-2xl text-[0.9rem] text-dim">{blurb}</p>

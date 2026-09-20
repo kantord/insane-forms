@@ -24,7 +24,7 @@ const DocItemContent = ({ content: Content }: { content: Props['content'] }) => 
   return (
     <div className="flex gap-10">
       <div className="min-w-0 flex-1">
-        <div className="mb-8 flex justify-end gap-6 text-[0.72rem] font-bold uppercase tracking-[0.14em] text-dim">
+        <div className="mb-8 flex justify-end gap-6 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] font-bold uppercase tracking-[0.14em] text-dim">
           <Link className="hover:text-pop" to="/explore">
             storybook
           </Link>
@@ -41,7 +41,7 @@ const DocItemContent = ({ content: Content }: { content: Props['content'] }) => 
           <Content />
         </article>
         {(metadata.previous || metadata.next) && (
-          <div className="mt-8 flex items-center justify-between gap-6 font-mono text-[0.8rem]">
+          <div className="mt-8 flex items-center justify-between gap-6 border-t-[length:var(--rule-w)] border-line pt-4 font-mono text-[0.8rem]">
             {metadata.previous ? (
               <Link
                 className="text-dim no-underline hover:text-pop"
