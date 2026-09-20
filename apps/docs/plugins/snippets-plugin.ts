@@ -1,13 +1,17 @@
-/** Vite plugin: build-time syntax highlighting with Shiki. Each docs-page
- * specimen gets its snippet sliced from the REAL example file and highlighted
- * with a custom theme matching its style biome — no highlighter ships to the
- * browser, only pre-rendered HTML. */
+/** Docusaurus content plugin: build-time syntax highlighting with Shiki.
+ * Each specimen shown on the homepage is sliced from the REAL example file
+ * and highlighted with a custom theme matching its style biome — no
+ * highlighter ships to the browser, only pre-rendered HTML (read back via
+ * `usePluginData`, src/hooks/useSnippets.ts). Ported from the old Vite
+ * plugin (apps/landing/snippets.plugin.ts) when the landing page moved to
+ * Docusaurus; the Magic Move step-morph animation was dropped (see
+ * landing-page skill), so each schema-morph step is now just its own
+ * highlighted snippet instead of a keyed-token animation. */
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { codeToKeyedTokens, createMagicMoveMachine } from '@shikijs/magic-move/core'
+import type { LoadContext, Plugin, PluginContentLoadedActions } from '@docusaurus/types'
 import { createHighlighter, type ThemeRegistrationAny } from 'shiki'
-import type { Plugin } from 'vite'
 
 type Palette = {
   bg: string
@@ -49,6 +53,19 @@ const biomeTheme = (name: string, c: Palette): ThemeRegistrationAny => ({
   ],
 })
 
+const BUREAU_THEME = biomeTheme('bureau', {
+  bg: '#1b1916',
+  fg: '#e9e3d2',
+  comment: '#837b66',
+  string: '#c9b98c',
+  keyword: '#ff7a55',
+  fn: '#e6b87e',
+  number: '#e6b87e',
+  type: '#b8c9a6',
+  property: '#d8d0bb',
+  punct: '#9a917c',
+})
+
 const SNIPPETS = [
   {
     id: 'tokens',
@@ -64,18 +81,7 @@ const SNIPPETS = [
     file: 'profile.tsx',
     from: 'const Contact',
     to: 'export type ProfileData',
-    theme: biomeTheme('bureau', {
-      bg: '#1b1916',
-      fg: '#e9e3d2',
-      comment: '#837b66',
-      string: '#c9b98c',
-      keyword: '#ff7a55',
-      fn: '#e6b87e',
-      number: '#e6b87e',
-      type: '#b8c9a6',
-      property: '#d8d0bb',
-      punct: '#9a917c',
-    }),
+    theme: BUREAU_THEME,
   },
   {
     id: 'terminal',
@@ -175,24 +181,25 @@ const extractNotes = (source: string) => {
   return { code: cleaned.join('\n'), decorations }
 }
 
-const VIRTUAL_ID = 'virtual:snippets'
-const RESOLVED_ID = `\0${VIRTUAL_ID}`
+export type SnippetsContent = {
+  snippets: Record<string, string>
+  morphSteps: string[]
+}
 
-export function snippetsPlugin(): Plugin {
+const PLUGIN_NAME = 'insane-forms-snippets'
+
+export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsContent> {
   return {
-    name: 'insane-forms:snippets',
-    resolveId(id) {
-      return id === VIRTUAL_ID ? RESOLVED_ID : undefined
-    },
-    async load(id) {
-      if (id !== RESOLVED_ID) return undefined
+    name: PLUGIN_NAME,
+    async loadContent() {
       const highlighter = await createHighlighter({
         langs: ['tsx', 'css'],
-        themes: SNIPPETS.flatMap((s) => (s.theme === null ? [] : [s.theme])),
+        themes: [...SNIPPETS.flatMap((s) => (s.theme === null ? [] : [s.theme])), BUREAU_THEME],
       })
+      const examplesDir = path.resolve(context.siteDir, '../../packages/examples')
+
       const entries = SNIPPETS.map((s) => {
-        const file = path.resolve(import.meta.dirname, '../../packages/examples', s.file)
-        this.addWatchFile(file)
+        const file = path.join(examplesDir, s.file)
         const source = readFileSync(file, 'utf8')
         const a = source.indexOf(s.from)
         const b = source.indexOf(s.to)
@@ -203,33 +210,31 @@ export function snippetsPlugin(): Plugin {
           theme: ('themeName' in s ? s.themeName : undefined) ?? s.theme?.name ?? s.id,
           decorations,
         })
-        return [s.id, html]
+        return [s.id, html] as const
       })
 
-      // Magic Move steps: slice examples/morph.tsx at its step markers and
-      // precompile keyed tokens (bureau theme), so the runtime ships the
-      // renderer only — zero Shiki in the browser.
-      const morphFile = path.resolve(import.meta.dirname, '../../packages/examples', 'morph.tsx')
-      this.addWatchFile(morphFile)
-      const morphBlocks = readFileSync(morphFile, 'utf8')
+      // Schema-morph steps: slice examples/morph.tsx at its step markers and
+      // highlight each step individually (no animation — the reader clicks
+      // through steps; see src/pages/index.tsx SchemaMorph).
+      const morphFile = path.join(examplesDir, 'morph.tsx')
+      const morphSteps = readFileSync(morphFile, 'utf8')
         .split(/\/\* step:\d[^*]*\*\//)
         .slice(1)
-        // notes are stripped here too (keyed tokens can't carry decorations)
         .map((block) => extractNotes(block.trim()).code)
         .map((block) => block.replace(/export const Step\d/, 'const Profile'))
-      // (matchAlgorithm isn't exposed in @shikijs/magic-move 4.2.0's options —
-      // revisit when upgrading to the shiki-monorepo line.)
-      const machine = createMagicMoveMachine((code) =>
-        codeToKeyedTokens(highlighter, code, { lang: 'tsx', theme: 'bureau' }),
-      )
-      const morphSteps = morphBlocks.map((code) => structuredClone(machine.commit(code).current))
+        .map((code) => highlighter.codeToHtml(code, { lang: 'tsx', theme: 'bureau' }))
 
-      return [
-        `export default ${JSON.stringify(Object.fromEntries(entries))}`,
-        // JSON.parse of a string literal parses ~1.7x faster than an equivalent
-        // JS object literal (V8 guidance) — these arrays are large.
-        `export const morphSteps = JSON.parse(${JSON.stringify(JSON.stringify(morphSteps))})`,
-      ].join('\n')
+      highlighter.dispose()
+      return { snippets: Object.fromEntries(entries), morphSteps }
+    },
+    async contentLoaded({
+      content,
+      actions,
+    }: {
+      content: SnippetsContent
+      actions: PluginContentLoadedActions
+    }) {
+      actions.setGlobalData(content)
     },
   }
 }

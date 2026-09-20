@@ -1,6 +1,6 @@
 ---
 name: code-example-pipeline
-description: One-source-of-truth rules for all displayed code — landing snippets, Magic Move morph steps, and Storybook code panels. Use when adding/editing examples, stories, the snippets Vite plugin, or anything that shows code to users.
+description: One-source-of-truth rules for all displayed code — docs-site snippets and Storybook code panels. Use when adding/editing examples, stories, the snippets plugin, or anything that shows code to users.
 ---
 
 # Code example pipeline
@@ -14,22 +14,26 @@ from a real, compiled, tested module — so docs cannot drift from working code.
   `meadow.tsx`, `morph.tsx`, `fields.tsx`); the UNCHANGED shadcn components are in
   `packages/ui/components`. Each module is rendered by Storybook stories
   (`apps/storybook/stories/`, with the axe a11y gate) and/or the vitest suites.
-- **Landing snippets**: `apps/landing/snippets.plugin.ts` slices marked regions
-  from those files (resolved at `../../packages/examples`) at build time and
-  highlights them with Shiki using custom per-biome themes. Zero highlighting JS
-  ships to the browser.
-- **Magic Move morph steps**: the same plugin splits `packages/examples/morph.tsx`
-  at `/* step:N */` markers, precompiles keyed tokens
-  (`codeToKeyedTokens` + `createMagicMoveMachine`, bureau theme), and the
-  runtime ships ONLY `ShikiMagicMovePrecompiled` — verify zero Shiki in the
-  bundle (no `oniguruma`/`grammar` strings in dist). The only allowed display
-  transform is identifier renaming (`export const StepN` → `const Profile`).
+- **Docs-site snippets**: `apps/docs/plugins/snippets-plugin.ts` (a Docusaurus
+  content plugin, ported from the old `apps/landing/snippets.plugin.ts` Vite
+  plugin when the landing page moved to Docusaurus — see [[landing-page]])
+  slices marked regions from those files (resolved at `../../packages/examples`)
+  at build time and highlights them with Shiki using custom per-biome themes,
+  exposed to `src/pages/index.tsx` via `usePluginData` (`src/hooks/useSnippets.ts`).
+  Zero highlighting JS ships to the browser. The schema-morph steps
+  (`packages/examples/morph.tsx`, `/* step:N */` markers) are highlighted the
+  SAME way — one static snippet per step, swapped by a plain step-selector
+  button, NOT an animation. (Magic Move — precompiled keyed-token morphing
+  between steps — was dropped in that move along with the rest of the
+  scrollytelling mechanics; `@shikijs/magic-move` is no longer a dependency.)
+  The only allowed display transform is identifier renaming
+  (`export const StepN` → `const Profile`).
 - **Storybook code panel (custom, default)**: a CUSTOM "Code" panel
   (`apps/storybook/.storybook/manager.tsx`) replaces the built-in one and is the
   default selected panel (`addons.setConfig({ selectedPanel })`); Controls/Actions
   are disabled (`parameters.controls/actions: { disable: true }`). Its content is
   highlighted at BUILD TIME by a Vite plugin (`code-panel.plugin.ts`) — same
-  zero-runtime-Shiki rule as the landing page — into a virtual module
+  zero-runtime-Shiki rule as the docs site — into a virtual module
   (`virtual:insane-code-panel`, typed in `code-panel.d.ts`), keyed file basename →
   story display name → HTML. The preview looks up the current story's HTML and
   sends it to the manager over the channel (`code-panel.shared.ts` constants); the
@@ -117,7 +121,7 @@ shown/noted/linked) — the teeth that keep the property from rotting.
   shipped) — the core publishes no form component. The core surface is the
   schema builders + `<Render schema engine={…}>`; a form library is connected
   by implementing the 3-hook `FieldEngine` and (optionally) `createFormRenderer`.
-- Shared chrome (`packages/examples/biomes.css`) is imported by BOTH the landing and
+- Shared chrome (`packages/examples/biomes.css`) is imported by BOTH the docs site and
   Storybook so examples render identically in both harnesses.
 - New display surface? It must consume one of these mechanisms — never an
   inline string.

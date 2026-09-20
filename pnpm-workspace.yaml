@@ -22,6 +22,9 @@ verifyDepsBeforeRun: install
 # esbuild reviewed: its platform binary arrives via optionalDependencies; the
 # postinstall script is only a fallback check. Works script-less — keep blocked.
 allowBuilds:
+  # core-js (pulled in by Docusaurus's babel/webpack toolchain): postinstall
+  # only prints a funding banner — keep blocked.
+  core-js: false
   esbuild: false
   # msw (via shadcn CLI): postinstall only prints a support banner — keep blocked.
   msw: false

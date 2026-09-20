@@ -2,8 +2,9 @@ import path from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 
 /* E2E against the BUILT static site — the exact artifact GitHub Pages serves
- * (landing at / and Storybook at /storybook/). `pnpm run test:e2e` builds both
- * (landing dist, then storybook into landing dist/storybook) before launching. */
+ * (docs at /insane-forms/ and Storybook at /insane-forms/storybook/).
+ * `pnpm run test:e2e` builds both (docs build, then storybook into
+ * apps/docs/build/storybook) before launching. */
 export default defineConfig({
   testDir: '.',
   testMatch: ['apps/*/e2e/**/*.spec.ts'],
@@ -12,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: 'http://localhost:4173/insane-forms/',
     trace: 'on-first-retry',
   },
   projects: [
@@ -22,9 +23,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'vite preview --port 4173 --strictPort',
-    cwd: path.join(import.meta.dirname, 'apps/landing'),
-    url: 'http://localhost:4173',
+    command: 'pnpm run serve',
+    cwd: path.join(import.meta.dirname, 'apps/docs'),
+    url: 'http://localhost:4173/insane-forms/',
     reuseExistingServer: !process.env.CI,
   },
 })

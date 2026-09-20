@@ -1,8 +1,9 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./apps/landing/dist",
-      "url": ["http://localhost/index.html"],
+      "startServerCommand": "pnpm --filter @insane-forms/docs run serve",
+      "startServerReadyPattern": "Serving",
+      "url": ["http://localhost:4173/insane-forms/"],
       "numberOfRuns": 1,
       "settings": { "chromeFlags": "--no-sandbox" }
     },

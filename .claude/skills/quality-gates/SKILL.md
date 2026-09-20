@@ -20,12 +20,23 @@ Root is a private workspace; the gate scripts at the root orchestrate across it.
   types.check). Depends on core + ui.
 - `apps/storybook` — `@insane-forms/storybook`: `stories/`, `.storybook/`,
   `vitest.config.ts` (browser project), `e2e/storybook.spec.ts`.
-- `apps/landing` — `@insane-forms/landing`: `src/`, `index.html`,
-  `vite.config.ts`, `snippets.plugin.ts`, `fonts.plugin.ts`, `e2e/docs-page.spec.ts`.
+- `apps/docs` — `@insane-forms/docs`: the Docusaurus site (see
+  [[landing-page]] skill). `src/pages/index.tsx` + `src/components/` (the
+  simplified static landing page), `plugins/` (Tailwind-via-postcss,
+  workspace aliases + font-emit webpack tweak, the Shiki snippets content
+  plugin), `scripts/static-server.mjs` (dependency-free static server used
+  for local e2e/Lighthouse — NOT `docusaurus serve`, which mangles the
+  embedded Storybook build's clean-url/query-string deep links),
+  `e2e/docs-page.spec.ts`. No theme/preset (see the skill) — deliberately
+  lighter than `preset-classic` until real docs pages need its sidebar/TOC.
+  Storybook builds INTO this app (`apps/storybook`'s `build:storybook` →
+  `apps/docs/build/storybook`), so `apps/docs/build` is the single Pages
+  deploy artifact.
 
 Cross-package imports use specifiers: `insane-forms` (core), `@/…` (→ ui, the
 shadcn alias), `@insane-forms/examples/…`. Resolution is source-based via vite
-`resolve.alias` (per app) + root tsconfig `paths` (one repo-wide `tsc --noEmit`).
+`resolve.alias` (per Vite app) or a `configureWebpack` alias plugin (apps/docs,
+Docusaurus/webpack) + root tsconfig `paths` (one repo-wide `tsc --noEmit`).
 Build/dev/test configs are per-app; typecheck/lint/measure are root-orchestrated.
 
 ## The gate chain — green before "done"
@@ -47,12 +58,15 @@ Build/dev/test configs are per-app; typecheck/lint/measure are root-orchestrated
    of dist) and runs publint + attw (esm-only profile).
 5. `pnpm exec playwright test` — e2e against the BUILT artifact
    (`build:docs` + `build:storybook` first; exactly what GitHub Pages serves).
+   Served locally by `apps/docs/scripts/static-server.mjs` (see [[landing-page]]),
+   not `docusaurus serve` or `vite preview` — it's the only local server that
+   both respects the `/insane-forms/` baseUrl AND gzips like a real static
+   host, which the Lighthouse budget below depends on.
 6. Visual/behavioral claims get verified in a real browser (chrome-devtools
    MCP or headless chromium), with measurements, not assumptions.
-7. `pnpm run perf` — Lighthouse budget gate on the built landing page
+7. `pnpm run perf` — Lighthouse budget gate on the built docs page
    (LCP ≤ 2.5s error, TBT ≤ 300ms error, CLS ≤ 0.1 error, perf score ≥ 0.9
-   warn); runs in the Pages workflow. `pnpm run analyze` produces the bundle
-   composition report backing the measure-first islands decision.
+   warn); runs in the Pages workflow, against the same static-server.mjs.
 
 ## Supply chain (pnpm-workspace.yaml)
 

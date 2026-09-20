@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.describe('storybook', () => {
   test('manager loads with all story groups', async ({ page }) => {
-    await page.goto('/storybook/')
+    await page.goto('storybook/')
     // Top-level folders (Examples, Integration examples, …) render as sidebar
     // nodes; assert their labels are present rather than a specific role.
     for (const group of ['Examples', 'Integration examples', 'Misc', 'Tests']) {
@@ -11,7 +11,7 @@ test.describe('storybook', () => {
   })
 
   test('wizard story gates steps and highlights errors', async ({ page }) => {
-    await page.goto('/storybook/iframe.html?id=examples-multi-step--checkout&viewMode=story')
+    await page.goto('storybook/iframe.html?id=examples-multi-step--checkout&viewMode=story')
     await page.getByRole('button', { name: 'Next' }).click()
     // Stays on step 1 with errors; the Account chip is marked invalid.
     const accountChip = page.getByRole('button', { name: /1\s*Account/ })
@@ -28,7 +28,7 @@ test.describe('storybook', () => {
   })
 
   test('settings story submits the typed output', async ({ page }) => {
-    await page.goto('/storybook/iframe.html?id=examples-forms--profile&viewMode=story')
+    await page.goto('storybook/iframe.html?id=examples-forms--profile&viewMode=story')
     // Field ids are the schema paths — stable selectors for flat fields.
     await page.locator('#name').fill('Evil Rabbit')
     await page.locator('#email').fill('evil@rabbit.com')
