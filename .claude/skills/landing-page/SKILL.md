@@ -1,15 +1,16 @@
 ---
 name: landing-page
-description: Rules for the apps/docs site — the static landing page (src/pages/index.tsx), the persistent sidebar embedding every Storybook page (src/theme/Root.tsx, src/components/DocsSidebar.tsx, src/pages/docs.tsx), the Tailwind/webpack gotchas specific to Docusaurus, and the perf-testing setup. Use whenever editing apps/docs/src or apps/docs/plugins, or adding landing/docs sections.
+description: Rules for the apps/docs site — the static landing page (src/pages/index.tsx), the persistent sidebar (src/theme/Root.tsx, src/components/Sidebar.tsx) with its two sections (/docs real written docs, /explore every Storybook page), the from-scratch content-docs theme (src/components/docs/), the Tailwind/webpack gotchas specific to Docusaurus, and the perf-testing setup. Use whenever editing apps/docs/src or apps/docs/plugins, or adding landing/docs/explore sections.
 ---
 
-# Landing page (apps/docs)
+# apps/docs (landing page + docs + explore)
 
 **Supersedes the old `scrollytelling-landing` skill** (2026-09-20, explicit
 user request): the landing page was rewritten from a standalone Vite
 scrollytelling app (`apps/landing`, now deleted) into a plain static page in
-the Docusaurus site (`apps/docs`) that will also host real docs pages +
-embedded Storybook next. The direction changed from "hybrid scrollytelling —
+the Docusaurus site (`apps/docs`), which now also hosts real written docs
+(`/docs`) and a Storybook browser (`/explore`) behind a persistent sidebar.
+The landing page's direction changed from "hybrid scrollytelling —
 sticky-stepper morph, fullscreen scroll-snap biome deck, Magic Move code
 animation, motion toggle, six-font chapter-prioritized loading" to "simple,
 bold, static — same content, top-to-bottom flow, no scroll-driven JS." If you
@@ -43,80 +44,113 @@ components exist anymore — `apps/docs/src/components/` only holds `Showcase`,
   JS-driven animation on this page to gate. If you add motion, add the toggle
   back then — don't add it preemptively.
 
-## No theme/preset — deliberate, and load-bearing for perf
+## No theme-classic, ever — it's not prunable, so it's not used at all
 
-`apps/docs/docusaurus.config.ts` has NO `presets`/`themes` entry. It uses
-`@docusaurus/plugin-content-pages` (bare page routing) + `@docusaurus/plugin-sitemap`
-+ local plugins, and nothing else. This was NOT the original setup —
-`preset-classic` was tried first and dropped when it turned out `theme-classic`
-ships a full framework's worth of component CSS (admonitions, avatars, badges,
-doc sidebar, blog chrome…) that this page uses none of, and that CSS alone
-blew the Lighthouse LCP budget on its own (measured: dropping it cut the
-render-blocking stylesheet from ~217 KB to ~150 KB). The navbar is gone too —
-its two links (Storybook, GitHub) live in the page's own masthead row instead,
-styled like everything else on the page.
+`apps/docs/docusaurus.config.ts` registers `@docusaurus/plugin-content-pages`,
+`@docusaurus/plugin-sitemap`, and `@docusaurus/plugin-content-docs` directly
+— no `preset-classic`, no `@docusaurus/theme-classic`, not even for the real
+written docs (`/docs`). This was tried three times before landing here, each
+one measured against the Lighthouse LCP budget (quality-gates skill) on the
+landing page, since Docusaurus ships ONE global stylesheet for the whole
+site — CSS added anywhere is paid for everywhere:
 
-The "real docs pages" step this pointed at turned out NOT to need
-`preset-classic` either — see "Docs section" below: it's a custom sidebar
-embedding Storybook directly, not a Docusaurus content-docs sidebar. If a
-future need (long-form written docs, search, versioning) genuinely requires
-`preset-classic`'s doc-content system, that's a real trade to make explicitly
-— state it, don't silently add the preset back to fix an unrelated problem.
+1. `preset-classic` with `docs` enabled: landing-page LCP 2.3s → 2.8s
+   (budget: 2.5s). Cause: `theme-classic`'s plugin definition calls
+   `getClientModules()` and unconditionally requires
+   `infima/dist/css/default/default.css` (~150 KB) as a global client
+   module — this runs at the PLUGIN level, not per-component, so it loads
+   the instant theme-classic is an active theme, full stop.
+2. Swizzling `Layout` to drop `Navbar`/`Footer`/`AnnouncementBar` (still
+   useful — we don't want Docusaurus's own navbar anywhere, the persistent
+   sidebar replaces it) clawed back only ~2 KB / ~60ms. Confirms (1): Infima's
+   own base framework (grid, typography, buttons, admonitions, doc-sidebar
+   styles) is ONE monolithic stylesheet, not tree-shaken per component — you
+   cannot have theme-classic active "a little bit."
+3. **What actually worked**: drop theme-classic entirely and supply
+   content-docs' required components ourselves — `docsRootComponent`,
+   `docVersionRootComponent`, `docRootComponent`, `docItemComponent`,
+   `docCategoryGeneratedIndexComponent` in the plugin options
+   (`docusaurus.config.ts`), pointed at `src/components/docs/*.tsx`
+   (absolute paths via `path.resolve(__dirname, ...)` — the generated
+   `.docusaurus/` registry can't resolve paths relative to the config file).
+   Result: landing LCP back to 2.3s with full doc pages. These components
+   import ONLY `@docusaurus/plugin-content-docs/client` (`useDoc`,
+   `useDocRootMetadata`, `DocProvider`, `DocsSidebarProvider`,
+   `DocsVersionProvider` — theme-agnostic hooks, safe standalone) and
+   `@docusaurus/renderRoutes` — never anything from `@docusaurus/theme-classic`
+   or `@theme/*` aliases theme-classic would have provided. `useDoc`/etc.
+   need `@docusaurus/theme-common` and `@docusaurus/plugin-content-docs`
+   declared as ROOT devDependencies (not just transitive through a preset) —
+   `tsc` resolves their types either way, but webpack's runtime resolution
+   won't without the explicit dependency.
 
-## Docs section — persistent sidebar embedding Storybook
+**If you're tempted to add `preset-classic` back "just for this one thing"**:
+don't, without re-measuring. That's exactly attempt (1) above. Any doc
+feature that turns out to need theme-classic specifically (versioning,
+Algolia search) is a real, explicit trade to make — state it, don't silently
+reach for the preset.
 
-Reachable from every page (the sidebar is global — see "Persistent layout"
-below), `/docs?id=<storyId>&mode=story|docs` embeds ONE Storybook page (a
-story canvas or an autodocs page) picked by the sidebar. This is deliberately
-NOT a Docusaurus content-docs setup and NOT an embed of Storybook's own
-manager UI (which has its own sidebar, still linked separately from the
-masthead for when you want Controls/Actions/the full Storybook chrome) — it's
-a lighter, same-look-as-the-rest-of-the-site nav over Storybook's story
-canvases.
+## Two sections behind the sidebar: /docs vs /explore
 
-- **`src/hooks/useStorybookIndex.ts`** fetches `<baseUrl>/storybook/index.json`
-  client-side (Storybook writes this at ITS OWN build time, listing every
-  story + autodocs page it built). This is the single source of truth for
-  "every page in Storybook" — no story-discovery logic is duplicated here,
-  and it doesn't matter that `build:docs` runs before `build:storybook`
-  (`pnpm run test:e2e`/the Pages workflow): the fetch just 404s until
-  Storybook's build lands, same as any other client-side data fetch. Fetch
-  failure resolves to an empty list (sidebar renders, just empty), never a
-  crash.
-- **`src/components/DocsSidebar.tsx`** groups entries by their `title` (a
-  slash-separated path, e.g. `Examples/Forms`) into a plain nested
-  `Record<string, TreeNode>` tree (NOT a `Map` — see the note below) and
-  renders it recursively. Each leaf links to `/docs?id=<id>&mode=<type>` via
-  `@docusaurus/Link`; the active entry is derived by comparing the current
-  `id` query param (`@docusaurus/router`'s `useLocation`) — no separate
-  "selected" state.
-- **`src/pages/docs.tsx`** reads `id`/`mode` from the query string and renders
-  `<iframe src="<baseUrl>storybook/iframe.html?id=<id>&viewMode=<mode>">`
-  filling the content pane. No per-story routes, no build-time knowledge of
-  which stories exist — new stories show up automatically next time
-  `index.json` is fetched.
-- Use plain objects/arrays for this tree, not `Map`. A `Map`-based version of
-  `buildTree` crashed on first paint in production
-  (`TypeError: Cannot read properties of undefined (reading 'groups')`,
-  reproducible only with real fetched data, not obviously wrong from reading
-  the code) — switching to `Record<string, TreeNode>` fixed it outright. Cause
-  never fully isolated; treat `Map` in this render path as suspect if the
-  crash resurfaces.
+Both routes sit behind the SAME persistent sidebar (below), but solve
+different problems and are NOT unified:
 
-### Persistent layout (sidebar on every page, landing included)
+- **`/docs`** — real, hand-authored documentation. Markdown/MDX files under
+  `apps/docs/docs/`, routed and sidebar-generated by
+  `@docusaurus/plugin-content-docs` (autogenerated from folder structure,
+  `sidebars.ts`). Rendering is our own minimal theme (previous section) —
+  `src/components/docs/DocItem.tsx` renders a title + the compiled MDX with
+  plain typographic CSS (`.docs-content` in `custom.css` — Tailwind's
+  preflight zeroes out default `<p>`/`<h1>` margins, so writing ANY prose
+  content needs this or it renders as one unreadable run-on block).
+  `src/components/docs/DocRoot.tsx` renders content-docs' own
+  per-doc-page sidebar (`DocSidebarItems.tsx`, a plain recursive renderer
+  over `PropSidebarItem[]`) alongside the content — this is a SECOND,
+  contextual sidebar for moving between doc pages, nested inside the global
+  one's content pane, not a duplicate of it.
+- **`/explore`** — every Storybook story/autodocs page, embedded via iframe.
+  Nothing here is content-docs; it's a `?id=<storyId>&mode=story|docs` query
+  param read by `src/pages/explore.tsx`, rendering
+  `<iframe src="<baseUrl>storybook/iframe.html?id=...&viewMode=...">`.
+  `src/hooks/useStorybookIndex.ts` fetches `<baseUrl>/storybook/index.json`
+  CLIENT-SIDE (Storybook writes this at ITS OWN build time) — the single
+  source of truth for "every page in Storybook," so no story-discovery logic
+  is duplicated here, and it doesn't matter that `build:docs` runs before
+  `build:storybook` (`pnpm run test:e2e`/the Pages workflow): the fetch just
+  404s until Storybook's build lands. Fetch failure resolves to an empty
+  list, never a crash.
+  - `src/components/Sidebar.tsx`'s `buildTree` groups entries by their
+    `title` (slash-separated, e.g. `Examples/Forms`) into a plain nested
+    `Record<string, TreeNode>` — NOT a `Map`. A `Map`-based version crashed on
+    first paint in production (`TypeError: Cannot read properties of
+    undefined (reading 'groups')`, reproducible only with real fetched data,
+    never isolated further) — switching to plain objects fixed it outright.
+    Treat `Map` in this render path as suspect if the crash resurfaces.
+  - Don't try to generate content-docs pages FROM Storybook's story data
+    (one MDX file per story) to get a "proper" sidebar for this instead —
+    considered and rejected: it would require building Storybook BEFORE
+    Docusaurus (reversed from today, since Docusaurus would need
+    `index.json` at ITS build time) and re-deriving Storybook's title→id
+    slugging by hand. More framework-fighting for no gain over the
+    client-fetch approach already in place.
+
+## Persistent layout (sidebar on every page, landing included)
 
 `src/theme/Root.tsx` — Docusaurus's documented global-wrapper swizzle point,
-rendered around EVERY route — puts `<DocsSidebar>` in a fixed-height flex row
-next to `{children}` (the page). This is deliberate and was an explicit
-request: the sidebar is on the landing page too, not just `/docs`. Two
-consequences if you touch this:
+rendered around EVERY route — puts `<Sidebar>` in a fixed-height flex row
+next to `{children}` (the page). This was an explicit request: the sidebar is
+on the landing page too, not just `/docs`/`/explore`. Two consequences if you
+touch this:
 
 - `html`/`body`/`#__docusaurus` are pinned to `height: 100%` (`custom.css`) so
   the SIDEBAR and the PAGE each get their own `overflow-y-auto` scroll
   container instead of the whole document scrolling — without this the
   sidebar scrolls away with the page on anything taller than one screen.
 - `custom.css` is imported from `Root.tsx`, not from `index.tsx` — it's the
-  one place guaranteed to run for every route. Don't re-import it per-page.
+  one place guaranteed to run for every route. There's no `theme.customCss`
+  hook to register it through instead (no preset/theme registered at all —
+  previous section), so this plain import IS the mechanism. Don't re-import
+  it per-page.
 
 ## Tailwind under Docusaurus/webpack: two non-obvious gotchas
 

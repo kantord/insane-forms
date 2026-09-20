@@ -21,17 +21,21 @@ Root is a private workspace; the gate scripts at the root orchestrate across it.
 - `apps/storybook` — `@insane-forms/storybook`: `stories/`, `.storybook/`,
   `vitest.config.ts` (browser project), `e2e/storybook.spec.ts`.
 - `apps/docs` — `@insane-forms/docs`: the Docusaurus site (see
-  [[landing-page]] skill). `src/pages/index.tsx` (the static landing page) +
-  `src/pages/docs.tsx` (embeds one Storybook page, picked by `?id=`/`?mode=`),
-  `src/theme/Root.tsx` (the persistent sidebar layout wrapping every route),
-  `src/components/` (landing sections + `DocsSidebar.tsx`),
+  [[landing-page]] skill — full writeup of why there's no theme-classic
+  anywhere, including for `/docs`). `src/pages/index.tsx` (the static landing
+  page) + `src/pages/explore.tsx` (embeds one Storybook page, picked by
+  `?id=`/`?mode=`), `docs/` + `sidebars.ts` (real written docs content,
+  `@docusaurus/plugin-content-docs`), `src/components/docs/` (DocsRoot/
+  DocVersionRoot/DocRoot/DocItem/DocSidebarItems — our OWN minimal content-docs
+  theme, no `@docusaurus/theme-classic`), `src/theme/Root.tsx` (the persistent
+  sidebar layout wrapping every route), `src/components/Sidebar.tsx` (the
+  persistent sidebar itself: links into `/docs` + the full `/explore` tree),
   `src/hooks/useStorybookIndex.ts` (fetches Storybook's own `index.json` —
-  the sidebar's source of truth), `plugins/` (Tailwind-via-postcss, a
+  the explore tree's source of truth), `plugins/` (Tailwind-via-postcss, a
   workspace `resolve.alias` plugin, the Shiki snippets content plugin),
   `scripts/static-server.mjs` (dependency-free static server used for local
   e2e/Lighthouse — NOT `docusaurus serve`, which mangles the embedded
   Storybook build's clean-url/query-string deep links), `e2e/docs-page.spec.ts`.
-  No theme/preset (see the skill) — deliberately lighter than `preset-classic`.
   Storybook builds INTO this app (`apps/storybook`'s `build:storybook` →
   `apps/docs/build/storybook`), so `apps/docs/build` is the single Pages
   deploy artifact.

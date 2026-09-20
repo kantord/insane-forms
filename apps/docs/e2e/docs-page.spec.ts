@@ -87,7 +87,7 @@ test.describe('docs page', () => {
   })
 })
 
-test.describe('docs section (persistent sidebar)', () => {
+test.describe('explore section (persistent sidebar + Storybook embed)', () => {
   test('sidebar lists Storybook pages and is present on the landing page too', async ({ page }) => {
     await page.goto('./')
     const sidebar = page.locator('nav', { hasText: 'insane-forms' })
@@ -99,13 +99,25 @@ test.describe('docs section (persistent sidebar)', () => {
   test('clicking a sidebar entry embeds that Storybook page', async ({ page }) => {
     await page.goto('./')
     await page.getByRole('link', { name: 'Profile', exact: true }).click()
-    await expect(page).toHaveURL(/\/docs\?id=examples-forms--profile&mode=story/)
+    await expect(page).toHaveURL(/\/explore\?id=examples-forms--profile&mode=story/)
     const frame = page.frameLocator('iframe')
     await expect(frame.locator('input[id="name"]')).toBeVisible()
   })
 
   test('no page picked yet shows a placeholder, not a blank pane', async ({ page }) => {
-    await page.goto('./docs')
+    await page.goto('./explore')
     await expect(page.getByText(/pick a page from the sidebar/i)).toBeVisible()
+  })
+})
+
+test.describe('docs section (content-docs)', () => {
+  test('sidebar link reaches the written docs, with their own nested sidebar', async ({ page }) => {
+    await page.goto('./')
+    const globalSidebar = page.locator('nav', { hasText: 'insane-forms' })
+    await globalSidebar.getByRole('link', { name: 'guides', exact: true }).click()
+    await expect(page).toHaveURL(/\/docs\/?$/)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Introduction')
+    // content-docs' own sidebar, nested inside the persistent one's content pane.
+    await expect(page.getByRole('link', { name: 'Getting started' })).toBeVisible()
   })
 })

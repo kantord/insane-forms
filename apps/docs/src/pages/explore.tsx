@@ -6,8 +6,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl'
  * embeds one Storybook page — a story canvas or an autodocs page — picked by
  * `id`/`mode` in the query string, which the sidebar sets when you click an
  * entry. No per-story routes: Storybook can grow or rename stories freely,
- * nothing here needs to know about it beyond "read the query string". */
-export default function Docs() {
+ * nothing here needs to know about it beyond "read the query string".
+ *
+ * Lives at /explore, not /docs — /docs is real written documentation (the
+ * content-docs plugin, src/theme + docs/); this is the Storybook browser.
+ * See the landing-page skill for why these are two separate things. */
+export default function Explore() {
   const location = useLocation()
   const params = new URLSearchParams(location.search)
   const id = params.get('id')
@@ -17,7 +21,7 @@ export default function Docs() {
   return (
     <>
       <Head>
-        <title>docs | insane-forms</title>
+        <title>explore | insane-forms</title>
       </Head>
       {id ? (
         <iframe key={id} className="h-full w-full border-0" src={iframeSrc} title={id} />

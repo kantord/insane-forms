@@ -61,6 +61,60 @@ body,
   margin: 0;
 }
 
+/* Written docs content (DocItem.tsx) — plain markdown has NO spacing/type
+ * styling by default once Tailwind's preflight resets zero out `<p>`/`<h1>`
+ * etc. margins; this restores basic readability without pulling in a full
+ * prose plugin. Scoped to `.docs-content` only — the rest of the site sets
+ * every element's spacing explicitly via utility classes. */
+.docs-content :is(h1, h2, h3, h4) {
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+.docs-content :is(h1, h2, h3, h4):first-child {
+  margin-top: 0;
+}
+.docs-content h1 {
+  font-size: 2rem;
+}
+.docs-content h2 {
+  font-size: 1.5rem;
+}
+.docs-content p,
+.docs-content ul,
+.docs-content ol,
+.docs-content pre,
+.docs-content blockquote {
+  margin: 0 0 1em;
+}
+.docs-content ul,
+.docs-content ol {
+  padding-left: 1.5em;
+}
+.docs-content a {
+  color: var(--color-pop);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.docs-content code {
+  background: var(--color-paper-deep);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+}
+.docs-content pre {
+  background: var(--color-carbon);
+  color: var(--color-carbon-text);
+  padding: 1em;
+  overflow-x: auto;
+  border-radius: 0.25em;
+}
+.docs-content pre code {
+  background: none;
+  padding: 0;
+}
+
 /* shiki output: the pre carries inline biome colors; size it here */
 .carbon > pre {
   margin: 0;
