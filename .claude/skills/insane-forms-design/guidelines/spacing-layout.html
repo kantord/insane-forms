@@ -1,0 +1,18 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Frame measures" subtitle="266 / flexible / 280, 48px gutters" -->
+<meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:16px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  .sw{display:flex;flex-direction:column;gap:5px;}
+  .chip{width:96px;height:52px;border:var(--rule-w) solid var(--border);box-sizing:border-box;}
+  .lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--muted-foreground);}
+  .val{font-family:var(--font-mono);font-size:10px;color:var(--foreground);}
+</style>
+
+<div style="padding:14px 18px">
+  <div style="display:flex;border:var(--rule-w) solid var(--border);height:104px;font-family:var(--font-mono);font-size:10px;color:var(--muted-foreground)">
+    <div style="width:133px;border-right:var(--rule-w) solid var(--border);background:var(--rail);padding:8px">266px<br>nav rail</div>
+    <div style="flex:1;padding:8px;display:flex;flex-direction:column;justify-content:space-between"><span>flexible content · 48px gutters</span><span>measure 660px</span></div>
+    <div style="width:140px;border-left:var(--rule-w) solid var(--border);background:var(--rail);padding:8px">280px<br>aside rail</div>
+  </div>
+</div>

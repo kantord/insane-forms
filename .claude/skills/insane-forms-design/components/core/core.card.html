@@ -1,0 +1,42 @@
+<!-- @dsCard group="Components" viewport="700x190" name="Core" subtitle="Button variants, eyebrows, inline code, rules" -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--font-mono);font-size:var(--text-eyebrow);letter-spacing:var(--text-eyebrow-ls);text-transform:uppercase;color:var(--muted-foreground);}
+  .btn{font-family:var(--font-sans);font-size:14px;font-weight:700;padding:13px 26px;border-radius:0;cursor:pointer;line-height:1.2;}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground);border:none;}
+  .btn-outline{background:transparent;color:var(--foreground);border:var(--rule-w) solid var(--border);}
+  .btn-ghost{background:transparent;color:var(--muted-foreground);border:none;padding:6px 8px;}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:180px;}
+  .field label{font-size:13px;font-weight:600;}
+  .field .input{height:var(--field-h);background:var(--background);border:var(--rule-w) solid var(--input);}
+  .check{width:16px;height:16px;border:var(--rule-w) solid var(--input);display:inline-block;box-sizing:border-box;}
+  .check.on{background:var(--primary);}
+  pre{margin:0;font-family:var(--font-mono);font-size:var(--text-code);line-height:var(--text-code-lh);}
+  pre span{display:block;}
+  .n1{color:var(--code-n1)} .n2{color:var(--code-n2)} .n3{color:var(--code-n3)} .a1{color:var(--code-a1)} .a2{color:var(--code-a2)}
+  .nav{width:220px;background:var(--rail);border-right:var(--rule-w) solid var(--border);padding:10px 8px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box;}
+  .navitem{display:block;padding:var(--nav-item-pad);font-size:var(--text-nav);font-weight:500;text-decoration:none;color:var(--foreground);}
+  .navitem.active{background:var(--primary);color:var(--primary-foreground);font-weight:700;}
+  .navitem.hover{background:var(--muted);}
+  .sw{display:flex;flex-direction:column;gap:6px;}
+  .chip{width:104px;height:56px;border:var(--rule-w) solid var(--border);}
+  .mono{font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);}
+</style>
+<div class="wrap">
+  <div class="row">
+    <button class="btn btn-primary">Save</button>
+    <button class="btn btn-outline">Read the docs</button>
+    <button class="btn btn-ghost">Cancel</button>
+    <button class="btn btn-primary" style="opacity:.4;cursor:default">Save</button>
+  </div>
+  <div class="row" style="gap:28px">
+    <span class="eyebrow">Docs · Getting started</span>
+    <span class="eyebrow" style="color:var(--primary)">Schema</span>
+    <span style="font-size:15px;color:var(--body)">edits the <code style="font-family:var(--font-mono);font-size:13px">z.input</code> draft</span>
+  </div>
+  <div style="border-top:var(--rule-w) solid var(--border)"></div>
+</div>

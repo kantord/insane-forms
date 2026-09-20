@@ -1,0 +1,6 @@
+/* Webfonts.
+   No binaries were supplied with this system, so both families are loaded
+   from Google Fonts (their CSS declares the @font-face rules).
+   Replace with self-hosted @font-face + local files when the real
+   binaries are available. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap");

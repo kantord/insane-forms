@@ -100,6 +100,15 @@ body,
 .docs-content blockquote {
   margin: 0 0 1em;
 }
+/* "Body" role (design system handoff §4): running prose is --body, a step
+ * softer than full --foreground, which stays reserved for headings and
+ * identifiers. max-width matches the spec's 660px prose measure. */
+.docs-content p {
+  max-width: 660px;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-body);
+}
 .docs-content ul,
 .docs-content ol {
   padding-left: 1.5em;

@@ -1,0 +1,39 @@
+<!-- @dsCard group="Docs site" viewport="1440x700" name="Docs site" subtitle="Landing, docs article and a live example on one shell" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>insane-forms — docs site kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;background:var(--background);}
+  a{color:var(--primary);}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react" src="Shell.jsx"></script>
+<script type="text/babel" data-presets="react" src="Landing.jsx"></script>
+<script type="text/babel" data-presets="react" src="DocsArticle.jsx"></script>
+<script type="text/babel" data-presets="react" src="ExamplePage.jsx"></script>
+<script type="text/babel" data-presets="react">
+  function App() {
+    const [route, setRoute] = React.useState("landing");
+    const [theme, setTheme] = React.useState("light");
+    const [draft, setDraft] = React.useState({ name: "", email: "", primary: false });
+    React.useEffect(() => {
+      document.documentElement.classList.toggle("dark", theme === "dark");
+      document.body.style.background = "var(--background)";
+    }, [theme]);
+    const props = { theme, onToggleTheme: () => setTheme(theme === "dark" ? "light" : "dark"), go: setRoute };
+    if (route === "docs") return <DocsArticle {...props} />;
+    if (route === "example") return <ExamplePage {...props} />;
+    return <Landing {...props} draft={draft} setDraft={setDraft} />;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

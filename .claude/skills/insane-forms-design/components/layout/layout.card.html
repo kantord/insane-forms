@@ -1,0 +1,45 @@
+<!-- @dsCard group="Components" viewport="700x320" name="Layout" subtitle="Three-column shell, aside note, statement band, footer" -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--font-mono);font-size:var(--text-eyebrow);letter-spacing:var(--text-eyebrow-ls);text-transform:uppercase;color:var(--muted-foreground);}
+  .btn{font-family:var(--font-sans);font-size:14px;font-weight:700;padding:13px 26px;border-radius:0;cursor:pointer;line-height:1.2;}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground);border:none;}
+  .btn-outline{background:transparent;color:var(--foreground);border:var(--rule-w) solid var(--border);}
+  .btn-ghost{background:transparent;color:var(--muted-foreground);border:none;padding:6px 8px;}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:180px;}
+  .field label{font-size:13px;font-weight:600;}
+  .field .input{height:var(--field-h);background:var(--background);border:var(--rule-w) solid var(--input);}
+  .check{width:16px;height:16px;border:var(--rule-w) solid var(--input);display:inline-block;box-sizing:border-box;}
+  .check.on{background:var(--primary);}
+  pre{margin:0;font-family:var(--font-mono);font-size:var(--text-code);line-height:var(--text-code-lh);}
+  pre span{display:block;}
+  .n1{color:var(--code-n1)} .n2{color:var(--code-n2)} .n3{color:var(--code-n3)} .a1{color:var(--code-a1)} .a2{color:var(--code-a2)}
+  .nav{width:220px;background:var(--rail);border-right:var(--rule-w) solid var(--border);padding:10px 8px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box;}
+  .navitem{display:block;padding:var(--nav-item-pad);font-size:var(--text-nav);font-weight:500;text-decoration:none;color:var(--foreground);}
+  .navitem.active{background:var(--primary);color:var(--primary-foreground);font-weight:700;}
+  .navitem.hover{background:var(--muted);}
+  .sw{display:flex;flex-direction:column;gap:6px;}
+  .chip{width:104px;height:56px;border:var(--rule-w) solid var(--border);}
+  .mono{font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);}
+</style>
+<div style="display:flex;height:100%;font-size:12px">
+  <div style="width:150px;background:var(--rail);border-right:var(--rule-w) solid var(--border);padding:12px 10px;box-sizing:border-box">
+    <div style="font-weight:800;letter-spacing:-.02em">insane-forms</div>
+    <div class="eyebrow" style="margin-top:12px">On this page</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column">
+    <div style="padding:16px 18px;border-bottom:var(--rule-w) solid var(--border);font-weight:900;font-size:26px;letter-spacing:-.04em">Rendering a schema</div>
+    <div style="padding:16px 18px;color:var(--body);line-height:1.7">A schema describes the shape of the data. Attach a component to each node and the same schema also describes the interface.</div>
+    <div style="background:var(--foreground);color:var(--background);padding:16px 18px;font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.35">A schema is data. The library never guesses.</div>
+    <div style="border-top:var(--rule-w) solid var(--border);padding:10px 18px;display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground)"><span>github.com/kantord/insane-forms</span><span>mit</span></div>
+  </div>
+  <div style="width:150px;background:var(--rail);border-left:var(--rule-w) solid var(--border);padding:12px 12px;box-sizing:border-box">
+    <div class="eyebrow" style="padding-bottom:10px;border-bottom:var(--rule-w) solid var(--border)">Asides</div>
+    <div class="eyebrow" style="color:var(--primary);margin-top:14px">Note</div>
+    <p style="margin:6px 0 0;font-size:11px;line-height:1.6;color:var(--body)">Bounds come from the schema's own .min(1).max(3).</p>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<!-- @dsCard group="Code" viewport="700x200" name="Highlighting in use" subtitle="Accent only on constructors and constraints" -->
+<meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:16px 18px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  .sw{display:flex;flex-direction:column;gap:5px;}
+  .chip{width:96px;height:52px;border:var(--rule-w) solid var(--border);box-sizing:border-box;}
+  .lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--muted-foreground);}
+  .val{font-family:var(--font-mono);font-size:10px;color:var(--foreground);}
+</style>
+
+<div style="padding:16px 18px">
+  <pre style="margin:0;font-family:var(--font-mono);font-size:13px;line-height:2"><span style="display:block"><span style="color:var(--code-n3)">const </span><span style="color:var(--code-n1)">Form</span><span style="color:var(--code-n3)"> = </span><span style="color:var(--code-a1)">insane.group</span><span style="color:var(--code-n3)">({</span></span><span style="display:block"><span style="color:var(--code-n2)">&nbsp;&nbsp;name:</span><span style="color:var(--code-n1)">     TextField</span><span style="color:var(--code-n3)">,</span></span><span style="display:block"><span style="color:var(--code-n2)">&nbsp;&nbsp;contacts:</span><span style="color:var(--code-n1)"> Contact</span><span style="color:var(--code-a1)">.array</span><span style="color:var(--code-n3)">()</span></span><span style="display:block"><span style="color:var(--code-a1)">&nbsp;&nbsp;&nbsp;&nbsp;.min</span><span style="color:var(--code-n3)">(</span><span style="color:var(--code-a2)">1</span><span style="color:var(--code-n3)">).</span><span style="color:var(--code-a1)">max</span><span style="color:var(--code-n3)">(</span><span style="color:var(--code-a2)">3</span><span style="color:var(--code-n3)">),</span></span><span style="display:block"><span style="color:var(--code-n3)">})</span></span></pre>
+</div>

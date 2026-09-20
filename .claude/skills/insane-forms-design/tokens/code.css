@@ -1,0 +1,20 @@
+:root {
+  /* duotone syntax palette: three neutral steps + two accent steps.
+     accent marks schema constructors and constraints only. */
+  --code-n1: #111110;
+  --code-n2: #56564f;
+  --code-n3: #6b6b64;
+  --code-a1: #3a35ff;
+  --code-a2: #4a45e6;
+  --code-bg: #f0f0ec;
+  --code-line-h: 26px;
+}
+
+.dark {
+  --code-n1: #efece3;
+  --code-n2: #a9a49a;
+  --code-n3: #8d887e;
+  --code-a1: #d9a441;
+  --code-a2: #e8c07a;
+  --code-bg: #141310;
+}

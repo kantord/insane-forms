@@ -1,0 +1,60 @@
+:root {
+  /* base ramp — paper */
+  --paper-0: #fbfbf9;
+  --paper-1: #f0f0ec;
+  --paper-2: #e2e2dc;
+  --ink-0: #111110;
+  --ink-1: #33332f;
+  --ink-2: #56564f;
+  --ink-3: #6b6b66;
+
+  /* base ramp — warm charcoal (dark theme) */
+  --char-0: #1c1b18;
+  --char-1: #24231f;
+  --char-2: #35332d;
+  --char-3: #191815;
+  --bone-0: #efece3;
+  --bone-1: #bdb8aa;
+  --bone-2: #a9a49a;
+  --bone-3: #8a8578;
+
+  /* accents */
+  --blue-500: #3a35ff;
+  --blue-600: #4a45e6;
+  --amber-500: #d9a441;
+  --amber-300: #e8c07a;
+
+  /* semantic — light is the default theme */
+  --background: var(--paper-0);
+  --foreground: var(--ink-0);
+  --body: var(--ink-1);
+  --muted: var(--paper-1);
+  --muted-foreground: var(--ink-3);
+  --primary: var(--blue-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--paper-1);
+  --secondary-foreground: var(--ink-0);
+  --border: var(--ink-0);
+  --input: var(--ink-0);
+  --ring: var(--blue-500);
+  --rail: var(--paper-0);
+  --rail-border: var(--paper-2);
+  --radius: 0rem;
+}
+
+.dark {
+  --background: var(--char-0);
+  --foreground: var(--bone-0);
+  --body: var(--bone-1);
+  --muted: var(--char-1);
+  --muted-foreground: var(--bone-3);
+  --primary: var(--amber-500);
+  --primary-foreground: var(--char-0);
+  --secondary: var(--char-1);
+  --secondary-foreground: var(--bone-0);
+  --border: var(--char-2);
+  --input: var(--char-2);
+  --ring: var(--amber-500);
+  --rail: var(--char-3);
+  --rail-border: var(--char-2);
+}

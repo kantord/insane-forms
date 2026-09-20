@@ -90,17 +90,34 @@ export const Sidebar = () => {
   const exploreBase = useBaseUrl('/explore')
   const onDocsPage = location.pathname.startsWith(docsBase)
   const onExplorePage = location.pathname.startsWith(exploreBase)
-  const { items: docsItems } = useDocsSidebarSync()
+  const { items: docsItems, onThisPage } = useDocsSidebarSync()
   const { mode, toggle } = useColorMode()
 
   return (
-    <nav className="flex h-full w-64 shrink-0 flex-col overflow-y-auto border-r border-ink bg-paper-deep px-4 py-6 font-mono">
+    <nav className="flex h-full w-[266px] shrink-0 flex-col overflow-y-auto border-r-[length:var(--rule-w)] border-line bg-rail px-[18px] py-6 font-mono">
       <Link
         to="/"
         className="font-display text-base font-extrabold tracking-tight text-ink no-underline"
       >
         insane-forms
       </Link>
+
+      {onThisPage && (
+        <>
+          <div className="mt-4 mb-1 text-[0.68rem] uppercase tracking-[0.14em] text-dim">
+            on this page
+          </div>
+          {onThisPage.map((entry) => (
+            <a
+              key={entry.id}
+              href={`#${entry.id}`}
+              className="block px-2 py-1 text-[0.82rem] font-medium text-ink no-underline hover:bg-paper-deep"
+            >
+              {entry.label}
+            </a>
+          ))}
+        </>
+      )}
 
       <div className="mt-4 mb-1 text-[0.68rem] uppercase tracking-[0.14em] text-dim">docs</div>
       {docsItems ? (
@@ -118,11 +135,15 @@ export const Sidebar = () => {
       {exploreItems === null && <p className="mt-2 pl-3 text-[0.8rem] text-dim">loading…</p>}
       {exploreItems && <TreeItems items={exploreItems} />}
 
+      <div className="mt-auto flex items-center justify-between border-t-[length:var(--rule-w)] border-line pt-3 text-[0.68rem] text-dim">
+        <span>rev 0.1.0</span>
+        <span>mit</span>
+      </div>
       <button
         type="button"
         onClick={toggle}
         aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="mt-auto flex items-center justify-between border-t border-rule pt-3 text-[0.72rem] text-dim hover:text-pop"
+        className="mt-2 flex items-center justify-between text-[0.72rem] text-dim hover:text-pop"
       >
         <span>{mode === 'dark' ? 'dark' : 'light'} mode</span>
         <span aria-hidden="true">{mode === 'dark' ? '●○' : '○●'}</span>

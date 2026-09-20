@@ -1,0 +1,49 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Navigation" subtitle="Sidebar rail, nav groups, item states, prev/next" -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--font-mono);font-size:var(--text-eyebrow);letter-spacing:var(--text-eyebrow-ls);text-transform:uppercase;color:var(--muted-foreground);}
+  .btn{font-family:var(--font-sans);font-size:14px;font-weight:700;padding:13px 26px;border-radius:0;cursor:pointer;line-height:1.2;}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground);border:none;}
+  .btn-outline{background:transparent;color:var(--foreground);border:var(--rule-w) solid var(--border);}
+  .btn-ghost{background:transparent;color:var(--muted-foreground);border:none;padding:6px 8px;}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:180px;}
+  .field label{font-size:13px;font-weight:600;}
+  .field .input{height:var(--field-h);background:var(--background);border:var(--rule-w) solid var(--input);}
+  .check{width:16px;height:16px;border:var(--rule-w) solid var(--input);display:inline-block;box-sizing:border-box;}
+  .check.on{background:var(--primary);}
+  pre{margin:0;font-family:var(--font-mono);font-size:var(--text-code);line-height:var(--text-code-lh);}
+  pre span{display:block;}
+  .n1{color:var(--code-n1)} .n2{color:var(--code-n2)} .n3{color:var(--code-n3)} .a1{color:var(--code-a1)} .a2{color:var(--code-a2)}
+  .nav{width:220px;background:var(--rail);border-right:var(--rule-w) solid var(--border);padding:10px 8px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box;}
+  .navitem{display:block;padding:var(--nav-item-pad);font-size:var(--text-nav);font-weight:500;text-decoration:none;color:var(--foreground);}
+  .navitem.active{background:var(--primary);color:var(--primary-foreground);font-weight:700;}
+  .navitem.hover{background:var(--muted);}
+  .sw{display:flex;flex-direction:column;gap:6px;}
+  .chip{width:104px;height:56px;border:var(--rule-w) solid var(--border);}
+  .mono{font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);}
+</style>
+<div style="display:flex;height:100%">
+  <div class="nav">
+    <div style="font-weight:800;font-size:16px;letter-spacing:-.02em;padding:0 8px 14px">insane-forms</div>
+    <span class="eyebrow" style="padding:0 8px 6px">On this page</span>
+    <a class="navitem active" href="#">Overview</a>
+    <a class="navitem hover" href="#">Schema → form</a>
+    <a class="navitem" href="#">Design principles</a>
+    <span class="eyebrow" style="padding:12px 8px 6px">Examples</span>
+    <div style="padding-left:10px;margin-left:10px;border-left:var(--rule-w) solid var(--rail-border)">
+      <a class="navitem" href="#">Profile</a>
+      <a class="navitem" href="#">Contacts</a>
+    </div>
+  </div>
+  <div style="flex:1;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between">
+    <div class="row" style="justify-content:flex-end;gap:24px;font-size:13px;font-weight:600;color:var(--muted-foreground)"><a href="#" style="color:inherit;text-decoration:none">Storybook</a><a href="#" style="color:inherit;text-decoration:none">GitHub</a></div>
+    <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:13px">
+      <a href="#" style="color:var(--muted-foreground);text-decoration:none">← Introduction</a>
+      <a href="#" style="color:var(--primary);font-weight:600;text-decoration:none">Guides · nested groups →</a>
+    </div>
+  </div>
+</div>

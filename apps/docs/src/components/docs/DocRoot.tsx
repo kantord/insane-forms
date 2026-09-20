@@ -17,7 +17,12 @@ import { useDocsSidebarSync } from '../../contexts/DocsSidebarSync'
  *
  * No `@theme/NotFound/Content` fallback for a missing route here (upstream
  * has one) — `onBrokenLinks: 'throw'` (docusaurus.config.ts) already fails
- * the build on a dangling doc link, so this case shouldn't reach runtime. */
+ * the build on a dangling doc link, so this case shouldn't reach runtime.
+ *
+ * Widened to max-w-[1180px] (was 820px) to make room for DocItem's right
+ * "Asides" rail — the top links row and footer bar live IN DocItem, not
+ * here, so they stay scoped to the content column instead of spanning full
+ * width underneath the rail (see DocItem.tsx's comment). */
 export default function DocRoot(props: Props) {
   const metadata = useDocRootMetadata(props)
   const { setItems } = useDocsSidebarSync()
@@ -32,7 +37,7 @@ export default function DocRoot(props: Props) {
 
   return (
     <DocsSidebarProvider name={sidebarName} items={metadata.sidebarItems}>
-      <div className="mx-auto max-w-[820px] px-10 py-10">{docElement}</div>
+      <div className="mx-auto max-w-[1180px] px-12 py-10">{docElement}</div>
     </DocsSidebarProvider>
   )
 }

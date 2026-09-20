@@ -1,10 +1,23 @@
 import Head from '@docusaurus/Head'
 import Link from '@docusaurus/Link'
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { BureauDemo, MeadowDemo, TerminalDemo } from '../components/BiomeDemos'
 import { CodePane } from '../components/CodePane'
 import { SchemaMorph } from '../components/SchemaMorph'
 import { Showcase } from '../components/Showcase'
+import { useDocsSidebarSync } from '../contexts/DocsSidebarSync'
+
+/** Real anchors into this page's own sections — pushed to the persistent
+ * SidebarNav's "on this page" group (see the landing-page skill), matching
+ * the design system handoff's SidebarNav organism, which every page carries.
+ * Labels describe what's actually on the page today, not the mockup's
+ * guessed labels for a page that doesn't have this exact structure. */
+const ON_THIS_PAGE = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'principles', label: 'Principles' },
+  { id: 'morph', label: 'Schema → form' },
+  { id: 'biomes', label: 'Design biomes' },
+] as const
 
 const PRINCIPLES = [
   [
@@ -72,6 +85,12 @@ const BIOMES = [
 ] as const
 
 export default function Home() {
+  const { setOnThisPage } = useDocsSidebarSync()
+  useEffect(() => {
+    setOnThisPage([...ON_THIS_PAGE])
+    return () => setOnThisPage(null)
+  }, [setOnThisPage])
+
   return (
     <>
       <Head>
@@ -84,19 +103,19 @@ export default function Home() {
       </Head>
       <div className="bg-paper font-mono text-[15px] leading-relaxed text-ink">
         {/* ---- hero + principles ---- */}
-        <div className="mx-auto max-w-[1180px] px-6 pt-12 pb-16">
+        <div id="overview" className="mx-auto max-w-[1180px] px-6 pt-12 pb-16">
           <header>
-            <div className="flex flex-wrap justify-between gap-4 border-y-3 border-double border-ink py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
-              <span>insane-forms</span>
-              <span className="flex gap-4">
-                <Link className="hover:text-pop" href="pathname://./storybook/">
-                  storybook
-                </Link>
-                <a className="hover:text-pop" href="https://github.com/kantord/insane-forms">
-                  github
-                </a>
-              </span>
-              <span>mit</span>
+            {/* TopBar organism (design system handoff §7): right-aligned
+             * external links only, no wordmark — the persistent sidebar
+             * (rendered alongside every page, landing included) already
+             * carries it, and this is the shared shell contract. */}
+            <div className="flex justify-end gap-6 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-dim">
+              <Link className="hover:text-pop" href="pathname://./storybook/">
+                storybook
+              </Link>
+              <a className="hover:text-pop" href="https://github.com/kantord/insane-forms">
+                github
+              </a>
             </div>
 
             <h1 className="my-9 flex flex-col font-display text-[clamp(3rem,8vw,6rem)] font-black leading-[0.9] tracking-tighter">
@@ -116,13 +135,16 @@ export default function Home() {
               <span className="border-2 border-pop px-3 py-1.5 text-[0.78rem] font-bold uppercase tracking-[0.18em] text-pop">
                 zod 4 · react 19
               </span>
-              <code className="select-all border border-dashed border-dim bg-paper-deep px-3.5 py-2 text-[0.9rem]">
+              <code className="select-all bg-ink px-4 py-[13px] text-[0.9rem] text-paper">
                 pnpm add insane-forms
               </code>
             </div>
           </header>
 
-          <ul className="grid list-none grid-cols-1 border border-ink p-0 sm:grid-cols-2 lg:grid-cols-4">
+          <ul
+            id="principles"
+            className="grid list-none grid-cols-1 border border-ink p-0 sm:grid-cols-2 lg:grid-cols-4"
+          >
             {PRINCIPLES.map(([term, body]) => (
               <li
                 key={term}
@@ -141,8 +163,8 @@ export default function Home() {
         <SchemaMorph />
 
         {/* ---- part two: design biomes ---- */}
-        <section className="mx-auto max-w-[1180px] px-6 py-24">
-          <div className="flex flex-wrap justify-between gap-4 border-y-3 border-double border-ink py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
+        <section id="biomes" className="mx-auto max-w-[1180px] px-6 py-24">
+          <div className="flex flex-wrap justify-between gap-4 border-b-[length:var(--rule-w)] border-line py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
             <span>part two</span>
             <span>design biomes</span>
           </div>
@@ -214,13 +236,12 @@ export default function Home() {
 
         {/* ---- footer ---- */}
         <div className="mx-auto max-w-[1180px] px-6 pt-10 pb-20">
-          <footer className="flex flex-wrap justify-between gap-4 border-y-3 border-double border-ink py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
+          {/* FooterBar organism: repo link left, mono note right, above a
+           * single top rule (design system handoff §7). */}
+          <footer className="flex flex-wrap justify-between gap-4 border-t-[length:var(--rule-w)] border-line py-2 text-[0.72rem] uppercase tracking-[0.14em] text-dim">
             <a className="text-pop hover:underline" href="https://github.com/kantord/insane-forms">
               github.com/kantord/insane-forms
             </a>
-            <Link className="text-pop hover:underline" href="pathname://./storybook/">
-              storybook — every piece in isolation
-            </Link>
             <span>the same example drives the automated suite</span>
           </footer>
         </div>

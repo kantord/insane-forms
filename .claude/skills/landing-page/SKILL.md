@@ -105,9 +105,10 @@ had its own tree) and was explicitly rejected as a "double sidebar."
   plain typographic CSS (`.docs-content` in `custom.css` — Tailwind's
   preflight zeroes out default `<p>`/`<h1>` margins, so writing ANY prose
   content needs this or it renders as one unreadable run-on block).
-  `src/components/docs/DocRoot.tsx` renders ONLY the doc content now (no
-  sidebar column) — its sidebar tree is pushed up into the persistent
-  sidebar instead (see "Merging the two trees" below).
+  `src/components/docs/DocRoot.tsx` renders no LEFT sidebar column — its
+  sidebar tree is pushed up into the persistent sidebar instead (see
+  "Merging the two trees" below) — but does render top links, a footer bar,
+  and (via DocItem) a right "Asides" rail; see "Per-article chrome" below.
 - **`/explore`** — every Storybook story/autodocs page, embedded via iframe.
   Nothing here is content-docs; it's a `?id=<storyId>&mode=story|docs` query
   param read by `src/pages/explore.tsx`, rendering
@@ -126,6 +127,48 @@ had its own tree) and was explicitly rejected as a "double sidebar."
     `index.json` at ITS build time) and re-deriving Storybook's title→id
     slugging by hand. More framework-fighting for no gain over the
     client-fetch approach already in place.
+
+### Per-article chrome: top links, footer bar, right "Asides" rail
+
+2026-09-20 (explicit user request, sourced from a second Claude Design
+artifact, "Pages & dark mode" — a set of full-page mockups establishing
+shared page chrome, separate from the rebrand artifact in "Design system"
+below): every `/docs` article gets a right-aligned "storybook"/"github" link
+row above it and a footer bar below it (`github.com/kantord/insane-forms` +
+"the same example drives the automated suite" — true site-wide, since
+displayed code IS generated from the real test-backing source, see
+[[code-example-pipeline]]), matching the landing page's own header/footer
+verbatim in style, plus a right "Asides" rail (`src/components/Asides.tsx`):
+an auto-derived "on this page" anchor list from the article's own headings
+(no scroll-spy — plain `href="#id"` links, hidden when the article has none
+shallow enough to list) plus a fixed "see also" link to `/explore`, shown
+unconditionally since it's true of every doc page regardless of that page's
+own heading structure. Don't add a "Note" callout slot speculatively —
+there's no real editorial content to put in one yet with the docs pages
+still placeholders (`docs/intro.md`, `docs/guides/getting-started.md`).
+
+**All three (top links, footer, Asides) live in `DocItem.tsx`, not
+`DocRoot.tsx`.** First attempt put the top links row and footer in
+`DocRoot.tsx` wrapping `{docElement}`, with Asides inside `DocItem.tsx`
+alongside the article — that put Asides and the top links/footer in
+different flex containers, so the top links/footer spanned the FULL content
+width underneath where the Asides column sits, instead of stopping beside
+it like the mockup (Asides runs parallel to the top links + article +
+footer stack, all three inside the mockup's own `flex:1` middle column,
+never full-width). Fixed by moving the top links row and footer inside
+`DocItem.tsx`'s own flex row, in a `min-w-0 flex-1` wrapper alongside
+`<Asides>` — `DocRoot.tsx` now does nothing but set the wider
+`max-w-[1180px]` and render `{docElement}`.
+
+**Explicitly decided NOT to do, when this landed**: replace the dynamic
+sidebar (previous section) with the design mockup's static "On this page" +
+hardcoded "Examples" list (Profile/Contacts/Categories/Collections/Editable
+table/Field behaviors — none of which exist as real pages). The mockup's
+exact information architecture was treated as style reference only; the
+sidebar mechanism (real `/docs` tree + Storybook index, merged) stayed as
+documented above. Don't silently build those named example pages later
+thinking it "completes" this spec — that's a separate, larger content
+decision, not implied by this chrome work.
 
 ### The shared tree component: CollapsibleTree.tsx
 

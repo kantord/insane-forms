@@ -1,0 +1,36 @@
+:root {
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, monospace;
+
+  /* display + titles */
+  --text-display: 100px;
+  --text-display-lh: 0.9;
+  --text-display-ls: -0.05em;
+  --text-title: 66px;
+  --text-title-lh: 0.94;
+  --text-title-ls: -0.04em;
+  --text-title-sm: 58px;
+
+  /* sections + body */
+  --text-h2: 26px;
+  --text-h3: 21px;
+  --text-lead: 22px;
+  --text-lead-lh: 1.5;
+  --text-body: 16px;
+  --text-body-lh: 1.75;
+  --text-small: 15px;
+  --text-aside: 14px;
+  --text-nav: 14px;
+
+  /* machine voice */
+  --text-eyebrow: 11px;
+  --text-eyebrow-ls: 0.16em;
+  --text-code: 13px;
+  --text-code-lh: 2;
+  --text-meta: 12px;
+
+  --weight-display: 900;
+  --weight-strong: 700;
+  --weight-medium: 500;
+  --measure: 660px;
+}

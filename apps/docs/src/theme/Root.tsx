@@ -24,7 +24,7 @@ export default function Root({ children }: { children: ReactNode }) {
       <DocsSidebarSyncProvider>
         <div className="flex h-screen">
           <Sidebar />
-          <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
+          <div className="min-w-0 flex-1 overflow-y-auto bg-paper text-ink">{children}</div>
         </div>
       </DocsSidebarSyncProvider>
     </ColorModeProvider>

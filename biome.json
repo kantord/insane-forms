@@ -11,6 +11,7 @@
       "!!**/dist",
       "!**/storybook-static",
       "!**/packages/ui/components",
+      "!**/.claude/skills/insane-forms-design",
       "!**/*.op.tsx",
       "!**/*.op.jsx",
       "!**/*.op.mjs",

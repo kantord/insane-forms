@@ -3,15 +3,54 @@
  *
  * A biome is a scope that locally remaps the semantic design tokens; the
  * chrome inside uses the same utilities (bg-paper, text-ink, border-accent…)
- * everywhere — only the variables change. */
-
+ * everywhere — only the variables change.
+ *
+ * NAMING, deliberately NOT shadcn's bare `--background`/`--foreground`/
+ * `--primary`/`--muted`/`--border`/`--input`/`--ring`: `packages/ui/globals.css`
+ * (the real, vendored shadcn — see quality-gates skill) already owns those
+ * EXACT bare names at `:root`, applied globally via
+ * `body { @apply bg-background text-foreground }`. Tailwind v4's `--color-*`
+ * theme convention has no package-level scoping — a first attempt at this
+ * rename (2026-09-20, matching the "Design system handoff" spec literally)
+ * used the bare names here too and immediately broke real shadcn components
+ * wherever both stylesheets load together (Storybook: `stories/css.stories.tsx`
+ * caught a shadcn Button rendering the SITE's blue accent instead of its own
+ * default, because both files' `@theme inline` blocks fought over
+ * `--color-primary`). The `--color-paper`/`--color-ink`/`--color-pop` prefix
+ * below is what keeps this file's tokens from colliding with packages/ui's —
+ * don't reach for shadcn's bare names here again without re-checking that
+ * collision. Values below ARE the handoff spec's exact hex codes; only the
+ * NAMES differ from what it literally shows.
+ *
+ * MUST be an `@theme` block, not a plain `:root { }` — Tailwind v4 only
+ * generates utility classes (bg-paper, text-ink, …) for variables declared
+ * inside `@theme`; a bare `:root` declaration is just an ordinary CSS custom
+ * property; it doesn't get any utility. A later revert of this file dropped
+ * the `@theme` wrapper while keeping the values, which silently deleted
+ * EVERY color utility this file defines — light mode still looked plausible
+ * (unstyled black-on-white happens to resemble it), but dark mode had
+ * nothing to switch to, because neither state was actually styled by these
+ * tokens at all. Don't move these back to a plain `:root` block. */
 @theme {
-  --color-paper: #efece3;
-  --color-paper-deep: #e2e2dc;
+  --color-paper: #fbfbf9;
+  --color-paper-deep: #f0f0ec;
+  --color-rail: #fbfbf9;
   --color-ink: #111110;
-  --color-dim: #6b6b64;
-  --color-rule: #d9d4c2;
+  --color-body: #33332f;
+  --color-dim: #6b6b66;
+  --color-rule: #e2e2dc;
+  --color-line: #111110;
   --color-pop: #3a35ff;
+  --color-pop-foreground: #ffffff;
+  --rule-w: 2px;
+
+  /* Duotone code palette (3 neutral steps + 2 accent steps) — the accent
+   * appears only on schema constructors/constraints, never plain syntax. */
+  --color-code-n1: #111110;
+  --color-code-n2: #56564f;
+  --color-code-n3: #6b6b64;
+  --color-code-a1: #3a35ff;
+  --color-code-a2: #4a45e6;
 
   /* "Display" (was "serif" — the site's own look no longer uses a serif
    * face; the name changed everywhere it's referenced, see the
@@ -28,22 +67,44 @@
  * own separate light/dark toggle (a `.dark` class, not this attribute) so
  * the two never collide. The accent flips color entirely (blue on light,
  * gold on dark) rather than just dimming — matched for contrast against
- * each mode's page background, not a mechanical invert. */
+ * each mode's page background, not a mechanical invert.
+ *
+ * --color-line (structural DocsShell rules: sidebar/aside borders, footer
+ * bars) is NOT just --color-ink in dark mode — the handoff's principle is
+ * "rules get thinner and recede," so dark-mode rules are a soft graphite,
+ * not full-contrast cream. In light mode the two happen to coincide (both
+ * near-black) but they're conceptually different tokens; don't collapse
+ * them back into one. --rule-w carries the matching width drop (2px → 1px)
+ * on the SAME markup via `border-[length:var(--rule-w)]`. */
 :root[data-theme="dark"] {
-  --color-paper: #111110;
-  --color-paper-deep: #1c1b18;
+  --color-paper: #1c1b18;
+  --color-paper-deep: #24231f;
+  --color-rail: #191815;
   --color-ink: #efece3;
+  --color-body: #bdb8aa;
   --color-dim: #8a8578;
   --color-rule: #35332d;
+  --color-line: #35332d;
   --color-pop: #d9a441;
+  --color-pop-foreground: #1c1b18;
+  --rule-w: 1px;
+
+  --color-code-n1: #efece3;
+  --color-code-n2: #a9a49a;
+  --color-code-n3: #8d887e;
+  --color-code-a1: #d9a441;
+  --color-code-a2: #e8c07a;
 }
 
 .biome-terminal {
   --color-paper: #0a1410;
   --color-paper-deep: #0f1d16;
+  --color-rail: #0f1d16;
   --color-ink: #a9efc5;
+  --color-body: #a9efc5;
   --color-dim: #6fa284;
   --color-rule: #1f3a2c;
+  --color-line: #1f3a2c;
   --color-pop: #ffc163;
   --font-display: var(--font-mono);
   --font-code: "JetBrains Mono Variable", ui-monospace, monospace;
@@ -52,9 +113,12 @@
 .biome-meadow {
   --color-paper: #faf8ff;
   --color-paper-deep: #ffffff;
+  --color-rail: #ffffff;
   --color-ink: #36304a;
+  --color-body: #36304a;
   --color-dim: #6f6890;
   --color-rule: #e4dff2;
+  --color-line: #e4dff2;
   --color-pop: #5b48d8;
   /* Explicit, not inherited: before the site's own display font moved to
    * Archivo, meadow got Instrument Serif "for free" from the root default.

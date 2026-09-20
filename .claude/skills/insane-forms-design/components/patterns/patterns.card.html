@@ -1,0 +1,51 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Patterns" subtitle="Split hero, schema diptych, principle list" -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  .wrap{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--font-mono);font-size:var(--text-eyebrow);letter-spacing:var(--text-eyebrow-ls);text-transform:uppercase;color:var(--muted-foreground);}
+  .btn{font-family:var(--font-sans);font-size:14px;font-weight:700;padding:13px 26px;border-radius:0;cursor:pointer;line-height:1.2;}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground);border:none;}
+  .btn-outline{background:transparent;color:var(--foreground);border:var(--rule-w) solid var(--border);}
+  .btn-ghost{background:transparent;color:var(--muted-foreground);border:none;padding:6px 8px;}
+  .field{display:flex;flex-direction:column;gap:7px;min-width:180px;}
+  .field label{font-size:13px;font-weight:600;}
+  .field .input{height:var(--field-h);background:var(--background);border:var(--rule-w) solid var(--input);}
+  .check{width:16px;height:16px;border:var(--rule-w) solid var(--input);display:inline-block;box-sizing:border-box;}
+  .check.on{background:var(--primary);}
+  pre{margin:0;font-family:var(--font-mono);font-size:var(--text-code);line-height:var(--text-code-lh);}
+  pre span{display:block;}
+  .n1{color:var(--code-n1)} .n2{color:var(--code-n2)} .n3{color:var(--code-n3)} .a1{color:var(--code-a1)} .a2{color:var(--code-a2)}
+  .nav{width:220px;background:var(--rail);border-right:var(--rule-w) solid var(--border);padding:10px 8px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box;}
+  .navitem{display:block;padding:var(--nav-item-pad);font-size:var(--text-nav);font-weight:500;text-decoration:none;color:var(--foreground);}
+  .navitem.active{background:var(--primary);color:var(--primary-foreground);font-weight:700;}
+  .navitem.hover{background:var(--muted);}
+  .sw{display:flex;flex-direction:column;gap:6px;}
+  .chip{width:104px;height:56px;border:var(--rule-w) solid var(--border);}
+  .mono{font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);}
+</style>
+<div style="display:flex;flex-direction:column;height:100%">
+  <div style="padding:18px 20px;border-bottom:var(--rule-w) solid var(--border)">
+    <h1 style="margin:0;font-weight:900;font-size:44px;line-height:.9;letter-spacing:-.05em;display:flex;flex-direction:column">
+      <span style="align-self:flex-start">The schema <span style="color:var(--primary)">is</span></span>
+      <span style="align-self:flex-end">the form.</span>
+    </h1>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:var(--rule-w) solid var(--border)">
+    <div style="padding:14px 18px;border-right:var(--rule-w) solid var(--border)">
+      <span class="eyebrow" style="color:var(--primary)">Schema</span>
+      <pre style="margin-top:10px;font-size:11px;line-height:1.9"><span><span class="n3">const </span><span class="n1">Form</span><span class="n3"> = </span><span class="a1">insane.group</span><span class="n3">({</span></span><span><span class="n2">&nbsp;&nbsp;name:</span><span class="n1"> TextField</span><span class="n3">,</span></span><span><span class="n3">})</span></span></pre>
+    </div>
+    <div style="padding:14px 18px;background:var(--muted);display:flex;flex-direction:column;gap:10px">
+      <span class="eyebrow" style="color:var(--primary)">Output</span>
+      <div class="field"><label>Name</label><div class="input" style="height:34px"></div></div>
+      <span style="display:flex;align-items:center;gap:9px;font-size:13px"><span class="check on"></span>Primary</span>
+    </div>
+  </div>
+  <div style="padding:14px 20px;display:grid;grid-template-columns:52px 1fr;gap:16px;align-items:baseline">
+    <span style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">01</span>
+    <div><h3 style="margin:0 0 4px;font-size:16px;font-weight:700;letter-spacing:-.02em">Matchless rendering</h3><p style="margin:0;font-size:12px;line-height:1.6;color:var(--muted-foreground)">Every node carries its renderer. The core never switches on schema type.</p></div>
+  </div>
+</div>

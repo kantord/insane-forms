@@ -1,0 +1,31 @@
+:root {
+  /* the only rule weight in the system — thinner in the dark theme */
+  --rule-w: 2px;
+
+  --rail-nav-w: 266px;
+  --rail-aside-w: 280px;
+
+  --gutter: 48px;
+  --section-y: 44px;
+  --rail-pad-y: 24px;
+  --rail-pad-x: 18px;
+  --aside-pad-y: 22px;
+  --aside-pad-x: 24px;
+
+  --nav-item-pad: 6px 8px;
+  --field-h: 42px;
+  --control-pad: 13px 26px;
+
+  --stack-1: 8px;
+  --stack-2: 14px;
+  --stack-3: 18px;
+  --stack-4: 22px;
+  --stack-5: 36px;
+  --stack-6: 44px;
+
+  --shadow: none;
+}
+
+.dark {
+  --rule-w: 1px;
+}
