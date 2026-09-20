@@ -3,7 +3,6 @@ import Link from '@docusaurus/Link'
 import type { ReactNode } from 'react'
 import { BureauDemo, MeadowDemo, TerminalDemo } from '../components/BiomeDemos'
 import { CodePane } from '../components/CodePane'
-import '../css/custom.css'
 import { SchemaMorph } from '../components/SchemaMorph'
 import { Showcase } from '../components/Showcase'
 

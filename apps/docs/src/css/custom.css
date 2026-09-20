@@ -12,12 +12,20 @@
 @import "tailwindcss" source(none);
 @import "../../../../packages/examples/biomes.css";
 
-/* Self-hosted fonts (GDPR: no third-party font CDN). font-display: swap +
- * latin subsets on every face. */
-@import "@fontsource/instrument-serif";
-@import "@fontsource/instrument-serif/400-italic.css";
+/* Self-hosted fonts (GDPR: no third-party font CDN). font-display: swap.
+ * Latin-subset files only where the package ships them (instrument-serif,
+ * ibm-plex-mono) — the plain package import pulls EVERY subset (latin-ext,
+ * cyrillic, greek, vietnamese...) as separate @font-face url()s, and
+ * Docusaurus's webpack config base64-inlines any font under its size
+ * threshold, so unused subsets still cost real bytes in the render-blocking
+ * CSS even though the browser would never fetch them over the network. The
+ * three variable packages don't ship a latin-only file (Fontsource ships one
+ * combined `wght.css` per variable family) — accepted as-is; revisit if the
+ * Lighthouse LCP budget (quality-gates skill) gets tight again. */
+@import "@fontsource/instrument-serif/latin-400.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
 @import "@fontsource-variable/spline-sans-mono";
-@import "@fontsource/ibm-plex-mono";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/fira-code";
 
@@ -29,6 +37,7 @@
  * actually renders instead. */
 @source "../pages";
 @source "../components";
+@source "../theme";
 @source "../../../../packages/examples/profile.tsx";
 @source "../../../../packages/examples/terminal.tsx";
 @source "../../../../packages/examples/meadow.tsx";
@@ -39,6 +48,17 @@
   --color-carbon: #1b1916;
   --color-carbon-text: #e9e3d2;
   --color-carbon-dim: #837b66;
+}
+
+/* The persistent sidebar (src/theme/Root.tsx) needs a fixed-height flex row
+ * to sit alongside; without this, html/body scroll INSTEAD of the sidebar's
+ * and the page's own scroll containers, which detaches the sidebar from the
+ * viewport as soon as the page content is taller than one screen. */
+html,
+body,
+#__docusaurus {
+  height: 100%;
+  margin: 0;
 }
 
 /* shiki output: the pre carries inline biome colors; size it here */

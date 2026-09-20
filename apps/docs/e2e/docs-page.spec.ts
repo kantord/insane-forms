@@ -86,3 +86,26 @@ test.describe('docs page', () => {
     await expect(specimenB.locator('input[id="children.1.name"]')).toHaveValue('')
   })
 })
+
+test.describe('docs section (persistent sidebar)', () => {
+  test('sidebar lists Storybook pages and is present on the landing page too', async ({ page }) => {
+    await page.goto('./')
+    const sidebar = page.locator('nav', { hasText: 'insane-forms' })
+    await expect(sidebar.getByRole('link', { name: 'Profile', exact: true })).toBeVisible()
+    // Still on the landing page — the sidebar didn't navigate away.
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('the schema is the form')
+  })
+
+  test('clicking a sidebar entry embeds that Storybook page', async ({ page }) => {
+    await page.goto('./')
+    await page.getByRole('link', { name: 'Profile', exact: true }).click()
+    await expect(page).toHaveURL(/\/docs\?id=examples-forms--profile&mode=story/)
+    const frame = page.frameLocator('iframe')
+    await expect(frame.locator('input[id="name"]')).toBeVisible()
+  })
+
+  test('no page picked yet shows a placeholder, not a blank pane', async ({ page }) => {
+    await page.goto('./docs')
+    await expect(page.getByText(/pick a page from the sidebar/i)).toBeVisible()
+  })
+})
