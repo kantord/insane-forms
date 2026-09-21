@@ -100,7 +100,7 @@ export const Sidebar = ({ variant = 'rail' }: { variant?: 'rail' | 'inline' }) =
   const onDocsPage = location.pathname.startsWith(docsBase)
   const onExplorePage = location.pathname.startsWith(exploreBase)
   const { items: docsItems, onThisPage } = useDocsSidebarSync()
-  const { mode, toggle } = useColorMode()
+  const { mode, set } = useColorMode()
 
   return (
     <nav
@@ -158,15 +158,32 @@ export const Sidebar = ({ variant = 'rail' }: { variant?: 'rail' | 'inline' }) =
         <span>rev 0.1.0</span>
         <span>mit</span>
       </div>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="mt-2 flex items-center justify-between text-[0.72rem] text-dim hover:text-pop"
-      >
-        <span>{mode === 'dark' ? 'dark' : 'light'} mode</span>
-        <span aria-hidden="true">{mode === 'dark' ? '●○' : '○●'}</span>
-      </button>
+      {/* Both modes shown together as a segmented control (not a single
+       * toggle that only ever names the CURRENT mode) — the active one
+       * reads as filled, matching every other "active = bg-pop fill" state
+       * on this site (nav links, SchemaMorph's old step buttons). */}
+      <div className="mt-2 flex border-[length:var(--rule-w)] border-line text-[0.68rem] uppercase tracking-[0.1em]">
+        <button
+          type="button"
+          onClick={() => set('light')}
+          aria-pressed={mode === 'light'}
+          className={`flex-1 px-2 py-1 ${
+            mode === 'light' ? 'bg-pop font-bold text-paper' : 'text-dim hover:text-pop'
+          }`}
+        >
+          light mode
+        </button>
+        <button
+          type="button"
+          onClick={() => set('dark')}
+          aria-pressed={mode === 'dark'}
+          className={`flex-1 border-l-[length:var(--rule-w)] border-line px-2 py-1 ${
+            mode === 'dark' ? 'bg-pop font-bold text-paper' : 'text-dim hover:text-pop'
+          }`}
+        >
+          dark mode
+        </button>
+      </div>
     </nav>
   )
 }

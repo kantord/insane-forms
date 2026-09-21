@@ -103,7 +103,7 @@ export default function Home() {
       </Head>
       <div className="bg-paper font-mono text-[15px] leading-relaxed text-ink">
         {/* ---- hero + principles ---- */}
-        <div id="overview" className="pt-12 pb-16">
+        <div id="overview" className="pt-12">
           {/* TopBar organism (design system handoff §7): right-aligned
            * external links only, no wordmark — the persistent sidebar
            * (rendered alongside every page, landing included) already
@@ -158,24 +158,36 @@ export default function Home() {
            * column, the box's own border stopped short of the sidebar/aside
            * edges instead of reaching them. `p-5` on each cell is the ONLY
            * margin now — pushed "inside" the box instead of held outside it
-           * as column padding — and every rule uses the standard
-           * `border-[length:var(--rule-w)] border-line` pair used
-           * everywhere else on the site (this used to be a bare `border`
-           * plus a stray `border-rule`/`border-ink` pairing, neither of
-           * which matched). Row dividers use `nth-last-child` scoped per
+           * as column padding.
+           *
+           * `border-t` only, no `border-b`/`border-l`/`border-r` on the
+           * outer box: every OTHER section boundary on this page is marked
+           * exactly once, via the border-TOP of the section that follows
+           * (SchemaMorph's own border-t is what ends this box, immediately
+           * below with no `pb-*` gap left on `#overview` for it to float
+           * in) — a border-b here would double up against that. Left/right
+           * would double up against the sidebar's own border-r and the
+           * aside's own border-l, now that this box is full-bleed between
+           * them.
+           *
+           * Row dividers (`li`'s border-b) use `nth-last-child` scoped per
            * breakpoint's own column count (2 at `sm`, 4 at `lg`) — `last:`
-           * alone only ever matches the single DOM-last item, which is
-           * correct for the 1-column mobile layout but leaves a stray
-           * border under item 3 (wrongly not paired with item 4) once the
-           * grid wraps to 2 columns. */}
+           * alone only matches the single DOM-last item, correct for the
+           * 1-column mobile layout but leaving a stray border under item 3
+           * (not paired with item 4) once the grid wraps to 2 columns.
+           * Column dividers (`li`'s border-r) use the same `nth-child`
+           * approach for the mirror reason: the RIGHTMOST column in each
+           * row would otherwise double up against the aside's border-l
+           * (sm: item 2 of 2; lg: item 4 of 4 — re-adding it at `lg` since
+           * `sm:`'s removal would otherwise still apply at `lg` too). */}
           <ul
             id="principles"
-            className="grid list-none grid-cols-1 border-[length:var(--rule-w)] border-line p-0 sm:grid-cols-2 lg:grid-cols-4"
+            className="grid list-none grid-cols-1 border-t-[length:var(--rule-w)] border-line p-0 sm:grid-cols-2 lg:grid-cols-4"
           >
             {PRINCIPLES.map(([term, body]) => (
               <li
                 key={term}
-                className="border-b-[length:var(--rule-w)] border-line p-5 last:border-b-0 sm:border-r-[length:var(--rule-w)] sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0"
+                className="border-b-[length:var(--rule-w)] border-line p-5 last:border-b-0 sm:border-r-[length:var(--rule-w)] sm:[&:nth-child(2n)]:border-r-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r-[length:var(--rule-w)] lg:[&:nth-child(4n)]:border-r-0"
               >
                 <h3 className="mb-1.5 text-[0.78rem] font-bold uppercase tracking-[0.16em] text-pop">
                   {term}

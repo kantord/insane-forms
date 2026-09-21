@@ -64,11 +64,22 @@ test.describe('docs page', () => {
 
   test('schema-morph renders every step as its own static section', async ({ page }) => {
     await page.goto('./')
+    // All steps are on the page at once — no stepper/carousel to click
+    // through. Step 1 is the funnel: schema and hand-written UI shown as
+    // two separate code panes, with the disconnected UI actually usable.
     const step1 = page.locator('#morph')
-    await expect(step1).toContainText('Nothing renders yet')
-    // All four are on the page at once — no stepper/carousel to click through.
+    await expect(step1).toContainText('the data')
+    await expect(step1).toContainText('the UI — wired by hand, disconnected')
+    const handWritten = step1.getByPlaceholder('a plain, hand-wired input')
+    await handWritten.fill('Ada')
+    await expect(handWritten).toHaveValue('Ada')
+    // Step 2 is the merge itself — two code panes again (usage +
+    // definition), no live demo yet; that's the whole point of this step.
     const step2 = page.locator('#morph-step-2')
-    await expect(step2.locator('input[id="name"]')).toBeVisible()
+    await expect(step2).toContainText('using the field')
+    await expect(step2).toContainText('the field itself — where they merge')
+    await expect(step2.locator('form')).toHaveCount(0)
+    // Steps 3-4: the live, schema-driven field, iterated on.
     const step4 = page.locator('#morph-step-4')
     await expect(step4.locator('input[id="name"]')).toBeVisible()
   })

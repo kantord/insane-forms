@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 
 type Mode = 'light' | 'dark'
-type Ctx = { mode: Mode; toggle: () => void }
+type Ctx = { mode: Mode; toggle: () => void; set: (mode: Mode) => void }
 
 const ColorModeContext = createContext<Ctx | null>(null)
 const STORAGE_KEY = 'insane-forms:theme'
@@ -48,7 +48,11 @@ export const ColorModeProvider = ({ children }: { children: ReactNode }) => {
 
   const toggle = () => setMode((m) => (m === 'dark' ? 'light' : 'dark'))
 
-  return <ColorModeContext.Provider value={{ mode, toggle }}>{children}</ColorModeContext.Provider>
+  return (
+    <ColorModeContext.Provider value={{ mode, toggle, set: setMode }}>
+      {children}
+    </ColorModeContext.Provider>
+  )
 }
 
 export const useColorMode = () => {

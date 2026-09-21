@@ -84,6 +84,17 @@ const SNIPPETS = [
     theme: BUREAU_THEME,
   },
   {
+    // The schema-morph funnel's step 2 (SchemaMorph.tsx): the actual line
+    // where a schema and a widget merge into one field — shown in place of
+    // a live demo at that step, since the point there is the BINDING, not
+    // a rendered result (that comes back from step 3 on).
+    id: 'text-field-binding',
+    file: 'profile.tsx',
+    from: 'export const TextField',
+    to: 'export const NumberField',
+    theme: BUREAU_THEME,
+  },
+  {
     id: 'terminal',
     file: 'terminal.tsx',
     from: 'const TerminalShell',
@@ -183,7 +194,10 @@ const extractNotes = (source: string) => {
 
 export type SnippetsContent = {
   snippets: Record<string, string>
-  morphSteps: string[]
+  /** Keyed by marker id (`"1"`, `"1b"`, `"2"`…), not a plain sequential
+   * array — `1b` is a non-sequential aside (the "old way" hand-written UI,
+   * shown next to step 1's bare schema, not a numbered step of its own). */
+  morphSteps: Record<string, string>
 }
 
 const PLUGIN_NAME = 'insane-forms-snippets'
@@ -214,15 +228,23 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
       })
 
       // Schema-morph steps: slice examples/morph.tsx at its step markers and
-      // highlight each step individually (no animation — the reader clicks
-      // through steps; see src/pages/index.tsx SchemaMorph).
+      // highlight each step individually (no animation — every step is its
+      // own static section; see src/components/SchemaMorph.tsx). The
+      // marker id is CAPTURED (a `\w+` split regex keeps captured groups
+      // interleaved in the result array), so ids don't need to be
+      // sequential integers — `1b` is a real id, not a parse error.
       const morphFile = path.join(examplesDir, 'morph.tsx')
-      const morphSteps = readFileSync(morphFile, 'utf8')
-        .split(/\/\* step:\d[^*]*\*\//)
-        .slice(1)
-        .map((block) => extractNotes(block.trim()).code)
-        .map((block) => block.replace(/export const Step\d/, 'const Profile'))
-        .map((code) => highlighter.codeToHtml(code, { lang: 'tsx', theme: 'bureau' }))
+      const morphParts = readFileSync(morphFile, 'utf8').split(/\/\* step:(\w+)[^*]*\*\//)
+      const morphSteps: Record<string, string> = {}
+      for (let i = 1; i < morphParts.length; i += 2) {
+        const id = morphParts[i]
+        const block = morphParts[i + 1]
+        if (id === undefined || block === undefined) continue
+        const code = extractNotes(block.trim())
+          .code.replace(/export const Step\w+/, 'const Profile')
+          .replace(/export function (\w+)/, 'function $1')
+        morphSteps[id] = highlighter.codeToHtml(code, { lang: 'tsx', theme: 'bureau' })
+      }
 
       highlighter.dispose()
       return { snippets: Object.fromEntries(entries), morphSteps }

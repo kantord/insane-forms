@@ -24,12 +24,14 @@ export const Steps: StoryObj = {
       ))}
     </div>
   ),
-  // Step 4 adds validation: submitting it empty must surface field errors.
+  // Step 4 adds validation: submitting it empty must surface a field error.
+  // Atomic (a single `name` field) — at most one error is possible here,
+  // unlike the earlier multi-field Profile version of this story.
   play: async ({ canvas, userEvent }) => {
     const submits = canvas.getAllByRole('button', { name: /save/i })
     const last = submits[submits.length - 1]
     if (!last) throw new Error('no submit button')
     await userEvent.click(last)
-    await expect((await canvas.findAllByRole('alert')).length).toBeGreaterThanOrEqual(2)
+    await expect((await canvas.findAllByRole('alert')).length).toBeGreaterThanOrEqual(1)
   },
 }
