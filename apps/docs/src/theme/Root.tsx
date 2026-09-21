@@ -11,12 +11,29 @@ import { DocsSidebarSyncProvider } from '../contexts/DocsSidebarSync'
 /** Docusaurus renders this around EVERY route (the documented `src/theme/Root`
  * swizzle point) — the persistent sidebar lives here, not in individual pages,
  * so it's on the landing page too (deliberate: see the landing-page skill).
- * The sidebar and the page both scroll independently inside a fixed-height
- * flex row; `html`/`body` themselves never scroll (custom.css). No
- * theme/preset is registered (see docusaurus.config.ts), so there's no
+ * No theme/preset is registered (see docusaurus.config.ts), so there's no
  * `theme.customCss` hook to register the stylesheet through — this plain
  * import is the only place it's loaded, and it's guaranteed to run for every
  * route since Root wraps everything.
+ *
+ * The PAGE scrolls natively (`html`/`body`, normal document flow) — an
+ * earlier version instead gave the sidebar and the page each their own
+ * fixed-height `overflow-y-auto` container (a `flex h-screen` row), which
+ * looked broken once every section grew an explicit border: independent
+ * scroll positions meant the ruled boxes never read as one continuous page,
+ * closer to an app shell with panes than a document. The reference
+ * `DocsShell.jsx` (insane-forms-design skill) confirms this — its outer row
+ * is `minHeight: '100%'`, not a fixed height, i.e. it's meant to grow with
+ * content and let the document scroll. `<Sidebar>` is the one exception:
+ * `sticky top-0 h-screen` (its wrapper below) so it stays pinned to the
+ * viewport while the page scrolls past it, with its OWN `overflow-y-auto`
+ * (Sidebar.tsx) for when the nav tree itself is taller than one screen.
+ * `<Asides>` is deliberately NOT sticky — it's normal flow, scrolls away
+ * with the page like the reference `AsideNote`'s `offset` prop implies
+ * (a note positioned at a page-flow Y offset only makes sense if the rail
+ * scrolls with that content, not if it's pinned independently). `/explore`
+ * is the one route that keeps the old fixed-viewport, no-page-scroll model
+ * (below) — it's a full-bleed embedded Storybook iframe, not a document.
  *
  * `DocsSidebarSyncProvider` wraps BOTH `<Sidebar>` and `{children}` so a doc
  * page (rendered inside `children`, see src/components/docs/DocRoot.tsx) can
@@ -61,14 +78,18 @@ export default function Root({ children }: { children: ReactNode }) {
     setMobileNavOpen(false)
   }, [pathname, hash])
 
+  const contentClassName = onExplorePage
+    ? 'flex h-screen min-w-0 flex-1 flex-col overflow-y-auto bg-paper text-ink'
+    : 'flex min-w-0 flex-1 flex-col bg-paper text-ink'
+
   return (
     <ColorModeProvider>
       <DocsSidebarSyncProvider>
-        <div className="flex h-screen">
-          <div className="hidden md:flex">
+        <div className="flex min-h-screen">
+          <div className="hidden md:sticky md:top-0 md:flex md:h-screen">
             <Sidebar />
           </div>
-          <div className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper text-ink">
+          <div className={contentClassName}>
             <button
               type="button"
               onClick={() => setMobileNavOpen((open) => !open)}

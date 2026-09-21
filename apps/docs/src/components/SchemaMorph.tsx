@@ -1,6 +1,7 @@
 import { Step2, Step3, Step4 } from '@insane-forms/examples/morph'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import { useState } from 'react'
+import type { ZodType } from 'zod'
 import { useSnippets } from '../hooks/useSnippets'
 import { Receipt } from './Receipt'
 
@@ -31,63 +32,52 @@ const MORPH_STEPS = [
   },
 ] as const
 
-/** The old landing page drove this with a sticky-scroll + Magic Move code
- * animation (IntersectionObserver, keyed-token morph). Simplified for the
- * Docusaurus rewrite: a plain step selector, no scroll wiring, no animation
- * library — click a step, the code and the live form update. */
-export const SchemaMorph = () => {
-  const [step, setStep] = useState(0)
+/** One step's full section — its own `useState` for the submit receipt,
+ * since all four steps are now rendered simultaneously (not one active step
+ * at a time), each needs an independent output. */
+const MorphStep = ({
+  id,
+  kicker,
+  title,
+  body,
+  schema,
+  snippetHtml,
+}: {
+  id?: string
+  kicker: string
+  title: string
+  body: string
+  schema: ZodType | null
+  snippetHtml: string
+}) => {
   const [out, setOut] = useState<unknown>(null)
-  const { morphSteps } = useSnippets()
-  const current = MORPH_STEPS[step]
-  const schema = current?.schema ?? null
 
   return (
     <section
-      id="morph"
+      id={id}
       className="biome-bureau w-full border-t-[length:var(--rule-w)] border-line bg-paper-deep/40 py-16 text-ink"
     >
       <div className="mx-auto max-w-[1180px] px-6">
-        <div className="mb-8 flex flex-wrap gap-2">
-          {MORPH_STEPS.map((s, i) => (
-            <button
-              key={s.kicker}
-              type="button"
-              aria-pressed={i === step}
-              onClick={() => {
-                setStep(i)
-                setOut(null)
-              }}
-              className={`border px-3 py-1.5 text-[0.7rem] uppercase tracking-[0.14em] ${
-                i === step
-                  ? 'border-pop bg-pop text-paper'
-                  : 'border-dim text-dim hover:border-pop hover:text-pop'
-              }`}
-            >
-              {s.kicker}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-[1fr_1.2fr]">
+        <span className="text-[0.78rem] font-bold uppercase tracking-[0.2em] text-pop">
+          {kicker}
+        </span>
+        <div className="mt-2 grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <h3 className="mt-0 mb-3 font-display text-3xl font-bold tracking-tight">
-              {current?.title}
-            </h3>
-            <p className="m-0 max-w-md text-[0.95rem] text-dim">{current?.body}</p>
+            <h3 className="mt-0 mb-3 font-display text-3xl font-bold tracking-tight">{title}</h3>
+            <p className="m-0 max-w-md text-[0.95rem] text-dim">{body}</p>
           </div>
 
-          <div className="grid grid-rows-[1.15fr_1fr] gap-3 lg:h-[68svh]">
-            <div className="min-h-0 overflow-auto border border-ink bg-carbon font-code text-[0.8rem] leading-relaxed">
+          <div className="grid grid-rows-[1.15fr_1fr] gap-3 lg:h-[60svh]">
+            <div className="min-h-0 overflow-auto border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed">
               <div
                 className="h-full [&_pre]:m-0 [&_pre]:h-full [&_pre]:p-6"
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                dangerouslySetInnerHTML={{ __html: morphSteps[step] ?? '' }}
+                dangerouslySetInnerHTML={{ __html: snippetHtml }}
               />
             </div>
-            <div className="demo-pane min-h-0 overflow-auto border border-ink bg-paper p-6">
+            <div className="demo-pane min-h-0 overflow-auto border-[length:var(--rule-w)] border-line bg-paper p-6">
               {schema ? (
-                <ZodForm key={step} schema={schema} onSubmit={setOut}>
+                <ZodForm schema={schema} onSubmit={setOut}>
                   <button type="submit">Save</button>
                 </ZodForm>
               ) : (
@@ -101,5 +91,34 @@ export const SchemaMorph = () => {
         </div>
       </div>
     </section>
+  )
+}
+
+/** The old landing page drove this with a sticky-scroll + Magic Move code
+ * animation (IntersectionObserver, keyed-token morph); a later Docusaurus
+ * rewrite replaced that with a click-to-swap step selector (one button row,
+ * one active step's code+form shown at a time). Replaced again: each step
+ * is now its own static section, stacked and separated by the same
+ * border-t rule every other section on this page uses — no interactive
+ * carousel, nothing to click through, matching the rest of the site's
+ * plain top-to-bottom flow. `id="morph"` stays on the first step so the
+ * sidebar's "on this page" anchor still lands here. */
+export const SchemaMorph = () => {
+  const { morphSteps } = useSnippets()
+
+  return (
+    <>
+      {MORPH_STEPS.map((s, i) => (
+        <MorphStep
+          key={s.kicker}
+          id={i === 0 ? 'morph' : `morph-step-${i + 1}`}
+          kicker={s.kicker}
+          title={s.title}
+          body={s.body}
+          schema={s.schema}
+          snippetHtml={morphSteps[i] ?? ''}
+        />
+      ))}
+    </>
   )
 }

@@ -56,14 +56,18 @@
   --color-carbon-dim: #837b66;
 }
 
-/* The persistent sidebar (src/theme/Root.tsx) needs a fixed-height flex row
- * to sit alongside; without this, html/body scroll INSTEAD of the sidebar's
- * and the page's own scroll containers, which detaches the sidebar from the
- * viewport as soon as the page content is taller than one screen. */
+/* The page scrolls natively now (src/theme/Root.tsx) — `<Sidebar>` stays
+ * pinned via `position: sticky` + an explicit `h-screen`, not a percentage
+ * height inherited from html/body, so this no longer needs to force
+ * html/body/#__docusaurus to 100% height. Still zeroing `margin` — the
+ * browser default `<body>` margin would otherwise show as an 8px gap around
+ * every full-bleed section/rail. `/explore`'s embedded Storybook iframe is
+ * the one place that still needs a concrete height chain; it gets it from
+ * `h-screen` on its own direct parent (Root.tsx's content column), not from
+ * here. */
 html,
 body,
 #__docusaurus {
-  height: 100%;
   margin: 0;
 }
 

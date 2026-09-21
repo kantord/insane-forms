@@ -12,12 +12,22 @@ import Link from '@docusaurus/Link'
  * SidebarNav. No "Note" content yet: there's no real editorial content to
  * put in one with the docs pages still placeholders (`docs/intro.md`,
  * `docs/guides/getting-started.md`) — the fixed "see also" link is the one
- * thing that's genuinely true of every page today. */
+ * thing that's genuinely true of every page today.
+ *
+ * No explicit height here, deliberately — Root.tsx no longer wraps this in
+ * a fixed-height row (the page scrolls natively; only `<Sidebar>` is
+ * `sticky`+viewport-height). This rail just stretches to match its flex
+ * row's natural height (default `align-items: stretch`, no height math
+ * needed), so its border/background run the full page length without this
+ * rail scrolling independently of the content beside it. */
 export const Asides = () => (
-  <aside className="hidden h-full w-[280px] shrink-0 flex-col gap-8 border-l-[length:var(--rule-w)] border-line bg-rail px-6 py-[22px] lg:flex">
-    <div className="border-b-[length:var(--rule-w)] border-line pb-3 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
-      Asides
-    </div>
+  <aside className="hidden w-[280px] shrink-0 flex-col gap-8 border-l-[length:var(--rule-w)] border-line bg-rail px-6 py-[22px] lg:flex">
+    {/* No "Asides" label — just the rule. -mx-6 (matching px-6 on close):
+     * bleeds it to the aside's true edges, same as before. `mt-*`: pushes
+     * the rule down to land at the same Y as the hero's TopBar border-b in
+     * the center column, so the two read as one continuous horizontal line
+     * across the whole page instead of two rules at different heights. */}
+    <div className="-mx-6 mt-[61px] border-b-[length:var(--rule-w)] border-line" />
     <div>
       <div className="mb-3 text-[0.68rem] uppercase tracking-[0.16em] text-dim">See also</div>
       <Link

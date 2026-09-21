@@ -62,16 +62,15 @@ test.describe('docs page', () => {
     await expect(note).toHaveAttribute('tabindex', '0') // keyboard-reachable
   })
 
-  test('the schema-morph step selector swaps code and form without scrolling', async ({ page }) => {
+  test('schema-morph renders every step as its own static section', async ({ page }) => {
     await page.goto('./')
-    const morph = page.locator('#morph')
-    await expect(morph).toContainText('Nothing renders yet')
-    await morph.getByRole('button', { name: /step 2/i }).click()
-    await expect(morph.locator('input[id="name"]')).toBeVisible()
-    await expect(morph.getByRole('button', { name: /step 2/i })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    const step1 = page.locator('#morph')
+    await expect(step1).toContainText('Nothing renders yet')
+    // All four are on the page at once — no stepper/carousel to click through.
+    const step2 = page.locator('#morph-step-2')
+    await expect(step2.locator('input[id="name"]')).toBeVisible()
+    const step4 = page.locator('#morph-step-4')
+    await expect(step4.locator('input[id="name"]')).toBeVisible()
   })
 
   test('recursive tree renders to data depth and grows', async ({ page }) => {

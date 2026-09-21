@@ -150,7 +150,11 @@ export const Sidebar = ({ variant = 'rail' }: { variant?: 'rail' | 'inline' }) =
       {exploreItems === null && <p className="mt-2 pl-3 text-[0.8rem] text-dim">loading…</p>}
       {exploreItems && <TreeItems items={exploreItems} />}
 
-      <div className="mt-auto flex items-center justify-between border-t-[length:var(--rule-w)] border-line pt-3 text-[0.68rem] text-dim">
+      {/* -mx-[18px] + matching px-[18px]: bleeds the rule out to the nav's
+       * true edges (it should span the full sidebar width, not stop short
+       * at the nav's own content padding) while keeping the text inset the
+       * same as everything else above it. */}
+      <div className="-mx-[18px] mt-auto flex items-center justify-between border-t-[length:var(--rule-w)] border-line px-[18px] pt-3 text-[0.68rem] text-dim">
         <span>rev 0.1.0</span>
         <span>mit</span>
       </div>
