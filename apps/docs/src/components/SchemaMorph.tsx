@@ -1,23 +1,31 @@
-import { HandWrittenNameInput, Step3, Step4 } from '@insane-forms/examples/morph'
+import { Step2, Step3, Step4 } from '@insane-forms/examples/morph'
 import { ZodForm } from '@insane-forms/examples/react-hook-form'
 import { useState } from 'react'
+import Xarrow, { Xwrapper } from 'react-xarrows'
 import type { ZodType } from 'zod'
 import { useSnippets } from '../hooks/useSnippets'
 import { Receipt } from './Receipt'
 
 const LATER_STEPS = [
   {
+    id: '2',
+    kicker: 'step 2 · customize',
+    title: 'Still just a Zod schema',
+    body: 'A field takes the same .min(), .email(), .meta() chaining as any plain Zod schema — because it is one. No separate customization API to learn.',
+    schema: Step2,
+  },
+  {
     id: '3',
-    kicker: 'step 3 · annotate',
-    title: 'Titles live in the schema',
-    body: 'Labels and descriptions are .meta() too — plain Zod chaining, and the shell renders them. The schema is still a schema: parse it, infer from it.',
+    kicker: 'step 3 · compose',
+    title: 'Fields combine like any schema',
+    body: 'Group two fields into an object and you get exactly what z.object({ … }) gives you — fields compose the same way plain Zod schemas do.',
     schema: Step3,
   },
   {
     id: '4',
-    kicker: 'step 4 · validate',
-    title: 'Checks come free',
-    body: 'Add .min() — the same declaration validates the draft and gates submit. Try submitting empty.',
+    kicker: 'step 4 · inject markup',
+    title: 'Plain React, anywhere',
+    body: 'insane.group() takes fields OR plain elements as parts — a heading here is just <h4>, dropped straight into the schema. Full control over markup, not just fields.',
     schema: Step4,
   },
 ] as const
@@ -80,23 +88,20 @@ const MorphStep = ({
 /** The old landing page drove this with a sticky-scroll + Magic Move code
  * animation; a later rewrite replaced that with a click-to-swap step
  * selector; replaced again with static, stacked sections (see git history
- * for both). This pass adds a funnel: step 1 shows the schema AND a
- * hand-written UI as two SEPARATE code panes — historically two files, one
- * hand-wired to the other — instead of the old single "nothing renders yet"
- * message. Step 2 is the merge itself: TWO code panes again (rhyming with
- * step 1's layout), but now both about the SAME merged thing — the schema's
- * usage on the left, and on the right the actual `insane.field({ schema,
- * widget, shell })` line where a schema and a widget become one field. NO
- * live demo at step 2 — the point there is the binding, not a rendered
- * result; that comes back starting step 3, once there's something worth
- * proving actually works. Steps 3-4 iterate on the now-merged field.
+ * for both). Four lessons, each building on the field the previous step
+ * produced (packages/examples/morph.tsx has the full progression):
  *
- * Deliberately atomic (a single `name` field, not a multi-key object): the
- * lesson here is "two files become one," which reads clearly for one field.
- * A composed object would suggest the OTHER lesson — multiple fields
- * combining — which the biome showcases below this section already own;
- * showing it here too would blur which lesson is which. See
- * packages/examples/morph.tsx for the full schema progression. */
+ * 1. bind — the funnel: "the data" and "the UI" (two separate, disconnected
+ *    files) converge into "the field itself", with `react-xarrows` drawing
+ *    the two connecting arrows. The only step that converges from two
+ *    things, so the only one with arrows.
+ * 2. customize — the SAME field takes .min()/.meta() chaining, because it's
+ *    still a plain Zod schema underneath.
+ * 3. compose — two customized fields grouped into one object, the same way
+ *    z.object({ … }) composes plain schemas.
+ * 4. inject markup — that composed group, plus a plain <h4> dropped in as a
+ *    part alongside the fields: insane.group() takes elements, not just
+ *    field definitions. */
 export const SchemaMorph = () => {
   const { morphSteps, snippets } = useSnippets()
 
@@ -108,83 +113,100 @@ export const SchemaMorph = () => {
       >
         <div className="mx-auto max-w-[1180px] px-6">
           <span className="text-[0.78rem] font-bold uppercase tracking-[0.2em] text-pop">
-            step 1 · data
+            step 1 · bind
           </span>
           <h3 className="mt-2 mb-3 font-display text-3xl font-bold tracking-tight">
-            Start with plain Zod
+            Two files become one
           </h3>
           <p className="m-0 mb-8 max-w-2xl text-[0.95rem] text-dim">
-            A schema is data — nothing renders from it alone. Historically, the UI is a second,
-            completely separate file you write and wire up by hand. insane-forms exists to merge
-            these two back into one.
+            A schema is data; historically, the UI is a second file you write and wire up by hand —
+            completely separate. insane-forms merges the two: a schema and a widget, bound once into
+            a field.
           </p>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
-                the data
+          <Xwrapper>
+            {/* gap-y-8: an explicit, artificial gap so the arrows have real
+             * room to read as arrows — bigger than the site's usual gap-y-3,
+             * but not so big it exaggerates the height difference below. */}
+            <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+              {/* flex flex-col on each wrapper + flex-1 on the code box:
+               * CSS Grid's default `align-items: stretch` already makes
+               * both wrappers the height of the taller one, but a plain
+               * block child doesn't fill that extra space — it just leaves
+               * it empty below the (shorter) actual code block, so THAT
+               * arrow starts from real content but then crosses a bunch of
+               * dead air before reaching the same gap-y-8 the other arrow
+               * gets. `flex-1` makes the code box itself absorb the slack,
+               * so both boxes' bottom edges — and so both arrows' start
+               * points and lengths — match exactly, not just their anchor
+               * X position. */}
+              <div className="flex flex-col">
+                <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
+                  The schema (Zod)
+                </div>
+                <div
+                  id="funnel-data-code"
+                  className="flex-1 border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
+                  dangerouslySetInnerHTML={{ __html: morphSteps['1'] ?? '' }}
+                />
               </div>
-              <div
-                className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                dangerouslySetInnerHTML={{ __html: morphSteps['1'] ?? '' }}
-              />
-            </div>
-            <div>
-              <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
-                the UI — wired by hand, disconnected
+              <div className="flex flex-col">
+                <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
+                  The form field (any React component)
+                </div>
+                <div
+                  id="funnel-ui-code"
+                  className="flex-1 border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
+                  dangerouslySetInnerHTML={{ __html: morphSteps['1b'] ?? '' }}
+                />
               </div>
-              <div
-                className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                dangerouslySetInnerHTML={{ __html: morphSteps['1b'] ?? '' }}
-              />
-              <div className="demo-pane mt-3 border-[length:var(--rule-w)] border-line bg-paper p-4">
-                <HandWrittenNameInput />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section
-        id="morph-step-2"
-        className="biome-bureau w-full border-t-[length:var(--rule-w)] border-line bg-paper-deep/40 py-16 text-ink"
-      >
-        <div className="mx-auto max-w-[1180px] px-6">
-          <span className="text-[0.78rem] font-bold uppercase tracking-[0.2em] text-pop">
-            step 2 · bind
-          </span>
-          <h3 className="mt-2 mb-3 font-display text-3xl font-bold tracking-tight">
-            Fields carry their widgets
-          </h3>
-          <p className="m-0 mb-8 max-w-2xl text-[0.95rem] text-dim">
-            The schema and the UI are no longer two files — one node now carries both. This is the
-            merge itself: a schema and a widget, bound once into a field.
-          </p>
+              <div className="sm:col-span-2">
+                <div className="relative">
+                  {/* Two zero-height landing points, positioned at the top
+                   * of the CODE BOX below (not the label above it), in the
+                   * SAME grid-cols-1/sm:grid-cols-2 + gap-x-6 as the row
+                   * above — identical column math, so their centers land
+                   * exactly under funnel-data-code/funnel-ui-code
+                   * regardless of viewport width, giving each arrow a true
+                   * vertical drop instead of slanting toward this box's own
+                   * (wider, differently-centered) top edge. */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                    <div id="funnel-field-left" />
+                    <div id="funnel-field-right" />
+                  </div>
+                  <div
+                    className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
+                    dangerouslySetInnerHTML={{ __html: snippets['text-field-binding'] ?? '' }}
+                  />
+                </div>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
-                using the field
-              </div>
-              <div
-                className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                dangerouslySetInnerHTML={{ __html: morphSteps['2'] ?? '' }}
-              />
-            </div>
-            <div>
-              <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
-                the field itself — where they merge
-              </div>
-              <div
-                className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                dangerouslySetInnerHTML={{ __html: snippets['text-field-binding'] ?? '' }}
-              />
-            </div>
-          </div>
+            <Xarrow
+              start="funnel-data-code"
+              end="funnel-field-left"
+              startAnchor="bottom"
+              endAnchor="top"
+              path="straight"
+              color="var(--color-ink)"
+              strokeWidth={2}
+              headSize={5}
+            />
+            <Xarrow
+              start="funnel-ui-code"
+              end="funnel-field-right"
+              startAnchor="bottom"
+              endAnchor="top"
+              path="straight"
+              color="var(--color-ink)"
+              strokeWidth={2}
+              headSize={5}
+            />
+          </Xwrapper>
         </div>
       </section>
 

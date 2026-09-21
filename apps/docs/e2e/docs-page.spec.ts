@@ -1,20 +1,22 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('docs page', () => {
-  test('renders the masthead and both showcases', async ({ page }) => {
+  test('renders the masthead', async ({ page }) => {
     await page.goto('./')
     await expect(page).toHaveTitle(/insane-forms/)
     await expect(page.getByRole('heading', { level: 1 })).toContainText('the schema is the form')
-    await expect(
-      page.getByRole('heading', { name: /nested groups, hidden field, dynamic list/i }),
-    ).toBeVisible()
-    await expect(page.getByRole('heading', { name: /recursive tree/i })).toBeVisible()
-    await expect(
-      page.getByRole('link', { name: /storybook — every piece in isolation/i }),
-    ).toHaveAttribute('href', './storybook/')
+    await expect(page.getByRole('link', { name: 'storybook' })).toHaveAttribute(
+      'href',
+      './storybook/',
+    )
   })
 
-  test('valid submit shows the parsed z.output including the hidden id', async ({ page }) => {
+  // The design-biomes section (bureau/terminal/meadow showcases) was removed
+  // from the landing page "for now" — the components themselves are still
+  // real and working (src/components/Showcase.tsx, BiomeDemos.tsx,
+  // CodePane.tsx), just not rendered on this page. Skipped, not deleted, so
+  // this coverage comes back the moment the section does.
+  test.skip('valid submit shows the parsed z.output including the hidden id', async ({ page }) => {
     await page.goto('./')
     const specimenA = page.locator('#showcase-bureau .demo-pane')
     await specimenA.locator('input[id="name"]').fill('Ada Lovelace')
@@ -32,7 +34,7 @@ test.describe('docs page', () => {
     await expect(receipt).toContainText('"age": 18') // declared .default(18)
   })
 
-  test('invalid submit shows field errors and no receipt', async ({ page }) => {
+  test.skip('invalid submit shows field errors and no receipt', async ({ page }) => {
     await page.goto('./')
     const specimenA = page.locator('#showcase-bureau .demo-pane')
     await specimenA.getByRole('button', { name: 'SAVE' }).click()
@@ -40,7 +42,7 @@ test.describe('docs page', () => {
     await expect(specimenA.locator('.receipt')).toHaveCount(0)
   })
 
-  test('contact list bounds gate the add/remove chrome', async ({ page }) => {
+  test.skip('contact list bounds gate the add/remove chrome', async ({ page }) => {
     await page.goto('./')
     const specimenA = page.locator('#showcase-bureau .demo-pane')
     const add = specimenA.locator('button[data-add]')
@@ -53,7 +55,7 @@ test.describe('docs page', () => {
     await expect(specimenA.locator('button[data-remove]')).toHaveCount(3)
   })
 
-  test('code notes annotate confusing parts, stripped from display', async ({ page }) => {
+  test.skip('code notes annotate confusing parts, stripped from display', async ({ page }) => {
     await page.goto('./')
     const pane = page.locator('#showcase-bureau .carbon')
     await expect(pane).not.toContainText('@note') // the comment itself never shows
@@ -62,29 +64,36 @@ test.describe('docs page', () => {
     await expect(note).toHaveAttribute('tabindex', '0') // keyboard-reachable
   })
 
-  test('schema-morph renders every step as its own static section', async ({ page }) => {
+  test('schema-morph renders the funnel then steps 2-4 as static sections', async ({ page }) => {
     await page.goto('./')
     // All steps are on the page at once — no stepper/carousel to click
-    // through. Step 1 is the funnel: schema and hand-written UI shown as
-    // two separate code panes, with the disconnected UI actually usable.
-    const step1 = page.locator('#morph')
-    await expect(step1).toContainText('the data')
-    await expect(step1).toContainText('the UI — wired by hand, disconnected')
-    const handWritten = step1.getByPlaceholder('a plain, hand-wired input')
-    await handWritten.fill('Ada')
-    await expect(handWritten).toHaveValue('Ada')
-    // Step 2 is the merge itself — two code panes again (usage +
-    // definition), no live demo yet; that's the whole point of this step.
+    // through. The funnel (#morph) is one section, three panes: the schema
+    // and the hand-written UI (two separate, disconnected files, shown as
+    // CODE only — no live-rendered preview) converging into the field
+    // binding below them (react-xarrows draws the two connecting arrows).
+    const funnel = page.locator('#morph')
+    await expect(funnel).toContainText('The schema (Zod)')
+    await expect(funnel).toContainText('The form field (any React component)')
+    await expect(funnel.locator('form')).toHaveCount(0)
+    await expect(funnel.locator('input')).toHaveCount(0)
+    // 2 arrows × (body path + arrowhead path) = 4 real SVG paths, not
+    // decoration-only markup.
+    await expect(funnel.locator('svg path[d]')).toHaveCount(4)
+    // Step 2: customize — same field, live and schema-driven now.
     const step2 = page.locator('#morph-step-2')
-    await expect(step2).toContainText('using the field')
-    await expect(step2).toContainText('the field itself — where they merge')
-    await expect(step2.locator('form')).toHaveCount(0)
-    // Steps 3-4: the live, schema-driven field, iterated on.
+    await expect(step2.locator('input[id="name"]')).toBeVisible()
+    // Step 3: compose — two fields grouped into one object.
+    const step3 = page.locator('#morph-step-3')
+    await expect(step3.locator('input[id="name"]')).toBeVisible()
+    await expect(step3.locator('input[id="email"]')).toBeVisible()
+    // Step 4: inject markup — the same composed group, plus a plain <h4>
+    // dropped in as a part, not a field.
     const step4 = page.locator('#morph-step-4')
+    await expect(step4.getByRole('heading', { level: 4, name: 'Contact card' })).toBeVisible()
     await expect(step4.locator('input[id="name"]')).toBeVisible()
   })
 
-  test('recursive tree renders to data depth and grows', async ({ page }) => {
+  test.skip('recursive tree renders to data depth and grows', async ({ page }) => {
     await page.goto('./')
     const specimenB = page.locator('#showcase-terminal .demo-pane')
     await expect(specimenB.locator('input[id="name"]')).toHaveValue('root')

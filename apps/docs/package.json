@@ -8,8 +8,9 @@
     "serve": "node scripts/static-server.mjs"
   },
   "dependencies": {
-    "insane-forms": "workspace:*",
+    "@insane-forms/examples": "workspace:*",
     "@insane-forms/ui": "workspace:*",
-    "@insane-forms/examples": "workspace:*"
+    "insane-forms": "workspace:*",
+    "react-xarrows": "^2.2.0"
   }
 }
