@@ -151,12 +151,6 @@ export default function Home() {
         {/* ---- watch a schema become a form (click through the steps) ---- */}
         <SchemaMorph />
 
-        {/* ---- design biomes: removed for now (temporary — the biome
-         * showcases and their live demos still exist as working components
-         * in src/components/Showcase.tsx/BiomeDemos.tsx/CodePane.tsx, just
-         * not rendered on this page). The e2e tests that exercised them are
-         * skipped, not deleted, in apps/docs/e2e/docs-page.spec.ts. */}
-
         {/* ---- footer ---- */}
         {/* FooterBar organism: repo link left, mono note right, above a
          * single top rule (design system handoff §7) — full-width like

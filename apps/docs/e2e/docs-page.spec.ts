@@ -11,59 +11,6 @@ test.describe('docs page', () => {
     )
   })
 
-  // The design-biomes section (bureau/terminal/meadow showcases) was removed
-  // from the landing page "for now" — the components themselves are still
-  // real and working (src/components/Showcase.tsx, BiomeDemos.tsx,
-  // CodePane.tsx), just not rendered on this page. Skipped, not deleted, so
-  // this coverage comes back the moment the section does.
-  test.skip('valid submit shows the parsed z.output including the hidden id', async ({ page }) => {
-    await page.goto('./')
-    const specimenA = page.locator('#showcase-bureau .demo-pane')
-    await specimenA.locator('input[id="name"]').fill('Ada Lovelace')
-    await specimenA.locator('input[id="email"]').first().fill('ada@example.com')
-    await specimenA.locator('input[id="address.city"]').fill('London')
-    await specimenA.locator('input[id="address.zip"]').fill('12345')
-    await specimenA.locator('input[id="contacts.0.email"]').fill('charles@example.com')
-    await specimenA.getByRole('button', { name: 'SAVE' }).click()
-
-    const receipt = page.locator('.receipt')
-    await expect(receipt).toBeVisible()
-    // The hidden field never rendered, yet the parse filled its default.
-    await expect(receipt).toContainText('"id": "srv-000"')
-    await expect(receipt).toContainText('"name": "Ada Lovelace"')
-    await expect(receipt).toContainText('"age": 18') // declared .default(18)
-  })
-
-  test.skip('invalid submit shows field errors and no receipt', async ({ page }) => {
-    await page.goto('./')
-    const specimenA = page.locator('#showcase-bureau .demo-pane')
-    await specimenA.getByRole('button', { name: 'SAVE' }).click()
-    await expect(specimenA.locator('em[role="alert"]').first()).toBeVisible()
-    await expect(specimenA.locator('.receipt')).toHaveCount(0)
-  })
-
-  test.skip('contact list bounds gate the add/remove chrome', async ({ page }) => {
-    await page.goto('./')
-    const specimenA = page.locator('#showcase-bureau .demo-pane')
-    const add = specimenA.locator('button[data-add]')
-    // Seeded with 1 row (min 1): no remove button yet.
-    await expect(specimenA.locator('button[data-remove]')).toHaveCount(0)
-    await add.click()
-    await add.click()
-    // At max(3) the add button disappears; every row is removable again.
-    await expect(add).toHaveCount(0)
-    await expect(specimenA.locator('button[data-remove]')).toHaveCount(3)
-  })
-
-  test.skip('code notes annotate confusing parts, stripped from display', async ({ page }) => {
-    await page.goto('./')
-    const pane = page.locator('#showcase-bureau .carbon')
-    await expect(pane).not.toContainText('@note') // the comment itself never shows
-    const note = pane.locator('.code-note').first()
-    await expect(note).toHaveAttribute('data-note', /.+/)
-    await expect(note).toHaveAttribute('tabindex', '0') // keyboard-reachable
-  })
-
   test('schema-morph renders the funnel then steps 2-4 as static sections', async ({ page }) => {
     await page.goto('./')
     // All steps are on the page at once — no stepper/carousel to click
@@ -91,18 +38,6 @@ test.describe('docs page', () => {
     const step4 = page.locator('#morph-step-4')
     await expect(step4.getByRole('heading', { level: 4, name: 'Contact card' })).toBeVisible()
     await expect(step4.locator('input[id="name"]')).toBeVisible()
-  })
-
-  test.skip('recursive tree renders to data depth and grows', async ({ page }) => {
-    await page.goto('./')
-    const specimenB = page.locator('#showcase-terminal .demo-pane')
-    await expect(specimenB.locator('input[id="name"]')).toHaveValue('root')
-    await expect(specimenB.locator('input[id="children.0.name"]')).toHaveValue('docs')
-    await expect(specimenB.locator('input[id="children.0.children.0.name"]')).toHaveValue('api')
-    // Growing the tree at the root: the root list's add button is the LAST one
-    // in DOM order (nested lists render their own add buttons first).
-    await specimenB.locator('button[data-add]').last().click()
-    await expect(specimenB.locator('input[id="children.1.name"]')).toHaveValue('')
   })
 })
 

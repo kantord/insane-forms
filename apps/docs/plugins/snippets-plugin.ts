@@ -68,22 +68,6 @@ const BUREAU_THEME = biomeTheme('bureau', {
 
 const SNIPPETS = [
   {
-    id: 'tokens',
-    file: 'biomes.css',
-    from: '.biome-terminal {',
-    to: '.biome-meadow {',
-    lang: 'css' as const,
-    themeName: 'terminal',
-    theme: null,
-  },
-  {
-    id: 'bureau',
-    file: 'profile.tsx',
-    from: 'const Contact',
-    to: 'export type ProfileData',
-    theme: BUREAU_THEME,
-  },
-  {
     // The schema-morph funnel's step 2 (SchemaMorph.tsx): the actual line
     // where a schema and a widget merge into one field — shown in place of
     // a live demo at that step, since the point there is the BINDING, not
@@ -123,43 +107,6 @@ const SNIPPETS = [
     from: 'export const Step1',
     to: '/** The old way',
     theme: BUREAU_THEME,
-  },
-  {
-    id: 'terminal',
-    file: 'terminal.tsx',
-    from: 'const TerminalShell',
-    to: 'export const TerminalTreeForm',
-    theme: biomeTheme('terminal', {
-      bg: '#081009',
-      fg: '#a9efc5',
-      comment: '#4f7a62',
-      string: '#7fe0a9',
-      keyword: '#ffc163',
-      fn: '#d2ffd6',
-      number: '#ffc163',
-      type: '#86d7ff',
-      property: '#9fdcc0',
-      punct: '#4f7a62',
-    }),
-  },
-  {
-    id: 'meadow',
-    file: 'meadow.tsx',
-    from: 'export const Rsvp',
-    to: 'export type RsvpData',
-    theme: biomeTheme('meadow', {
-      bg: '#f6f3fd',
-      fg: '#36304a',
-      comment: '#9a93b3',
-      string: '#3f8f63',
-      keyword: '#6d5ae6',
-      fn: '#c25590',
-      number: '#c98a2f',
-      type: '#3e74d6',
-      property: '#554b78',
-      punct: '#8d86a8',
-      light: true,
-    }),
   },
 ] as const
 
