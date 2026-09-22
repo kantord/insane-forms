@@ -16,17 +16,32 @@
  * ZodForm — introducing insane.group() is step 3's job (compose); showing
  * it here would blur which lesson step 2 is teaching. The wrapper lives
  * under its own `step:2-demo` marker, which nothing in SchemaMorph.tsx
- * reads for display — it exists purely so `Step2` compiles and renders. */
+ * reads for display — it exists purely so `Step2` compiles and renders.
+ *
+ * BOTH funnel panes ("the data" AND the "old way" UI) are `from`/`to`
+ * substring entries in the docs SNIPPETS array (snippets-plugin.ts), the
+ * exact same mechanism already used for the bureau/terminal/meadow panes
+ * elsewhere on this page — NEITHER is part of the sequential
+ * step:1 → step:2 → … marker chain below. That chain burned real time
+ * three separate times: a block there is "everything until the next
+ * marker," so whenever a marker moved (the input JSX's boundaries, twice)
+ * the UNRELATED `step:1` block next to it silently grew to absorb whatever
+ * was newly unmarked — once the entire `HandWrittenNameInput` function.
+ * `from`/`to` substring slicing can't do that: each entry is one isolated
+ * extraction, unaffected by anything else in the file, including each
+ * other. Moral: don't mix "the thing before this marker" content with
+ * "the thing between these two markers" content in the same chain. */
 
 import * as insane from 'insane-forms'
 import { useState } from 'react'
 import * as z from 'zod'
 import { TextField } from './profile'
 
-/* step:1 — plain Zod: data, no UI */
 export const Step1 = z.string()
 
-/* step:1b — the old way: schema and UI are two separate files, wired by hand */
+/** The old way: schema and UI are two separate files, wired by hand. Docs
+ * site shows only the `<input>` JSX below (see the top-of-file comment for
+ * why that's a `from`/`to` snippet, not a `step:` marker). */
 export function HandWrittenNameInput() {
   const [name, setName] = useState('')
   return (

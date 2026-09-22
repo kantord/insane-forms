@@ -66,7 +66,7 @@ const MorphStep = ({
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6">
+            <div className="min-w-0 overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6">
               <div
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
                 dangerouslySetInnerHTML={{ __html: snippetHtml }}
@@ -140,26 +140,26 @@ export const SchemaMorph = () => {
                * so both boxes' bottom edges — and so both arrows' start
                * points and lengths — match exactly, not just their anchor
                * X position. */}
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
                   The schema (Zod)
                 </div>
                 <div
                   id="funnel-data-code"
-                  className="flex-1 border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                  className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                  dangerouslySetInnerHTML={{ __html: morphSteps['1'] ?? '' }}
+                  dangerouslySetInnerHTML={{ __html: snippets['bare-schema'] ?? '' }}
                 />
               </div>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <div className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-dim">
                   The form field (any React component)
                 </div>
                 <div
                   id="funnel-ui-code"
-                  className="flex-1 border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                  className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
-                  dangerouslySetInnerHTML={{ __html: morphSteps['1b'] ?? '' }}
+                  dangerouslySetInnerHTML={{ __html: snippets['hand-written-input'] ?? '' }}
                 />
               </div>
 
@@ -178,7 +178,7 @@ export const SchemaMorph = () => {
                     <div id="funnel-field-right" />
                   </div>
                   <div
-                    className="border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6"
+                    className="overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                     // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
                     dangerouslySetInnerHTML={{ __html: snippets['text-field-binding'] ?? '' }}
                   />

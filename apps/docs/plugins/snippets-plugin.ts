@@ -95,6 +95,36 @@ const SNIPPETS = [
     theme: BUREAU_THEME,
   },
   {
+    // The funnel's "old way" pane: just the `<input>` JSX from
+    // HandWrittenNameInput, not the whole function (useState wrapper isn't
+    // the point). `from` is disambiguated with a trailing newline — the
+    // file's own doc comment also contains the literal text `<input>`
+    // (backtick-quoted, no newline after), which a bare `from: '<input'`
+    // matched FIRST, pulling in comment prose instead of the real element.
+    id: 'hand-written-input',
+    file: 'morph.tsx',
+    from: '<input\n',
+    to: '\n  )\n}',
+    theme: BUREAU_THEME,
+  },
+  {
+    // The funnel's "the data" pane. Deliberately NOT part of the sequential
+    // step:1 → step:2 → … marker chain below (`morphSteps`) — that chain
+    // burned real time three separate times: a block there is "everything
+    // until the next marker," so whenever a NEIGHBORING marker moved or was
+    // removed (adding/removing the 1b input markers, twice), step 1's own
+    // block silently absorbed whatever was newly unmarked next to it,
+    // including once the ENTIRE HandWrittenNameInput function. This entry
+    // can't have that failure mode: it's one isolated from/to extraction,
+    // unaffected by anything else in the file, same as bureau/terminal/
+    // meadow/hand-written-input above.
+    id: 'bare-schema',
+    file: 'morph.tsx',
+    from: 'export const Step1',
+    to: '/** The old way',
+    theme: BUREAU_THEME,
+  },
+  {
     id: 'terminal',
     file: 'terminal.tsx',
     from: 'const TerminalShell',
@@ -218,7 +248,12 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
         const a = source.indexOf(s.from)
         const b = source.indexOf(s.to)
         const sliced = a !== -1 && b !== -1 && b > a ? source.slice(a, b).trimEnd() : source
-        const { code, decorations } = extractNotes(sliced)
+        // Same identifier rename as the morphSteps loop below (harmless
+        // no-op for every entry that isn't one of morph.tsx's `StepN`
+        // consts) — keeps `bare-schema` reading "Profile" like every other
+        // schema-morph pane instead of the internal `Step1` name.
+        const renamed = sliced.replace(/export const Step\w+/, 'const Profile')
+        const { code, decorations } = extractNotes(renamed)
         const html = highlighter.codeToHtml(code, {
           lang: 'lang' in s && s.lang === 'css' ? 'css' : 'tsx',
           theme: ('themeName' in s ? s.themeName : undefined) ?? s.theme?.name ?? s.id,
@@ -230,11 +265,16 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
       // Schema-morph steps: slice examples/morph.tsx at its step markers and
       // highlight each step individually (no animation — every step is its
       // own static section; see src/components/SchemaMorph.tsx). The
-      // marker id is CAPTURED (a `\w+` split regex keeps captured groups
+      // marker id is CAPTURED (a `[\w-]+` split regex keeps captured groups
       // interleaved in the result array), so ids don't need to be
-      // sequential integers — `1b` is a real id, not a parse error.
+      // sequential integers — `1b` is a real id, not a parse error. `-`
+      // is explicitly allowed (not just `\w`): a `1b-end` marker id once
+      // silently truncated to `1b` under a bare `\w+` (hyphen isn't a word
+      // character), so its block overwrote the real `1b` entry instead of
+      // producing its own — a same-id collision with no error, just wrong
+      // displayed content.
       const morphFile = path.join(examplesDir, 'morph.tsx')
-      const morphParts = readFileSync(morphFile, 'utf8').split(/\/\* step:(\w+)[^*]*\*\//)
+      const morphParts = readFileSync(morphFile, 'utf8').split(/\/\* step:([\w-]+)[^*]*\*\//)
       const morphSteps: Record<string, string> = {}
       for (let i = 1; i < morphParts.length; i += 2) {
         const id = morphParts[i]
