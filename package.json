@@ -16,7 +16,7 @@
     "build:storybook": "pnpm --filter @insane-forms/storybook run build:storybook",
     "test": "vitest run && pnpm --filter @insane-forms/storybook run test",
     "test:watch": "vitest",
-    "test:e2e": "pnpm run build:docs && pnpm run build:storybook && playwright test",
+    "test:e2e": "pnpm run build:storybook && pnpm run build:docs && playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",

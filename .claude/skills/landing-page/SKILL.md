@@ -116,17 +116,21 @@ had its own tree) and was explicitly rejected as a "double sidebar."
   `src/hooks/useStorybookIndex.ts` fetches `<baseUrl>/storybook/index.json`
   CLIENT-SIDE (Storybook writes this at ITS OWN build time) — the single
   source of truth for "every page in Storybook," so no story-discovery logic
-  is duplicated here, and it doesn't matter that `build:docs` runs before
-  `build:storybook` (`pnpm run test:e2e`/the Pages workflow): the fetch just
-  404s until Storybook's build lands. Fetch failure resolves to an empty
-  list, never a crash.
+  is duplicated here. Fetch failure (Storybook not built yet) resolves to an
+  empty list, never a crash.
+  - Written `/docs` pages can embed one story inline too, via
+    `src/components/docs/StorybookEmbed.tsx` — same iframe mechanism and
+    `?id=&mode=` convention, just sized to sit inside a column of prose
+    instead of filling the whole `/explore` pane. `docs/widgets/*.mdx` and
+    `docs/examples/*.mdx` use it.
   - Don't try to generate content-docs pages FROM Storybook's story data
     (one MDX file per story) to get a "proper" sidebar for this instead —
-    considered and rejected: it would require building Storybook BEFORE
-    Docusaurus (reversed from today, since Docusaurus would need
-    `index.json` at ITS build time) and re-deriving Storybook's title→id
-    slugging by hand. More framework-fighting for no gain over the
-    client-fetch approach already in place.
+    considered and rejected: it would re-derive Storybook's title→id
+    slugging by hand for no gain over the client-fetch approach already in
+    place.
+  - **`build:storybook` must run BEFORE `build:docs`** (`pnpm run test:e2e`,
+    the Pages workflow) — see "Storybook's build output lives in `static/`,
+    not `build/`" below for why; this flipped from the original order.
 
 ### Per-article chrome: top links, footer bar, right "Asides" rail
 
@@ -313,6 +317,35 @@ Lighthouse CI (`.lighthouserc.json` `startServerCommand`) — NOT
 
 If you touch the static server, keep both properties: no clean-url
 redirects, gzip on when the client sends `Accept-Encoding: gzip`.
+
+## Storybook's build output lives in `static/`, not `build/`
+
+`apps/storybook/package.json`'s `build:storybook` writes to
+`../docs/static/storybook`, not `../docs/build/storybook` (the original
+target). This matters for two different modes, both real:
+
+- **`docusaurus start` (dev server)**: only serves `static/` plus its own
+  webpack bundle — it never reads `build/` at all, since that directory is
+  `docusaurus build`'s OUTPUT, not an input. With Storybook's output living
+  in `build/storybook`, every `/explore` and `StorybookEmbed` iframe in dev
+  mode 200'd with Docusaurus's own SPA shell instead of Storybook content
+  (webpack-dev-server's history-API fallback serving the app shell for any
+  unrecognized path) — silently wrong, not a loud 404. Confirmed via a live
+  `fetch()` of the iframe's `src` returning the Docusaurus shell's HTML.
+  Moving the output into `static/storybook` fixes this for free: anything
+  under `static/` is served live by the dev server, no extra config.
+- **`docusaurus build` (production)**: `staticDirectories` (default
+  `['static']`) gets copied into `build/` as part of the build — so
+  `build/storybook/` still ends up exactly where `static-server.mjs`,
+  `playwright.config.ts`, and `.lighthouserc.json` already expect it, no
+  changes needed there.
+
+The one consequence: **`build:storybook` must now run BEFORE
+`build:docs`**, the opposite of the original order. The static-dir copy
+happens as a step inside `docusaurus build` itself — if Storybook builds
+after, `static/storybook` doesn't exist yet when that copy runs, and
+`build/storybook` comes out empty. `static/storybook` is `.gitignore`d
+(generated), same as `build/`.
 
 ## Design system: tokens, fonts, dark mode
 

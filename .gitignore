@@ -2,6 +2,7 @@ node_modules
 dist
 apps/docs/build
 apps/docs/.docusaurus
+apps/docs/static/storybook
 *.log
 .DS_Store
 test-results

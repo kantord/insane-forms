@@ -26,8 +26,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ci
-      - run: pnpm run build:docs
-      - run: pnpm run build:storybook # lands in apps/docs/build/storybook → /storybook/ on Pages
+      - run: pnpm run build:storybook # lands in apps/docs/static/storybook — docusaurus build copies static/ into build/
+      - run: pnpm run build:docs # must run AFTER build:storybook: static/ is copied into build/ during this step
       - run: pnpm exec playwright test # e2e against the exact artifact being deployed
       - run: pnpm run perf # Lighthouse budget gate (LCP/TBT/CLS) on the built page
       - uses: actions/upload-pages-artifact@v3

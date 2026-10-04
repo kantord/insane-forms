@@ -1,0 +1,19 @@
+---
+sidebar_position: 8
+---
+
+import { StorybookEmbed } from '@site/src/components/docs/StorybookEmbed'
+
+# Toggle
+
+_Placeholder page — real prose (single toggle vs. a toggle group over an
+enum, single vs. multi-select) goes here._
+
+A single `Toggle` is just another `z.boolean()` widget, styled as a pressable
+button instead of a switch. `ToggleGroup` goes further: it binds a single
+`z.enum([...])` for one-of-many selection, or a `z.array()` of an enum for
+many-of-many — one widget, two schema shapes.
+
+<StorybookEmbed id="integration-examples-shadcn-ui-widgets--toggle-control" title="Toggle — live" />
+
+<StorybookEmbed id="integration-examples-shadcn-ui-widgets--toggle-group-control" title="Toggle group — live" />
