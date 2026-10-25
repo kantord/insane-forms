@@ -310,6 +310,17 @@ that information. Treating initialization as a binding/integration responsibilit
 does not mean the field constructor can check unseen caller values.
 
 The final row is an observed contract violation, not an intended guarantee.
+The requirement clarified from that example is compile-time safety: either the
+UI field accepts absence, or its binding/form must guarantee a suitable concrete
+initial value. A form with neither should fail type checking. Caller defaults
+can satisfy that obligation; merely making a `defaults` prop required cannot,
+because a required field could still be omitted or explicitly undefined.
+
+The full slider reproduction, the two approaches discussed, and investigation
+criteria are recorded in the repository backlog at
+`docs/field-initialization-backlog.md`. The guarantee is the intended outcome;
+the type machinery to preserve it through schema composition is not yet chosen.
+
 Six focused runtime checks and the repository TypeScript check passed for the
 examples above, including a check confirming that missing initialization is not
 currently rejected. No implementation behavior was changed by those probes.
