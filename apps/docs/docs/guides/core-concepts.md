@@ -8,6 +8,10 @@ _Placeholder page — proves a third guide slots into the sidebar in the right
 order. Real content goes here: matchless rendering, draft vs. submit, and the
 `FieldEngine` contract._
 
+The [field values and submission design reference](./design-reference.md)
+records the terminology, reasoning, current behavior, and open decisions around
+editable values, UI fields, bindings, and initialization.
+
 - **Matchless rendering** — every schema node carries its own renderer via
   `.meta({ component })`; the core never switches on schema type to decide
   what to draw.
