@@ -35,7 +35,7 @@ const CodePane = ({ html }: { html: string }) => {
 
   return (
     <div
-      className={`relative min-w-0 border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6 ${clampY ? 'max-h-40 overflow-hidden' : ''}`}
+      className={`relative min-w-0 border-[length:var(--rule-w)] border-line bg-paper-deep font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:p-6 ${clampY ? 'max-h-40 overflow-hidden' : ''}`}
     >
       <div
         ref={ref}
@@ -43,10 +43,10 @@ const CodePane = ({ html }: { html: string }) => {
         dangerouslySetInnerHTML={{ __html: html }}
       />
       {clampY && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-carbon to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-paper-deep to-transparent" />
       )}
       {clampX && (
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-carbon to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-paper-deep to-transparent" />
       )}
     </div>
   )
@@ -177,7 +177,7 @@ const FunnelStep = () => {
               </div>
               <div
                 id="funnel-data-code"
-                className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
+                className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-paper-deep font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
                 dangerouslySetInnerHTML={{ __html: snippets['bare-schema'] ?? '' }}
               />
@@ -188,7 +188,7 @@ const FunnelStep = () => {
               </div>
               <div
                 id="funnel-ui-code"
-                className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
+                className="min-w-0 flex-1 overflow-hidden border-[length:var(--rule-w)] border-line bg-paper-deep font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
                 dangerouslySetInnerHTML={{ __html: snippets['hand-written-input'] ?? '' }}
               />
@@ -209,7 +209,7 @@ const FunnelStep = () => {
                   <div id="funnel-field-right" />
                 </div>
                 <div
-                  className="overflow-hidden border-[length:var(--rule-w)] border-line bg-carbon font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
+                  className="overflow-hidden border-[length:var(--rule-w)] border-line bg-paper-deep font-code text-[0.8rem] leading-relaxed [&_pre]:m-0 [&_pre]:overflow-hidden [&_pre]:p-6"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: build-time Shiki output from our own files
                   dangerouslySetInnerHTML={{ __html: snippets['text-field-binding'] ?? '' }}
                 />

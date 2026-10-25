@@ -142,11 +142,27 @@ body,
   padding: 0;
 }
 
-/* shiki output: the pre carries inline biome colors; size it here */
-.carbon > pre {
-  margin: 0;
-  min-height: 100%;
-  padding: 1.5rem;
+/* Shiki dual-theme output (snippets-plugin.ts: `defaultColor: false`) emits
+ * BOTH colors per token as `--shiki-light`/`--shiki-dark` custom properties,
+ * no resolved `color` — picking one is left to us, since this site's dark
+ * mode is a `data-theme` attribute (ColorMode.tsx), not the
+ * `prefers-color-scheme` media query Shiki's own injected CSS would key
+ * off. Defaults to light; the override flips every token at once. */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+}
+:root[data-theme="dark"] .shiki,
+:root[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark);
+}
+
+/* Horizontal scroll for long lines — Shiki's own `.shiki` class (not a
+ * selector of our own) so it applies to every highlighted pane automatically,
+ * not just ones a consumer remembers to opt in. Margin/padding are handled
+ * per-pane via Tailwind's `[&_pre]:*` arbitrary variants instead, since those
+ * differ slightly between panes; this one's genuinely uniform. */
+.shiki {
   overflow-x: auto;
 }
 

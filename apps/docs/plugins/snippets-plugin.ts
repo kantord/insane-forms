@@ -14,56 +14,62 @@ import type { LoadContext, Plugin, PluginContentLoadedActions } from '@docusauru
 import { createHighlighter, type ThemeRegistrationAny } from 'shiki'
 
 type Palette = {
-  bg: string
-  fg: string
-  comment: string
-  string: string
-  keyword: string
-  fn: string
-  number: string
-  type: string
-  property: string
-  punct: string
-  light?: boolean
+  /** n1 (primary text) / n2 (structural: keywords, strings) / n3 (dimmest:
+   * comments, punctuation) — the "3 neutral steps" of biomes.css's duotone
+   * code palette (--color-code-n1/n2/n3). n1 is literally --color-ink in
+   * each mode; n2/n3 are dimmer, not separately-hued. */
+  n1: string
+  n2: string
+  n3: string
+  /** a1/a2 — the palette's "2 accent steps" (--color-code-a1/a2, literally
+   * --color-pop). Reserved for schema constructors/constraints (function
+   * calls, types) — never plain syntax — so this is the ONLY place color
+   * (not just contrast) appears in an otherwise duotone scheme. */
+  a1: string
+  a2: string
+  light: boolean
 }
 
 const biomeTheme = (name: string, c: Palette): ThemeRegistrationAny => ({
   name,
-  type: c.light === true ? 'light' : 'dark',
-  colors: { 'editor.background': c.bg, 'editor.foreground': c.fg },
+  type: c.light ? 'light' : 'dark',
+  colors: { 'editor.background': 'transparent', 'editor.foreground': c.n1 },
   tokenColors: [
-    { scope: ['comment'], settings: { foreground: c.comment, fontStyle: 'italic' } },
-    { scope: ['string', 'punctuation.definition.string'], settings: { foreground: c.string } },
-    {
-      scope: ['keyword', 'storage.type', 'storage.modifier'],
-      settings: { foreground: c.keyword },
-    },
-    { scope: ['entity.name.function', 'support.function'], settings: { foreground: c.fn } },
-    { scope: ['constant.numeric', 'constant.language'], settings: { foreground: c.number } },
-    { scope: ['entity.name.type', 'support.type'], settings: { foreground: c.type } },
-    {
-      scope: ['entity.name.tag', 'support.class.component'],
-      settings: { foreground: c.keyword },
-    },
+    { scope: ['comment'], settings: { foreground: c.n3, fontStyle: 'italic' } },
+    { scope: ['string', 'punctuation.definition.string'], settings: { foreground: c.n2 } },
+    { scope: ['keyword', 'storage.type', 'storage.modifier'], settings: { foreground: c.n2 } },
+    { scope: ['entity.name.function', 'support.function'], settings: { foreground: c.a1 } },
+    { scope: ['constant.numeric', 'constant.language'], settings: { foreground: c.n1 } },
+    { scope: ['entity.name.type', 'support.type'], settings: { foreground: c.a2 } },
+    { scope: ['entity.name.tag', 'support.class.component'], settings: { foreground: c.n2 } },
     {
       scope: ['variable.other.property', 'meta.object-literal.key'],
-      settings: { foreground: c.property },
+      settings: { foreground: c.n1 },
     },
-    { scope: ['punctuation'], settings: { foreground: c.punct } },
+    { scope: ['punctuation'], settings: { foreground: c.n3 } },
   ],
 })
 
-const BUREAU_THEME = biomeTheme('bureau', {
-  bg: '#1b1916',
-  fg: '#e9e3d2',
-  comment: '#837b66',
-  string: '#c9b98c',
-  keyword: '#ff7a55',
-  fn: '#e6b87e',
-  number: '#e6b87e',
-  type: '#b8c9a6',
-  property: '#d8d0bb',
-  punct: '#9a917c',
+// Both lifted straight from packages/examples/biomes.css's duotone code
+// palette (--color-code-n1/n2/n3/a1/a2) — not invented here. That palette
+// sat unused until now: n1 is literally --color-ink and a1 is literally
+// --color-pop in each mode, so code text was always meant to share the
+// page's own ink/accent scale, not a separate fixed-dark panel.
+const BUREAU_THEME_LIGHT = biomeTheme('bureau-light', {
+  light: true,
+  n1: '#111110',
+  n2: '#56564f',
+  n3: '#6b6b64',
+  a1: '#3a35ff',
+  a2: '#4a45e6',
+})
+const BUREAU_THEME_DARK = biomeTheme('bureau-dark', {
+  light: false,
+  n1: '#efece3',
+  n2: '#a9a49a',
+  n3: '#8d887e',
+  a1: '#d9a441',
+  a2: '#e8c07a',
 })
 
 const SNIPPETS = [
@@ -76,7 +82,6 @@ const SNIPPETS = [
     file: 'profile.tsx',
     from: 'export const TextField',
     to: 'export const NumberField',
-    theme: BUREAU_THEME,
   },
   {
     // The funnel's "old way" pane: just the `<input>` JSX from
@@ -89,7 +94,6 @@ const SNIPPETS = [
     file: 'morph.tsx',
     from: '<input\n',
     to: '\n  )\n}',
-    theme: BUREAU_THEME,
   },
   {
     // The funnel's "the data" pane. Deliberately NOT part of the sequential
@@ -106,7 +110,6 @@ const SNIPPETS = [
     file: 'morph.tsx',
     from: 'export const Step1',
     to: '/** The old way',
-    theme: BUREAU_THEME,
   },
 ] as const
 
@@ -184,9 +187,16 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
     name: PLUGIN_NAME,
     async loadContent() {
       const highlighter = await createHighlighter({
-        langs: ['tsx', 'css'],
-        themes: [...SNIPPETS.flatMap((s) => (s.theme === null ? [] : [s.theme])), BUREAU_THEME],
+        langs: ['tsx'],
+        themes: [BUREAU_THEME_LIGHT, BUREAU_THEME_DARK],
       })
+      // Dual-theme output: each token gets BOTH colors as CSS custom
+      // properties (`--shiki-light`/`--shiki-dark`) instead of one resolved
+      // color — `defaultColor: false` suppresses Shiki's own
+      // `prefers-color-scheme` media-query CSS, since this site's dark mode
+      // is a `data-theme` attribute toggle (ColorMode.tsx), not the system
+      // preference; custom.css picks the right var off that attribute.
+      const codeTheme = { light: BUREAU_THEME_LIGHT.name, dark: BUREAU_THEME_DARK.name }
       const examplesDir = path.resolve(context.siteDir, '../../packages/examples')
 
       const entries = SNIPPETS.map((s) => {
@@ -202,8 +212,9 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
         const renamed = sliced.replace(/export const Step\w+/, 'const Profile')
         const { code, decorations } = extractNotes(renamed)
         const html = highlighter.codeToHtml(code, {
-          lang: 'lang' in s && s.lang === 'css' ? 'css' : 'tsx',
-          theme: ('themeName' in s ? s.themeName : undefined) ?? s.theme?.name ?? s.id,
+          lang: 'tsx',
+          themes: codeTheme,
+          defaultColor: false,
           decorations,
         })
         return [s.id, html] as const
@@ -230,7 +241,11 @@ export default function snippetsPlugin(context: LoadContext): Plugin<SnippetsCon
         const code = extractNotes(block.trim())
           .code.replace(/export const Step\w+/, 'const Profile')
           .replace(/export function (\w+)/, 'function $1')
-        morphSteps[id] = highlighter.codeToHtml(code, { lang: 'tsx', theme: 'bureau' })
+        morphSteps[id] = highlighter.codeToHtml(code, {
+          lang: 'tsx',
+          themes: codeTheme,
+          defaultColor: false,
+        })
       }
 
       highlighter.dispose()
