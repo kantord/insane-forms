@@ -191,3 +191,106 @@ editable value, and initialization sources.
 Before implementing, compare the available type encodings against these examples.
 The desired guarantee is established; its representation and enforcement
 mechanism remain the subject of this investigation.
+
+## INIT-02 — Separate starting values from user decisions
+
+**Status:** new design investigation raised by the user; not an implemented
+explicit-choice feature or a reproduced provenance bug.
+
+### Current example evidence
+
+The existing profile interaction test intentionally submits untouched defaults:
+age 18, role `user`, and newsletter false. Billing-plan stories initialize
+`Yearly`. These are value-validation examples, not explicit-confirmation flows.
+The nested-modal Done action and wizard Next action validate current values;
+they do not establish that each prefilled field was deliberately chosen.
+
+Select/radio implementations support an unset representation; an enum with no
+default rejects missing input, so ordinary required selection can be expressed
+without a provenance flag. The inspected rendered choice stories generally
+provide defaults. This source-level capability is not a new browser test of
+every control's unset behavior.
+
+The help-tooltip story's `terms` field uses `CheckboxField`, whose schema is
+`z.boolean().default(false)`. It accepts false; the field label does not imply
+a required-true rule. No dedicated explicit-confirmation feature was found by
+searching the current examples/stories for dirty/touched checks, confirmation,
+and affirmation validation.
+
+The existing interaction suite was rerun successfully (four tests), and public
+Zod parsing confirmed unset enum rejection, selected value acceptance, default
+fallback, and ordinary boolean false acceptance. This does not characterize all
+conditional, reset, or nested interaction semantics.
+
+### Distinctions to preserve
+
+Materializing a default means initializing editable form values. It must not
+silently be treated as evidence that the person supplied or confirmed those
+values. Likewise, a parse-time fallback does not establish interaction history.
+
+Distinguish at least these questions:
+
+- What value exists now?
+- What baseline is used for dirty comparison?
+- Has the field been visited/touched?
+- Is its current value different from its baseline?
+- Has the person made an explicit choice, including choosing the suggested value?
+
+These are not interchangeable. Focusing and blurring can touch a field without
+choosing. Changing A to B and back to A can leave the current value equal to its
+baseline despite meaningful interaction. A same-value choice can be intentional,
+and not every control emits a change callback for it. Programmatic initialization,
+remote updates, and resets must not automatically count as person-originated choices.
+
+The current RHF engine forwards value, change, blur, and error; it does not expose
+dirty/touched state through `FieldBinding`. The engine-native form instance has
+additional metadata. Do not assume either existing metadata flag precisely means
+“explicitly chosen” without defining that requirement and checking the engine.
+
+### Conditional explicitness scenario
+
+A form suggests a transport option. Under one condition the suggestion may be
+accepted without interaction. Under another condition, the person must actively
+choose or confirm it. Their final choice may equal the suggestion.
+
+If both cases submit the same value, a schema seeing only that value cannot
+distinguish their interaction histories. Possible approaches to investigate:
+
+1. Keep the actual choice unset until selection; display the suggestion separately.
+   Ordinary required/conditional value validation may then be sufficient, without
+   a new per-field metadata mechanism.
+2. If prefilled values must coexist with an explicit confirmation requirement,
+   represent the confirmation fact or perform a separate form-level submission
+   check with the relevant interaction state.
+
+If the requirement must survive persistence or be checked outside the mounted UI,
+the required evidence cannot live only in ephemeral UI metadata. Conversely,
+transient interaction history should not be forced into every application payload.
+No schema extension, new field category, or universal state flag has been approved.
+
+### Cases to reason through before selecting an interface
+
+- Default displayed but no person action.
+- Focus/blur only.
+- Choosing the same value as the suggestion.
+- Clearing a defaulted choice, confirming while its display is unset, and
+  submitting a parser fallback. Diagnosis C08 persistently characterizes this
+  interaction; confirmation policy is not yet selected.
+- Changing away and back to the initial value.
+- A programmatic update, reset, or background load.
+- A condition becoming active after the person already made a choice: establish
+  whether that choice still qualifies or needs reconfirmation.
+- A field unmounting because a tab is hidden versus its data becoming inapplicable.
+- A nested/repeated row being moved, removed, or restored: interaction evidence
+  must not migrate to another logical item solely because indexes changed.
+
+The user's principle is explicit behavior without making ordinary forms learn
+irrelevant complexity. Keep initialization, comparison baselines, and interaction
+intent separate in the model; introduce an explicit-choice facility only where
+concrete use cases justify it. Conditional/segment lifecycle work is related but
+was deferred as a broader topic until the fundamentals are addressed.
+
+References: [RHF form state](https://react-hook-form.com/docs/useform/formstate)
+documents dirty comparison and touched fields;
+[resetDefaultValues](https://react-hook-form.com/docs/useform/resetdefaultvalues)
+distinguishes changing the baseline from changing current values.

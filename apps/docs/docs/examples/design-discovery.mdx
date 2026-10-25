@@ -1,0 +1,68 @@
+---
+sidebar_position: 8
+---
+
+import { StorybookEmbed } from '@site/src/components/docs/StorybookEmbed'
+
+# Exploring editing policies
+
+These examples make design questions executable. Each represents a particular
+application policy or a known implementation gap; none introduces a new core
+default. Compare both the interaction and the binding code before deciding what
+the library should make easier.
+
+The implementations live in `packages/examples/design-discovery.tsx` and their
+interaction assertions in `packages/examples/tests/design-discovery.test.tsx`.
+
+## Suggested, chosen, and confirmed
+
+The first shipment accepts Standard delivery when Save is pressed without editing.
+The next starts unset and requires a selection. The third prefills Standard but,
+under a condition, requires a separate confirmation. Its current choice can remain
+equal to the starting value while that confirmation is explicitly supplied.
+
+The displayed visited and changed states let you try focus/blur and changing away
+and back. Neither is treated as confirmation. In this particular application,
+changing the service revokes confirmation; Reset restores the unconfirmed baseline.
+Those are example policies rather than universal conditional-form semantics.
+
+One unresolved cross-case is also executable: clear the defaulted service, then
+confirm and save. The display can remain unset while parsing submits Standard.
+The characterization records that mismatch so confirmation of a suggestion can
+be compared with confirmation of an actual selected value; it does not approve
+the current wording or interaction as the final policy.
+
+<StorybookEmbed id="examples-design-discovery--suggested-choice" title="Save accepts a suggested choice" />
+
+<StorybookEmbed id="examples-design-discovery--required-choice" title="Choose before saving" />
+
+<StorybookEmbed id="examples-design-discovery--conditional-confirmation" title="Confirm even the suggested choice" />
+
+## Editing limits and submission limits
+
+Both trips require two to three travellers at submission. The first uses the
+core's current gating of Add/Remove. The second allows temporarily empty and
+oversized lists, while still rejecting an invalid submission. An empty list has
+no per-item Remove operation, and the next Add creates the first actual row.
+
+The free-editing example currently needs separate presentation and submission
+schemas plus explicit array-error wiring. That workaround is visible design
+pressure, not the proposed final interface.
+
+<StorybookEmbed id="examples-design-discovery--constrained-collection" title="Collection controls follow submission bounds" />
+
+<StorybookEmbed id="examples-design-discovery--free-collection" title="Edit freely and validate on save" />
+
+## A known initialization gap
+
+This schema declares Ada as its default traveller, but the current array binding
+starts empty and an untouched save produces an empty array. The example records
+the discrepancy so it can be examined; that observed result is not the desired
+initialization contract.
+
+<StorybookEmbed id="examples-design-discovery--schema-default-collection" title="Schema default rows — current initialization gap" />
+
+The next examples to investigate include schema-only versus caller initialization,
+transformed inputs, and these choices inside nested or repeated conditional
+sections. See the [design reference](../guides/design-reference.md) for the
+distinctions already discussed.

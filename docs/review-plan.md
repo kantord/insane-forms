@@ -1,112 +1,166 @@
-# Validated observations and proposed work sequence
+# Plan: executable diagnosis, comparable solutions, then core changes
 
-Status: the observations below have been reviewed; the architecture and API
-proposals have not been approved by the user. The sequence is a planning aid,
-not an authorization to implement those proposals. In particular, packaging,
-draft value semantics, initialization ownership, and submission conversion are
-still open. See `research-design-boundaries.md` and the accompanying research
-notes before choosing a design.
+This is the current plan, replacing the earlier prescriptive two-schema/extraction
+sequence. It follows the user's direction: expose the decision space through
+existing examples before selecting and enforcing an architecture.
 
-Three independent skeptic agents reviewed field typing/initialization, lists/URL
-state, and architecture/dependencies. This document separates observed behavior
-from intended design and proposed implementation.
+## Sources of truth
 
-## Intended model versus current implementation
+- [Diagnosis](diagnosis.md): stable finding IDs, causes, evidence, and scope.
+- This document: one execution order and one owner for each work item.
+- [Review rounds](design-review-rounds.md): reviewer findings and their disposition.
+- [Site reference](../apps/docs/docs/guides/design-reference.md): concepts and
+  status for readers. Detailed research notes remain evidence, not duplicate plans.
 
-- The repository already is a pnpm monorepo.
-- The core source is independent of a form engine: schema builders, `Render`,
-  and `FieldEngine`. A maintained, separately published React Hook Form adapter
-  is the proposed packaging direction discussed with the user.
-- The user's intended model has separate form/draft and submission schemas.
-  The draft schema must describe all possible editing states; the submission
-  schema describes acceptable submissions.
-- This separation is not implemented today. `packages/examples/react-hook-form.tsx`
-  uses one schema for both rendering and its resolver. The existing core-concepts
-  documentation instead describes one schema's `z.input` and `z.output`.
-- Before changing field types, specify whether widgets edit `z.input<Draft>` or
-  `z.output<Draft>`, and where conversion occurs. Defaults, prefaults, transforms,
-  coercion, enum widening, and implicit `undefined` make these different contracts.
+INIT-01/02, DISC-01, COMPAT-01, and SEG-01–11 retain their detailed scenarios.
+The work items below reference them instead of repeating them as independent
+parallel projects. Nothing here authorizes choosing a new public interface,
+installing a particular distribution, or publishing a release.
 
-## Validated findings
+## Work sequence
 
-| Finding | Assessment | Evidence and implication |
-| --- | --- | --- |
-| Strict one-go widget receives unset value | Confirmed, qualified; P2 | `insane.tsx:326` accepts strict string widgets without initialization; rendering with the example wrapper and no defaults can crash. Caller-supplied root defaults can legitimately initialize strict widgets, so requiring every field to have a schema default was an overprescriptive recommendation. |
-| Schema/widget type compatibility | Confirmed additional bug; P2 | Both overload styles can pair a string schema with a numeric widget. The annotated one-go overload infers schema and widget independently; the curried guard checks initialization only. Adding that guard alone is insufficient. |
-| Null defaults | Confirmed; P2 | `insane.tsx:353` and `:521` use nullish fallback, discarding valid `.default(null)` values. Declared defaults should take precedence over `initial`; only `undefined` should trigger fallback. |
-| Fixed-length list bounds | Confirmed; P2 | `insane.tsx:513` reads `minimum` for `length_equals`, but Zod stores `length`. `.length(2)` reports bounds `0/Infinity`. |
-| Repeated list bounds | Confirmed additional bug; P2 | `insane.tsx:511`–`:512` overwrite rather than intersect checks. `.min(3).min(1)` reports minimum 1; `.max(1).max(3)` reports maximum 3, unlike validation. |
-| List defaults do not render initial rows | Confirmed, ownership qualified; P2 | `list(row).default([{ name: 'Ada' }])` with the example `ZodForm` renders no rows without separately supplied defaults. `FieldEngine.useArray` has no seed argument. This establishes an integration/initialization gap, not that core must globally parse the schema. |
-| README uses absent exports | Confirmed documentation mismatch; P2 | `README.md:16` uses `insane.ZodForm`, which the package does not export. Keeping it out of the core is intentional; fix the documentation to use the adapter package. Stale source comments also advertise an absent `insane-forms/react-hook-form` subpath. |
-| Engine-independent package | Qualified | Core has no runtime `dependencies`, but still declares mandatory RHF and resolver peer dependencies. Its install contract remains engine-coupled. |
-| URL back-button behavior | Qualified follow-up | The hook documents one-way form-to-URL sync, and stories explicitly use `history: 'replace'`. Do not describe the hook itself as broken for omitting two-way sync. Documentation promises back-button-friendly filters, while URL changes are passed only as cached RHF defaults; navigation behavior needs a browser reproduction and an explicit contract. |
+### 0. Repair the existing evidence before expanding it
 
-## Dependency facts
+**Owner:** the current discovery slice and its tests. **Status:** two review
+rounds completed and corrections made for this checkpoint; verification is
+recorded in the review log. This does not complete the EX-01–05 expansion below.
 
-- 68 distinct external direct dependencies across manifests; 67 root development
-  dependencies. The core has zero runtime dependencies and five peers.
-- 1,826 locked package-version entries, including transitive dependencies and
-  platform packages; this is not a count of distinct package names or imports.
-- The saved live registry report lists 50 dependencies with newer `latest`
-  releases, including seven major-version increases. Every reported `wanted`
-  equals `current`; this does not establish eligibility under release-age policy.
-- The user-requested three-day policy is applied: `minimumReleaseAge: 4320`.
-  Recheck eligible versions under that policy before selecting upgrades.
+- Show shared specimen implementation in each explorer code panel, not just a
+  helper invocation. Source exposure is generated from the actual file.
+- Make min/max rejection distinguishable and assert exact current payloads;
+  an old alert or earlier saved result must not satisfy a later assertion.
+- Exercise confirmed-to-reset and hidden/reactivated confirmation, including
+  a user dependency change. Do not generalize this to programmatic updates.
+- Preserve the newly exposed removed-row/default-path reuse as a labelled
+  characterization, not a silently approved append policy.
+- Distinguish browser mount/accessibility coverage from interaction assertions.
 
-## Implementation sequence
+### 1. Complete a compact set of fundamental specimen families
 
-1. **Specify draft and submission contracts.** Record terminology and choose the
-   exact widget/engine value type, initialization precedence, missing-state policy,
-   conversion boundary, and submission-error mapping. Work through a blank text
-   field, numeric input, nullable default, enum, nested object, and list. Propose a
-   wrapper taking a draft schema for rendering and a separate submission schema
-   for validation; type its callback from submission output. Avoid choosing
-   `z.input` versus `z.output` implicitly.
+Each family must be runnable from the existing explorer where meaningful,
+expose all integration code, and pair runtime interactions with type-level
+consumers where typing is part of the claim. Use parameterized cases rather
+than one independent demo per minor variation.
 
-2. **Fix the independent runtime defects.** Preserve null seeds; read fixed
-   lengths correctly; intersect repeated bounds using the strongest minimum and
-   maximum. Add focused regressions for null versus absent seeds, fallback
-   precedence, fixed lengths, repeated bounds, and control gating.
+| Work item / sole scope owner | Diagnoses | Existing evidence | Missing discriminating cases |
+| --- | --- | --- | --- |
+| EX-01: initialization sources and compile-time obligations | F01–F06, C06; INIT-01 | Slider and type probes; ordinary defaulted controls; no complete persistent source comparison | Same field under schema default, binding initial, and caller defaults; absence/null/falsy/override; clear/reset/programmatic load; strict versus absence-capable UI; one-go versus curried; missing/undefined/wrong defaults and nested type preservation |
+| EX-02: transformations and schema derivation | F07, T01–T08 | Removed runtime/type probes and current presentation workaround | One persistent string-input/numeric-output specimen covering bind order, trim versus transform, default versus prefault, input caller values, metadata/hints, and async result handling; object extend/pick/omit/partial render continuity; explicit versus contextual widget typing |
+| EX-03: collections and structural bounds | L01–L11; collection part of DISC-01 | Contrasting gated/free/known-default-gap specimens; append/bounds probes; persistent removed-default reuse case | Fixed/repeated/contradictory bounds; omitted versus explicit empty versus nested defaults; initial-array/append/leaf seed precedence; collection reset/caller replacement after deletion; distinguish defaulted old paths from new row identities; min is not automatic population; boundary rejection and exact current payloads |
+| EX-04: interaction intent and lifecycle | C01–C05, C08, lifecycle part of C07; INIT-02 | Suggestion/unset/confirmation/reset/hide specimens; fallback-plus-confirmation characterization | Actual same-value control events; programmatic dependency updates; reset/replacement after confirmation; one actual field unmount/remount; explicit retention/reconfirmation alternatives, including what confirmation means when parsing supplies an unseen fallback. Keep touched, dirty, confirmation, and save acceptance separate |
+| EX-05: composition and identity cross-checks | compositional F04/L09/C07; first limited SEG interactions | Nested/recursive existing stories, primarily isolated assertions | Reuse the same group at root, under shipping, and in named rows; change only its own confirmation; edit second row/remove first/append and verify identities, values, errors and relevant state. Do not duplicate EX-01 source cases or EX-04 lifecycle setup |
 
-3. **Make field bindings respect the draft contract.** Enforce schema/widget
-   compatibility in both overload styles, including widget `onChange` behavior.
-   Implement the initialization policy selected in step 1 rather than simply
-   copying the existing curried guard. Add compile-time cases for incompatible
-   types and nullable/optional states, plus runtime cases for caller defaults,
-   defaults/initial values, missing seeds, and transformed draft values.
+A representative interaction basis is required, not an infinite Cartesian
+product. For each dimension, record which single cases and high-risk pairs are
+covered, why others are inapplicable/deferred, and what future discovery would
+expand the basis. Use the same reusable definitions across contexts to expose
+path or metadata drift; do not hide the problem by rewriting each case.
 
-4. **Implement the two-schema RHF integration and initialization.** Render the
-   draft schema and validate submissions against the submission schema. Establish
-   one documented way to initialize containers and leaves, preserving explicit
-   caller values and lazy recursion. An unset draft must render safely and fail
-   submission when required; a completed draft must produce typed, parsed
-   submission output. Cover nested and list defaults and field-path errors.
+For strict initialization, the desired negative examples currently compile.
+Keep characterization of current compiler acceptance separate from the future
+expected rejection; do not add fake expected-error directives that break the
+normal typecheck or approve the hole as a contract.
 
-5. **Extract the publishable adapter.** Proposed name:
-   `@insane-forms/react-hook-form`. Move the RHF binding, bound renderer, and form
-   wrappers there; move RHF/resolver peers out of core. Check whether `react-dom`
-   is needed by each published package. Keep `FieldEngine` and rendering in core;
-   keep demos in examples. Update root build and package checks for both packages,
-   declarations, exports, client directives, and packed-package consumption.
+Lifecycle operation ownership is explicit to prevent both omissions and duplicate
+fixtures: scalar initialization/baseline reset is EX-01; collection reset/caller
+replacement is EX-03; confirmation updates and a bounded scalar unmount/remount
+are EX-04; moved/repeated instance identity is EX-05. Save-response races and
+partial-persistence baselines remain deferred to SEG-09/11; they are not silently
+claimed by ordinary reset coverage. Reuse common setup/assertions across these
+owners rather than building parallel scenario frameworks.
 
-6. **Align examples and documentation.** Replace the README's absent exports,
-   document the two schemas and initialization policy, and remove stale adapter
-   subpath claims. Test browser back/forward and external URL changes; either
-   implement URL-to-form reconciliation with loop protection if promised, or
-   document the supported URL-seeding/replace-history behavior accurately.
+### 2. Grow compatibility evidence alongside the specimens
 
-7. **Maintain dependencies separately.** Recheck versions eligible under the
-   three-day policy. Update related patch/minor packages together and review
-   major tool upgrades separately; keep React/types, Storybook addons, and Vitest
-   browser packages aligned. Run lint, type checking, unit/integration tests,
-   builds/package checks, and affected browser suites for each group.
+**Work item:** TEST-01, the sole implementation owner of COMPAT-01.
 
-## Validation baseline and scope
+Start with deterministic bounds-oracle cases, then generated check sequences and
+relevant schema wrappers/composition. Reuse the EX fixtures where applicable.
+Inventory each built-in feature against known schema categories and distinguish
+approved contract, known discrepancy, unsupported, inapplicable, and unexamined.
+Snapshots record observations; differential assertions check observable relations.
+Retain shrunk failures and dependency versions. The generator/file/JSON format is
+an engineering choice, not a prerequisite product decision.
 
-The existing 57 unit/integration tests and repository TypeScript check pass.
-The earlier temporary regressions reproduced the strict-widget crash, ignored
-fixed length, and absent default list rows; those temporary files were removed.
-Skeptics independently checked incompatible widget types, list bounds/defaults,
-and dependency counts. No browser-navigation claim is considered fully verified
-without a browser reproduction. No implementation changes are included in this
-plan beyond the already requested three-day release-age setting.
+Do not delay every UI specimen until this harness exists or build a parallel
+example framework. Conversely, a handful of passing stories is not a substitute
+for schema-case evidence. Compile-time fixtures and packed-package consumers are
+separate evidence layers from runtime snapshots.
+
+### 3. Compare implementations under fixed requirements
+
+**Work item:** COMPARE-01. Start per family once its discriminating examples exist;
+there is no need to wait for all deferred segment features.
+
+Keep task, application policy, input/output semantics, visible behavior, and
+acceptance sequences identical across candidate implementations. Gated versus
+free editing is policy discovery, not an ergonomics contest between equivalent
+implementations. Choose a policy for a comparison before varying its interface.
+
+Include the current supported path as a baseline. Prototype alternatives locally
+without changing the default core. Candidates may change type encoding,
+initialization ownership, explicit binding glue, or metadata lookup; those are
+experiments rather than prescribed architecture. Do not mandate an extra draft
+schema, provenance flag, or public initializer marker in advance.
+
+Evaluate:
+
+- observable correctness and recovery at boundaries;
+- compiler rejection/acceptance and inference through composition;
+- repeated schema/default/path declarations, casts, and manual error bookkeeping;
+- initial setup versus repeated-use cost;
+- changes needed when moving/reusing/specializing a group;
+- UI freedom, accessible errors, state retention, and predictable reset;
+- whether a person or coding agent can discover the supported path from the
+  examples without inventing fragile parallel structure;
+- declared dependencies, adapter capability limits, and significant runtime/type
+  checking costs where relevant.
+
+Line count and a working screen are insufficient by themselves. Record tradeoffs
+and unresolved cases, not just a winner. Check a typed consumer against built
+package declarations before claiming that source-level inference survives publishing.
+The external palette-editor declaration workaround is evidence to investigate,
+not a reproduced defect in the current package.
+
+### 4. Choose bounded changes, implement, and rerun the unchanged specimens
+
+Only after comparison choose the behavior/interface for the affected slice.
+Implement independent proven defects with regressions without bundling unrelated
+policy changes. Update an observation snapshot only with an explicit disposition
+of the prior known discrepancy; do not erase counterexamples to obtain green tests.
+Keep documentation generated or linked to the same evidence, and record decisions
+that were actually made. Do not turn missing example coverage into a false support
+promise or block useful bounded progress on universal completeness.
+
+## Deferred work and relationships
+
+- Broader segment validation/navigation, staged cancel, async races, and partial
+  saves remain under SEG-01–11 after the fundamental EX-05 interactions. The
+  complexity framing supplies scenario selection, not a demand to build a huge app.
+- A fair RHF/lenses Address comparison, maintained shadcn distribution, package
+  layout, URL-navigation scope, and release explanation remain later product work.
+  Reference product-discovery notes; do not repeat these in each EX family.
+- Dependency maintenance follows the established three-day policy and remains
+  separate from architecture comparisons. No dependency upgrades are selected here.
+
+## Exit criteria for the discovery/evaluation stage
+
+- Every selected EX-01–05 case and representative high-risk interaction has
+  persistent executable evidence. Missing selected cases remain open and cannot
+  satisfy this exit gate merely by being labelled missing. Current failures may
+  be explicitly characterized for discovery; that is not approved support.
+- Every remaining diagnosis has an explicit deferred/out-of-scope/unsupported
+  classification with rationale, without using those labels to silently remove
+  an agreed requirement. Historical probes alone do not complete a selected case.
+- At least one small composition/identity interaction exercises each fundamental
+  family; examples with hard-coded root paths cannot prove reusable placement.
+- Current versus desired outcomes and policy variants are distinguishable.
+- Equivalent candidate implementations run the same discriminating assertions;
+  code and setup costs remain visible to reviewers.
+- Runtime, browser interaction/accessibility, compile-time, and package-consumer
+  evidence are named separately. Report actual checks, not a general completeness
+  claim. Gaps discovered during evaluation expand the corpus explicitly.
+
+Passing this discovery gate means the selected questions are observable, not that
+the implementation satisfies all desired outcomes. A solution passes comparison
+only when it satisfies the agreed contracts for the same cases; approving current
+bug snapshots or deleting counterexamples cannot substitute for that evidence.

@@ -2,13 +2,15 @@
  * panel. Highlights with Shiki at build time — no highlighter ships to the
  * browser, only pre-rendered HTML (mirrors the landing page's snippets pipeline).
  *
- * Two modes, decided per story file:
+ * Modes, decided per story file:
  *  - Default: highlight the story's render body verbatim (the composition IS the
  *    lesson — Forms, Collections, Table…).
  *  - Field-definition (files marked `@code-panel:field-definition`): show each
  *    featured field's `insane.field()` definition (sliced from the real
  *    fields.tsx) followed by the example schema, dropping the form boilerplate.
  *    Used for the shadcn ui widgets, where "how the field is built" is the point.
+ *  - Source-file (marked `@code-panel:source <relative path>`): show the full
+ *    shared specimen implementation followed by this story's invocation.
  *
  * Emits a virtual module mapping  file basename → story display name → HTML. */
 
@@ -23,6 +25,9 @@ const THEME = 'github-dark-default'
 
 const FIELD_DEF_MARKER = '@code-panel:field-definition'
 const SHELL_DEF_MARKER = '@code-panel:shell-definition'
+// Discovery stories can expose their entire shared implementation rather than
+// hiding the meaningful integration code behind a one-line render invocation.
+const SOURCE_MARKER = /@code-panel:source\s+(\S+)/
 
 type Reference = { doc: string; href: string }
 
@@ -305,15 +310,22 @@ export function codePanelPlugin(): Plugin {
         const full = path.join(dir, file)
         this.addWatchFile(full)
         const raw = readFileSync(full, 'utf8')
+        const sourcePath = raw.match(SOURCE_MARKER)?.[1]
+        const sourceFile = sourcePath && path.resolve(path.dirname(full), sourcePath)
+        if (sourceFile) this.addWatchFile(sourceFile)
+        const fullSource = sourceFile ? readFileSync(sourceFile, 'utf8') : undefined
         const fieldDefMode = raw.includes(FIELD_DEF_MARKER)
         const shellDefMode = raw.includes(SHELL_DEF_MARKER)
         const byName: Record<string, string> = {}
         for (const { name, body } of extractStories(raw)) {
-          const code = shellDefMode
-            ? shellDefView(body, fieldDefs, shellDefs)
-            : fieldDefMode
-              ? fieldDefView(body, fieldDefs, fieldsSrc)
-              : body
+          const code =
+            fullSource !== undefined
+              ? `${fullSource}\n\n// This story\n${body}`
+              : shellDefMode
+                ? shellDefView(body, fieldDefs, shellDefs)
+                : fieldDefMode
+                  ? fieldDefView(body, fieldDefs, fieldsSrc)
+                  : body
           byName[name] = highlighter.codeToHtml(code, {
             lang: 'tsx',
             theme: THEME,

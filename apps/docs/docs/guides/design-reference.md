@@ -10,6 +10,13 @@ typing, and initialization. It distinguishes the direction discussed from the
 current implementation and proposals that still need a decision. It does not
 claim that every example already follows that direction.
 
+The next step is to make the decision space observable in the existing examples,
+not to enforce theoretical policies prematurely. The
+[editing-policy examples](../examples/design-discovery.mdx) provide a first
+interactive slice: suggestions, required choices, conditional confirmation,
+collection editing limits, and a known initialization gap. A policy used by one
+example is evidence to examine, not automatically a universal library decision.
+
 ## Submission contracts and editing representations
 
 A submission schema is a runtime representation of the contract for acceptable
@@ -168,6 +175,11 @@ types. That is separate from deliberately allowing a string-based enum widget;
 the precise compatibility rule still needs to reflect the chosen representation.
 
 ## Initialization: current behavior
+
+Materializing an initial value means placing it in editable form state. It does
+not mean that the person supplied, changed, or confirmed it. Initialization,
+dirty comparison against a baseline, touched state, and explicit user choice are
+different concepts.
 
 The curried binding's type guard currently accepts a field when one of these is
 true:
@@ -349,3 +361,62 @@ public interface, and release structure are not finalized.
 These open points should be resolved through concrete fields and interactions,
 rather than treating every unfinished value as either a schema error or a reason
 to weaken submission types.
+
+## Consumer choice in collection editing
+
+The user's direction is to let consumers choose editing behavior unless a
+concrete and compelling correctness reason requires restricting it. Surface the
+choice clearly and explain any necessary restriction through a minimal,
+intuitive rule. Submission-invalid editing states are not automatically unsafe
+states.
+
+This freedom does not relax structural invariants. A collection has a
+nonnegative integer number of actual items. Removing an item requires an
+existing target; an empty collection cannot expose a meaningful per-item delete
+operation. There must be no hidden negative item count that future additions
+need to pay off. These invariants are distinct from application submission
+constraints such as requiring at least three rows. The current list derives its
+count from `rows.length` and builds per-item operations from existing rows.
+
+The current list implementation withholds add/remove operations according to
+schema bounds. That behavior is not yet the general policy for all consumers:
+applications may wish to allow a temporary empty list or other lengths that
+cannot be submitted. Bounds extraction bugs should be fixed independently of
+choosing how editing controls expose policy. The final interface remains open
+and should be stress-tested against actual cases.
+
+## Values, interaction, and explicit choices
+
+A value can equal its default whether the person never interacted or deliberately
+chose that value. Comparing values cannot recover that distinction. Touched state
+also does not by itself establish a deliberate choice: visiting and leaving a
+field may be sufficient to mark it touched.
+
+Sometimes ordinary absence is enough: keep a choice unset until the person makes
+it, and show any suggestion separately. If the application must prefill the value
+and still require an explicit confirmation, that confirmation is another fact.
+A schema can validate such a fact if it is supplied as data; a validator receiving
+only the selected value cannot infer interaction history.
+
+This does not establish a new built-in field category or require every form to
+track intent. It records an investigation into conditional explicit-choice
+requirements, including their interaction with reset, conditional visibility,
+and nested/repeated items. The repository backlog
+`docs/field-initialization-backlog.md` records INIT-02 and concrete scenarios.
+
+### What the current examples establish
+
+Existing examples already validate values without tracking a separate history
+of explicit choices. The profile interaction test submits untouched schema
+defaults for age, role, and newsletter. The billing-plan examples similarly
+prefill `Yearly`; choosing it explicitly is not required by their schemas.
+
+The select/radio bindings can represent an unset value. A plain enum without a
+default rejects absent input, whereas a defaulted enum accepts absence and
+supplies its default. This provides ordinary required-choice behavior when the
+actual value starts unset; it is different from requiring confirmation of an
+already prefilled choice. No dedicated confirmation/provenance mechanism was
+found in the inspected examples. Likewise, the example checkbox labelled
+“I accept the terms” uses the ordinary default-false boolean binding; its label
+does not add a rule requiring true. That story demonstrates help text, not a
+required-affirmation contract.

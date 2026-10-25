@@ -115,3 +115,93 @@ node_modules/.bin/tsc --noEmit
 Both commands passed. The temporary probe file was removed afterward. No
 browser suite or TanStack adapter was exercised; no generic guarantee about all
 array refinements or custom checks is claimed.
+
+## Official introspection options and an independent behavioral oracle
+
+A follow-up checked installed Zod 4.4.3 against current official documentation.
+Its array interface does not expose direct `minItems`/`maxItems` or
+`minLength`/`maxLength` getters.
+
+Two documented integration routes exist:
+
+- [Zod Core](https://zod.dev/packages/core#checks) documents inspecting
+  `_zod.def.checks` and discriminating the typed `$ZodChecks` union through
+  each check's `_zod.def.check`. Reading checks is therefore a documented
+  library-author integration technique. Prefer its actual check types over
+  a hand-written structural approximation that confuses `length` and `minimum`.
+- [JSON Schema export](https://zod.dev/json-schema) is a higher-level public
+  conversion. Locally, `z.toJSONSchema(z.array(z.string()).length(2))`
+  returned `minItems: 2` and `maxItems: 2`; repeated ordinary min/max checks
+  also produced the strongest bound. However, full conversion visits element
+  schemas and some element types, such as dates, are unrepresentable by default.
+
+The public exporter is not automatically an infallible replacement. In 4.4.3:
+
+```ts
+const schema = z.array(z.unknown()).min(3).length(2)
+
+z.toJSONSchema(schema) // includes minItems: 2, maxItems: 2
+schema.safeParse([null, null]).success // false
+```
+
+The original schema's constraints are contradictory. Its parser retains both
+checks, whereas the exported interval in this case admits two items. This is
+an observed disagreement in the installed version, not a claim about every
+release. It reinforces the value of checking behavior independently of either
+extraction method.
+
+### A test independent of internal check representation
+
+Use schemas whose elements always validate and whose only constraints are built-in
+length checks. Then the length interval returned by `boundsOf` must agree with
+Zod's own acceptance of arrays of those lengths:
+
+```ts
+import { expect, test } from 'vitest'
+import * as z from 'zod'
+import { boundsOf } from '../src'
+
+test('reported bounds agree with Zod parsing', () => {
+  const cases = [
+    z.array(z.unknown()),
+    z.array(z.unknown()).length(2),
+    z.array(z.unknown()).min(3).min(1),
+    z.array(z.unknown()).max(1).max(3),
+    z.array(z.unknown()).min(3).length(2),
+  ]
+
+  for (const schema of cases) {
+    const { min, max } = boundsOf(schema)
+    for (let length = 0; length <= 8; length++) {
+      const data = Array.from({ length }, () => null)
+      const reportedAcceptance = length >= min && length <= max
+      expect(reportedAcceptance).toBe(schema.safeParse(data).success)
+    }
+  }
+})
+```
+
+The oracle uses only public schema construction and parsing. It neither examines
+Zod check properties nor repeats the extraction algorithm. The same assertions
+remain useful if `boundsOf` changes implementation or Zod changes its internal
+representation while retaining the public behavior. Updating Zod may break the
+implementation, and this test is meant to detect that rather than silently pass.
+
+A temporary exhaustive bounded probe generated all zero-, one-, and two-check
+chains using `.min`, `.max`, and `.length` with arguments 0 through 5. This made
+343 schemas, each checked at lengths 0 through 8: 3,087 comparisons per extractor.
+
+| Extractor on Zod 4.4.3 | Disagreements with parsing |
+| --- | --- |
+| Current `boundsOf` | 1,072 |
+| Public JSON Schema interval | 60, all on contradictory schemas in this probe |
+
+Of the 343 generated schemas, 223 admitted at least one tested length. On those
+cases, the current implementation had 572 disagreements and the JSON Schema
+interval had none. These counts concern input lengths, not independent defects.
+The temporary test was removed; no production implementation was changed.
+
+This is empirical regression evidence, not a proof over arbitrary schemas.
+Longer/generated chains and boundary values can expand coverage. Element checks,
+custom refinements such as even-length-only arrays, async validation, and
+transforms are deliberately outside this particular interval equivalence test.

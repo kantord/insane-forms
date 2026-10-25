@@ -6,6 +6,9 @@ This backlog concerns logical portions of a form presented as steps, tabs,
 accordions, dialogs, conditional sections, or recursive editors. It records
 problems to solve, not a proposed API or a commitment to built-in UI components.
 
+See [the form-complexity framing](form-complexity-framing.md) for structural
+challenges, familiar examples, and combinations that make useful stress tests.
+
 Guiding requirement: consumers should be free to choose the interaction design,
 while the library handles recurring structural bookkeeping that otherwise causes
 bugs. Merely making a workaround possible is not sufficient support.
