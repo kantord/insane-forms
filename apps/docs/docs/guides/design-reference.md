@@ -234,7 +234,87 @@ UI seeding is behavior supplied by this integration. Zod also distinguishes
 output defaults from input prefaults; the general type-changing case needs a
 consistent initialization rule. See [Zod defaults and prefaults](https://zod.dev/api#prefaults).
 
-## Conversion and questions still open
+## Explicit bindings: examples checked against the implementation
+
+The direction discussed is that the binding explicitly connects the UI field's
+editable value contract to the submission schema. Different input/output types
+are a normal case for that connection, not a reason to make the UI field depend
+on insane-forms or to equate editable values with parsed output.
+
+### Text editing with numeric submission
+
+Given a plain `TextEntry` UI accepting these props:
+
+```ts
+type TextEntryProps = {
+  value: string | undefined
+  onChange: (value: string | undefined) => void
+}
+```
+
+An explicit binding can connect it to a numeric submission:
+
+```tsx
+const Quantity = field({
+  schema: z.string().regex(/^\d+$/, 'Digits required').transform(Number),
+  widget: (props: TextEntryProps) => <TextEntry {...props} />,
+})
+
+const Order = group({ quantity: Quantity })
+
+<ZodForm schema={Order} defaults={{ quantity: '12' }} onSubmit={saveOrder} />
+```
+
+This was exercised with the current RHF reference wrapper: editing `'42'`
+submitted `{ quantity: 42 }` while the field continued displaying text. Invalid
+text produced a field error and blocked submission. The schema performs the
+conversion; the binding connects the two contracts without adding a second
+conversion algorithm.
+
+This explicit annotation works today, but it is not proof that the current
+binding types enforce compatibility. Inline widget inference still incorrectly
+uses numeric output for this string-input example. Binding before `.transform()`
+also loses renderer lookup, unlike explicitly binding the transformed schema.
+
+### Caller defaults for a concrete-valued field
+
+Given a plain `BooleanEntry` UI requiring a boolean:
+
+```tsx
+const Enabled = field({
+  schema: z.boolean(),
+  widget: (props: { value: boolean; onChange: (value: boolean) => void }) => (
+    <BooleanEntry {...props} />
+  ),
+})
+
+const Settings = group({ enabled: Enabled })
+
+<ZodForm schema={Settings} defaults={{ enabled: false }} onSubmit={saveSettings} />
+```
+
+The field does not need its own schema default or binding initial value for
+this instance to work. Current runtime checks of the examples confirmed:
+
+| Situation | Value received by the UI field |
+| --- | --- |
+| Caller supplies `true`, field has no initializer | `true` |
+| Caller supplies `false`, schema has `.default(true)` | `false` |
+| Caller supplies `false`, binding has `initial: true` | `false` |
+| Neither caller nor field supplies an initial value | `undefined`, despite the UI's declared boolean type |
+
+These examples support allowing caller defaults to satisfy initialization. The
+enforcement mechanism remains incomplete: the reusable field definition cannot
+see defaults supplied later by a consuming form. The per-form integration has
+that information. Treating initialization as a binding/integration responsibility
+does not mean the field constructor can check unseen caller values.
+
+The final row is an observed contract violation, not an intended guarantee.
+Six focused runtime checks and the repository TypeScript check passed for the
+examples above, including a check confirming that missing initialization is not
+currently rejected. No implementation behavior was changed by those probes.
+
+## Conversion and implementation questions still open
 
 The ordinary numeric examples use this flow:
 
@@ -243,10 +323,12 @@ DOM text -> widget conversion -> number or undefined in form state
          -> schema validation -> parsed submission
 ```
 
-Submission parsing can also declare a conversion, such as string input to
-numeric output. That makes editable input and successful output different types.
-The rendering, typing, metadata, and initialization rules for such schemas are
-being investigated; no general transform-support policy is settled here.
+Submission parsing can also declare a conversion, as demonstrated above. The
+direction discussed is to support that distinction through explicit bindings.
+Consistent rendering, typing, metadata, and initialization still need work.
+In particular, a transformed schema's output default is not automatically a
+suitable initial input value; the probe found a numeric output default being
+seeded into a field whose schema expects string input.
 
 Other open points are the exact binding compatibility rule, consistent support
 for caller defaults in initialization checks, and the final helper names. A
