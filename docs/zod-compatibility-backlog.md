@@ -63,6 +63,12 @@ An illustrative report entry, not a proposed mandatory file format:
 4. Investigate fast-check for longer check sequences, boundary values, wrappers,
    and composition. Preserve seeds/replay information for failures. Generation
    explores the declared vocabulary; it cannot discover every omitted category.
+   Supply shared infrastructure while EX-01–05 are being built: generated tests
+   belong to initialization, transformation, and stateful lifecycle coverage too,
+   not only to the bounds helper or a final coverage pass. Use an independent
+   policy model for stateful command sequences and promote minimized failures to
+   permanent named cases. The canonical plan assigns this infrastructure to
+   TEST-01 so the families do not build duplicate runners.
 5. Produce the machine-readable evidence artifact and a coverage summary from
    the same execution. Choose the exact JSON layout and fixture organization
    during implementation; they need not be product-design decisions.

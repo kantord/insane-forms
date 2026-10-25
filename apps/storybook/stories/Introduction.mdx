@@ -19,11 +19,11 @@ Bind your design system's components once, then forms are just schemas:
 ```tsx
 import * as z from 'zod'
 import * as insane from 'insane-forms'
-// The core is engine-agnostic. ZodForm is opt-in sugar for react-hook-form;
-// a TanStack adapter (or your own) plugs in the same way.
-import { ZodForm } from 'insane-forms/react-hook-form'
+// Repository example wrapper, not a published insane-forms subpath.
+// Copy/adapt packages/examples/react-hook-form.tsx for your application.
+import { ZodForm } from '@insane-forms/examples/react-hook-form'
 
-// One-time bindings: widget + shell per field kind (see examples/shadcn/fields.tsx)
+// TextWidget and Shell are application-defined; see packages/examples/fields.tsx.
 const Text = insane.field({ schema: z.string(), widget: TextWidget, shell: Shell })
 
 const Profile = insane.group({
@@ -38,9 +38,16 @@ export const ProfileForm = () => (
 )
 ```
 
-The form edits the `z.input` draft; `onSubmit` receives parsed `z.output` —
-defaults filled, types exact. The core never imports a form library: an engine
-is connected through a three-hook `FieldEngine` and threaded to `<Render>`.
+Widgets declare their editable representation; the RHF example wrapper parses
+submission into `z.output`. `z.input` is not a guarantee that every unfinished
+editing state passes validation. The current binding types, initialization, and
+renderer continuity under Zod derivation still have known gaps; see the written
+docs' **Field values and submission: design reference**.
+
+The core never imports a form library: an engine is connected through a three-hook
+`FieldEngine` and threaded to `<Render>`. Installing the core currently still
+requires its declared engine peers. The wrapper and shadcn bindings shown here
+are repository reference code; an easily installed distribution remains future work.
 
 ## What the stories show
 
@@ -56,7 +63,8 @@ is connected through a three-hook `FieldEngine` and threaded to `<Render>`.
 - **Multi-step** — a checkout wizard with per-step validation and error-highlighted
   step chips, built from the public pieces (`useZodForm` + `FormProvider` + `Render`).
 
-Every story is a **live form**: submit it and the parsed `z.output` appears below.
+Form stories generally expose parsed submissions; some examples instead
+demonstrate live previews, engine integration, or explicitly labelled known gaps.
 The chrome here is [shadcn/ui](https://ui.shadcn.com) (Base UI) — but all widgets,
 shells, and list wrappers are user code; the core ships zero DOM.
 

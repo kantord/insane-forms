@@ -42,6 +42,29 @@ expose all integration code, and pair runtime interactions with type-level
 consumers where typing is part of the claim. Use parameterized cases rather
 than one independent demo per minor variation.
 
+Generated testing is part of these families from the start, not an optional
+follow-up after all hand-written cases. The user explicitly wants techniques
+that expose inputs and operation orderings we did not anticipate individually:
+
+- EX-01/02: property-based generation of values, initializer-source combinations,
+  wrappers, derivation/check chains, and bounded composition. Compare against
+  independent parser behavior or an explicit field contract as appropriate.
+- EX-03: generate boundary/contradictory size constraints and append/remove/reset/
+  replacement sequences; track distinguishable logical items, not just counts.
+- EX-04/05: stateful/model-based generation of edits, conditions, reset,
+  replacement, remount, and repeated-item operations across root/nested scopes.
+  Compare actual state with a small independently defined model of the selected
+  application policy. Do not model every application as having the same policy.
+
+Share generator infrastructure through TEST-01 below. Each EX owner supplies its
+properties and applicable commands, rather than building a separate harness.
+Fast-check is the proposed tool to investigate for generation and shrinking;
+this plan change does not install it or claim those properties already exist.
+Use bounded ordinary runs in CI and an expandable longer-running fuzz mode.
+Record versions, seeds, and replay information; minimize failures and promote
+them into named deterministic specimens. Shared invariants and models must be
+specified, but individual failing cases need not be predicted in advance.
+
 | Work item / sole scope owner | Diagnoses | Existing evidence | Missing discriminating cases |
 | --- | --- | --- | --- |
 | EX-01: initialization sources and compile-time obligations | F01–F06, C06; INIT-01 | Slider and type probes; ordinary defaulted controls; no complete persistent source comparison | Same field under schema default, binding initial, and caller defaults; absence/null/falsy/override; clear/reset/programmatic load; strict versus absence-capable UI; one-go versus curried; missing/undefined/wrong defaults and nested type preservation |
@@ -60,6 +83,12 @@ For strict initialization, the desired negative examples currently compile.
 Keep characterization of current compiler acceptance separate from the future
 expected rejection; do not add fake expected-error directives that break the
 normal typecheck or approve the hole as a contract.
+
+EX-02 also owns an edit-existing-record case: load parsed output back into an
+input-shaped editor, contrasting an explicit reverse mapping or codec with a
+one-way transform. Record the consumer glue and any unsupported direction;
+do not assume ordinary transforms can be inverted. This follows the
+[Zod research](research-zod-drafts.md), rather than a demonstrated current bug.
 
 Lifecycle operation ownership is explicit to prevent both omissions and duplicate
 fixtures: scalar initialization/baseline reset is EX-01; collection reset/caller
@@ -81,10 +110,29 @@ Snapshots record observations; differential assertions check observable relation
 Retain shrunk failures and dependency versions. The generator/file/JSON format is
 an engineering choice, not a prerequisite product decision.
 
+TEST-01 supplies shared seeded generation, shrinking/replay, and reporting for
+the EX families in parallel with their deterministic examples. It must not become
+a later phase that leaves initialization or lifecycle testing example-only.
+Keep fixed regressions, bounded enumeration, generated properties, independent
+differential checks, and model-based sequences complementary. Check that the
+assertions are sensitive to representative deliberate faults before treating a
+large run count as strong evidence.
+
 Do not delay every UI specimen until this harness exists or build a parallel
 example framework. Conversely, a handful of passing stories is not a substitute
 for schema-case evidence. Compile-time fixtures and packed-package consumers are
 separate evidence layers from runtime snapshots.
+
+TEST-01 also owns an adapter-contract check using the same EX fixtures. The
+[form-practices research](research-form-practices.md) identifies a tension:
+our editable contract permits `undefined`, while RHF Controller documentation
+prohibits undefined defaults and `onChange(undefined)`. Characterize initialization,
+clear, submit, and reset through the actual adapter, then establish a supported
+mapping or explicit capability limit. Passing current probes does not settle
+upstream support, and the documentation mismatch alone is not a reproduced crash.
+Record engine/version provenance and distinguish engine-specific behavior from
+core guarantees; broader engine comparisons can follow without duplicating these
+fixtures.
 
 ### 3. Compare implementations under fixed requirements
 
@@ -156,6 +204,9 @@ promise or block useful bounded progress on universal completeness.
 - Current versus desired outcomes and policy variants are distinguishable.
 - Equivalent candidate implementations run the same discriminating assertions;
   code and setup costs remain visible to reviewers.
+- Selected families include generated coverage in addition to named cases, with
+  declared generator/command scope, independent properties or models, and
+  reproducible failure replay. Run count alone cannot satisfy the coverage gate.
 - Runtime, browser interaction/accessibility, compile-time, and package-consumer
   evidence are named separately. Report actual checks, not a general completeness
   claim. Gaps discovered during evaluation expand the corpus explicitly.

@@ -112,12 +112,13 @@ does not automatically supply renderer introspection or initialization features.
 
 ## What this leaves open for this project
 
-The user's requirement establishes distinct draft and submission semantics. It
-does not choose whether those are two independent schema arguments, two schemas
-derived from shared declarations, or a pipeline with an explicitly represented
-draft stage. Nor does it choose raw text versus parsed numeric draft values,
-where defaults are applied, whether `undefined` is normalized by adapters, or
-when validation feedback appears.
+The discussion establishes distinct editing and submission semantics. The later
+direction puts editing representation in UI fields and connects their declared
+contracts to submission schemas through explicit bindings; it does not mandate
+two runtime schema arguments. See the
+[design reference](../apps/docs/docs/guides/design-reference.md). Adapter handling
+of absence, initialization precedence, schema-derived hints, and feedback timing
+still need concrete guarantees rather than assuming all engines agree.
 
 The following are engineering inferences from the documented differences above:
 

@@ -5,6 +5,12 @@ documentation describes Zod 4.6; the project currently installs Zod 4.4.3.
 The runtime examples below were also executed against that installed version.
 This note documents constraints and choices, not an approved API design.
 
+Later clarification: UI fields own editing representation and explicit bindings
+connect it to submission schemas. A separate runtime draft schema is not required
+by the current direction. See the
+[design reference](../apps/docs/docs/guides/design-reference.md); the parsing facts
+below remain relevant when evaluating that direction.
+
 ## Three distinct meanings of a schema's input
 
 1. `.parse(value)` accepts `unknown` at its call boundary.
@@ -115,8 +121,9 @@ point is a design inference, not a statement made by Zod.
 - It forces the design to distinguish editing representation, successful
   validation, and parsed submission data. It does not force every distinction
   into a separate independently authored schema object.
-- The user's requirement for a schema covering all WIP states is stronger than
-  merely allowing an invalid submission draft to exist in memory.
+- The initial proposal for a runtime schema covering all WIP states would be
+  stronger than merely allowing an invalid submission draft in memory. That
+  proposal was not retained as a mandatory architecture.
 - Separate draft/submission schemas can be composed or derived. One pipeline
   can encode input-to-output conversion, but its failed inputs are not thereby
   accepted by a standalone draft validator. There is no automatic equivalence
@@ -129,7 +136,8 @@ point is a design inference, not a statement made by Zod.
   field error timing, and whether submission constraints restrict editing remain
   project decisions. Zod supplies parsing semantics rather than those policies.
 
-Before selecting an API, establish whether “the draft schema models every WIP
-state” means a static value type, a runtime validator accepting every WIP state,
-or both. An example with a blank string, an unset enum, an incomplete numeric
-string, and a partially filled cross-field group will distinguish the choices.
+If independent draft validation is introduced later, specify whether its promise
+concerns a static value type, a runtime validator accepting WIP states, or both.
+For the current UI-owned direction, test the actual editable contract using a
+blank string, an unset enum, incomplete numeric editing, and a partially filled
+cross-field group without assuming a second schema is necessary.

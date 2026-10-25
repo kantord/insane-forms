@@ -4,6 +4,12 @@ This map consolidates the review discussion and agent notes as of 2026-10-25.
 It distinguishes user-facing behavior decisions from implementation investigations.
 It is not authorization to implement every listed capability.
 
+The [product discovery notes](product-discovery-notes.md) own the complementary
+value/adoption framing and corrections: composition supplies binding paths,
+RHF/lenses are overlapping tools rather than incapable alternatives, and shared
+backend/resource/ORM schemas are explicitly deferred future exploration. The
+[review plan](review-plan.md) remains the source for execution order.
+
 Priority clarified by the user: materialize the decision space in the existing
 example code and interactions before selecting and enforcing broad design
 policies. See [the example discovery backlog](example-discovery-backlog.md) for

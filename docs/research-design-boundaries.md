@@ -3,12 +3,19 @@
 Status: research and decision map, not an approved design. Companion notes:
 `research-zod-drafts.md` and `research-form-practices.md`.
 
+Reconciled with the later discussion: the
+[site design reference](../apps/docs/docs/guides/design-reference.md) records the
+current UI-owned editing representation and explicit-binding direction. Distinct
+editing/submission contracts do not require two runtime schema arguments. The
+[current review plan](review-plan.md) owns the investigation sequence.
+
 ## What the conversation establishes
 
-The user explicitly distinguishes a form/draft schema describing possible WIP
-values from a submission schema describing acceptable submitted values. Treat
-those as separate contracts. Do not silently equate a strict submission schema
-with all possible draft states or choose how the contracts are authored.
+The discussion initially proposed a form/draft schema for WIP values separate
+from a submission schema. The later direction keeps the contracts distinct while
+allowing the UI field's declared value type and private state to describe editing.
+Do not equate a strict submission schema with all possible draft states or infer
+that a second runtime schema is required.
 
 The user has accepted the engine-independent core as the intended architecture.
 The project uses Zod schemas as its rendering structure. Publishing a separate
@@ -47,13 +54,13 @@ initialization behavior, and one-schema wrappers remain revisable.
 
 | Boundary | Example | Decision still open |
 | --- | --- | --- |
-| Display/edit buffer | Text such as `''`, `'-'`, or `'1.'` | Must transient text live in form state, or may a widget keep it locally? |
+| Display/edit buffer | Text such as `''`, `'-'`, or `'1.'` | UI fields may own private temporary state; define the value they communicate to the engine. |
 | Stored draft values | String, number-or-absence, selected option, nested rows | Exact representation, initialization, and whether transformations run before storage |
 | Successful submission | Validated number, normalized email, domain object | Where conversion executes and how submission errors map back to draft paths |
 
-The draft schema must describe the values stored as draft under the user's
-requirement. Whether it must also describe a widget's private display buffer is
-an additional decision, not something established by saying “all WIP states.”
+If independently validating drafts is required, a draft validator must describe
+the values it is asked to validate. That is conditional on that capability being
+needed, not a standing requirement for a separate schema covering private UI state.
 Touched flags, dirty tracking, errors, and submission status are separate form
 metadata; a data schema does not automatically have to encode those.
 
@@ -61,9 +68,9 @@ metadata; a data schema does not automatically have to encode those.
 
 | Choice | Real alternatives | Consequence |
 | --- | --- | --- |
-| Authoring the two contracts | Independent schemas; shared field definitions with explicit draft/submission derivations | Repetition versus the complexity and limitations of derivation |
+| Expressing the two contracts | UI value types plus submission schemas; optional separately validated drafts when needed | Preserve editing freedom without imposing a redundant runtime schema |
 | Empty values | `''`, null, undefined, explicit tagged states, different choices by field | Widgets, defaults, optionality, serialization and adapters must agree |
-| Draft schema semantics | Pre-parse inputs; parsed outputs; a transformation-free draft schema | Determines what types and default values are actually safe to store |
+| Stored editable values | Explicit widget value contract connected to schema input; any optional draft validator needs stated semantics | Determines what types and initial values are safe to store |
 | Numeric/date editing | Raw text drafts; typed values plus local display buffers | Ease of preserving intermediate text versus simpler typed form state |
 | Initialization | Caller form defaults, schema-driven seeds, per-field initial values, or a documented combination | Need explicit precedence and reset behavior; there is no unique meaningful blank for every schema |
 | Conversion | Widget boundary, blur, explicit conversion stage, or submission parser | Early normalization can lose editing information; late parsing needs accurate input/output typing |
@@ -77,7 +84,8 @@ about adding `undefined` to `z.string()`.
 ## Relevant observed failure classes
 
 - Read/write type mismatch: a widget consumes one type or emits values outside
-  the schema-backed draft contract. Current field overloads demonstrate this.
+  its declared editable contract. Current field overloads permit incompatible
+  bindings; that is separate from deliberate input/output differences.
 - Missing initialization versus fallback masking: UI looks empty while engine
   values remain absent; parsed output defaults are mistaken for draft defaults.
 - Lossy normalization: converting empty or partial text to a number too early,

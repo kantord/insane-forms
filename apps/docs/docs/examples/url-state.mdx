@@ -9,9 +9,11 @@ import { StorybookEmbed } from '@site/src/components/docs/StorybookEmbed'
 _Placeholder page — real prose (syncing form state to the URL's query
 string, apply-on-change vs. apply-on-submit) goes here._
 
-The same schema, synced to the URL's query string instead of component
-state — shareable, back-button-friendly filters. `Filtered catalog` applies
-every change live; `Product filters` waits for an explicit submit.
+Form state is seeded from the URL and written back to its query string, making
+filter selections shareable. `Filtered catalog` applies every change live;
+`Product filters` waits for an explicit submit. These examples use replace history;
+reactive back/forward synchronization into an already-mounted form is not
+established by them.
 
 <StorybookEmbed id="examples-url-state--filtered-catalog" title="Filtered catalog — live" />
 

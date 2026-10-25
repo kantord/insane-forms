@@ -9,8 +9,9 @@ import { StorybookEmbed } from '@site/src/components/docs/StorybookEmbed'
 _Placeholder page — real prose (rendering an array field as table rows
 instead of stacked cards) goes here._
 
-The same `z.array()` binding as [Collections](/insane-forms/docs/examples/collections),
-rendered as an editable table instead — the schema doesn't change, only the
-widget.
+The same `insane.list()` composition mechanism as
+[Collections](/insane-forms/docs/examples/collections), rendered as an editable
+table. Row fields use table-cell widgets and the collection uses a table wrapper;
+these are presentation bindings around an ordinary Zod array/object structure.
 
 <StorybookEmbed id="examples-editable-table--invoice-line-items" title="Invoice line items — live" />

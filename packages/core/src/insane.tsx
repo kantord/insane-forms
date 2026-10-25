@@ -561,9 +561,9 @@ export function list<E extends z.ZodType>(element: E, opts: ListOpts = {}): z.Zo
 /* instance, wiring submit, and providing engine context are all        */
 /* engine-native, userland concerns — the user writes (or copies) a     */
 /* tiny wrapper that calls their engine's useForm, then renders         */
-/* `<Render schema={schema} engine={…} />` inside. A ready-made wrapper  */
-/* ships per engine (e.g. `ZodForm` from "insane-forms/react-hook-form") */
-/* but it is opt-in sugar, never part of the schema-driven core.         */
+/* `<Render schema={schema} engine={…} />` inside. Reference wrappers     */
+/* live in packages/examples/react-hook-form.tsx and the Storybook      */
+/* TanStack adapter; they are not published core exports or subpaths.   */
 /* ------------------------------------------------------------------ */
 
 /* Named exports only — no aggregate object, no default export — so bundlers can

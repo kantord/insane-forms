@@ -26,11 +26,11 @@ const PRINCIPLES = [
   ],
   [
     'draft vs submit',
-    'The form edits the z.input draft; onSubmit receives parsed z.output. Hidden defaults fill at parse.',
+    'Widgets own editing representation. The React Hook Form reference wrapper parses submission into z.output.',
   ],
   [
     'tree-shakeable',
-    'Named exports only. Import the resolve toolkit alone: ~0.7 kB, zero react-hook-form in the bundle.',
+    'Named exports only. The core imports no form engine at runtime; connect the engine your app uses.',
   ],
 ] as const
 
@@ -91,6 +91,14 @@ export default function Home() {
                 <strong>insane-forms</strong> renders React forms straight from plain Zod schemas.
                 No JSON dialect, no renderer registry, no match statement — each schema node carries
                 its own component, and React does the traversal.
+              </p>
+
+              <p className="mb-7 max-w-2xl text-[0.9rem] text-dim">
+                Compose reusable bound schemas; their placement supplies their form-state paths.
+                Insane-forms works alongside a state engine such as React Hook Form. The examples
+                show current behavior;{' '}
+                <Link to="/docs/guides/design-reference">the design reference</Link> explains known
+                typing, initialization, and schema-derivation limits.
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-6">

@@ -13,6 +13,12 @@ Guiding requirement: consumers should be free to choose the interaction design,
 while the library handles recurring structural bookkeeping that otherwise causes
 bugs. Merely making a workaround possible is not sufficient support.
 
+Product intent includes reusable support for these recurring challenges, not
+only better examples. The precise core/adapter/presentation responsibilities
+remain to be designed. These items are deferred behind the fundamental field and
+collection investigations in the [current review plan](review-plan.md); “first
+design slice” below means first within segment work, not immediate project priority.
+
 ## Evidence and scope
 
 Source inspection, not browser reproduction, establishes the current baseline:

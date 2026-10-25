@@ -12,6 +12,18 @@ Related documents:
   problems that currently lack reusable support.
 - [Design discussion map](design-discussion-map.md): engineering decisions and
   investigations from the related design discussion.
+- [Current review plan](review-plan.md): execution order for diagnosis, examples,
+  comparison, and bounded implementation changes. This discovery note does not
+  replace that plan.
+
+## Reading status and precedence
+
+This document owns product intent and explanation hypotheses from this discovery
+conversation. The site design reference owns field-contract terminology; the
+diagnosis and review log own reproduced findings and verification; the review
+plan owns sequencing. Research notes preserve source evidence, not superseded
+product requirements. Future exploration below is not current implementation
+scope. See the corrections table at the end for conclusions that evolved.
 
 ## Motivation and intended value
 
@@ -119,8 +131,8 @@ a group, and freedom to customize presentation. Separate initial binding cost
 from repeated usage cost. Do not compare against deliberately weak RHF code.
 
 Hypothesis to test: insane-forms reduces duplicated structural wiring for these
-cases. Neither an implementation comparison nor a usability test has been done;
-superiority is not established. Lenses may offer useful independent control of
+cases. No fair RHF/lenses implementation comparison or usability test is recorded
+here; superiority is not established. Lenses may offer useful independent control of
 UI and data composition that needs a fair treatment.
 
 ## Adoption cost and distribution
@@ -159,7 +171,9 @@ The local `design-token-modeler` repository already contains an insane-forms
 palette editor, a copied RHF adapter, and live theme previews driven by watched
 values. This is application usage beyond the library's demos.
 
-The user reports no noticeable friction, while noting that the application was
+The user initially reported no application use, then identified this existing
+application; the later inspection supersedes the initial answer. The user reports
+no noticeable friction, while noting that the application was
 largely built with AI. That is a positive experience report, not proof of
 maintainability, full type safety, or difficult-form coverage. The user does not
 expect this editor to become dramatically more complex; avoid inventing features
@@ -178,8 +192,11 @@ homepage foregrounds internals such as “matchless rendering,” while recursiv
 composition and the connection between placement and binding offer more concrete
 explanations of value. This is a review hypothesis, not audience research.
 
-The README has stale layout/integration descriptions, and introductory docs are
-placeholders. Existing examples are stronger evidence than those prose pages.
+At the initial review, the README had stale layout/integration descriptions and
+introductory docs were placeholders. The documentation reconciliation corrected
+those descriptions and qualified unsupported claims; it did not select or test a
+new landing-page strategy. Existing examples remain stronger behavioral evidence
+than explanation alone.
 The live website was inaccessible through the browsing tool during the initial
 review; site observations came from repository source, not a live visual review.
 
@@ -246,8 +263,9 @@ reuse has three aspects:
 The user expects strong familiarity, especially among agents. Treat reduced
 learning effort as a hypothesis; universal agent familiarity is not established.
 The first-use documentation recommendation of starting with installable bindings
-is likewise an agent recommendation to evaluate, not a preference the user was
-asked to approve.
+is likewise an agent recommendation to evaluate, not an agreed documentation
+decision. The user clarified that proposing an effective first encounter is an
+output of discovery, not a design choice to repeatedly ask them to settle.
 
 ## Deferred exploration: shared schemas and a broader resource layer
 
@@ -277,6 +295,34 @@ Potential later work:
 These are possible future milestones or end-to-end directions, not an approved
 architecture, an ORM implementation request, or evidence that a broader framework
 is necessary for today's form composition benefits.
+
+## Corrections and refinements from this conversation
+
+| Earlier framing | Current interpretation |
+| --- | --- |
+| Adoption means replacing RHF. | Insane-forms supplements a state engine; compare the additional authoring layer and its costs. |
+| Nested values or reusable nested components distinguish the library by themselves. | RHF and lenses already support those. The narrower distinction is schema-bound rendering with placement-derived paths. |
+| RHF's dotted names imply flat storage or only serialized nesting. | Documented values are genuinely nested. The user was discussing the field-binding interface; storage is not the basis of the distinction. |
+| Lenses are an awkward inferior solution. | There is overlap, but ergonomics and tradeoffs need an equivalent implementation comparison. |
+| The recursive benefit is only a claim awaiting an example. | Recursive schema/list examples already exist; inspect them before asking the user for readily available evidence. They do not prove every complex interaction. |
+| The theme generator is not yet real usage. | The local application already uses the library. Its AI-assisted success and its typed workarounds are separate evidence. |
+| Repeated wizard paths are merely a teaching problem. | They may also reveal missing reusable capability, type guidance, naming, or discoverability. Avoidable code is not proof of a good API. |
+| Deriving paths with `Object.keys` is the best supported experience. | It removes duplication in a flat example but still asks consumers to invent glue. It is not the desired general segment solution. |
+| Fewer fields imply little value; the audience must be complex-form developers. | Clear structure and reuse across ordinary forms are intended benefits too. Complexity and form count are different dimensions. |
+| Bindings force each application to rediscover every field edge case. | Much is mechanical and reusable. Maintained bindings should absorb common work; near-zero cost and universal policies remain unproven. |
+| Explicit setup conflicts with ready-made bindings. | Installing explicit reusable bindings can satisfy the same architecture; the distribution path is not finalized. |
+| Composition guarantees good UX. | Structural clarity alone does not establish interaction quality. Preserve UI freedom and investigate recurring coordination failures. |
+| A playground or agent-led trial is the established adoption path. | Neither has audience evidence. AI-assisted implementation does not prove how libraries are discovered or evaluated. |
+| Release success is the sophistication of a form someone built, or enterprise readiness. | The user emphasizes quality of experience, feedback, adoption, recognition, and ultimately improved practice, even through a successor implementation. |
+| A separate runtime schema must describe every draft state. | Editing and submission are distinct contracts, but a second runtime schema is not mandated; UI-owned representation and explicit bindings are the later direction. |
+| Reusing Zod means only using familiar syntax, or only sharing an API schema. | It includes actual code reuse, engineering reuse, and conceptual familiarity. Backend-safe import of bound schemas remains deferred and unverified. |
+| Shared resource/ORM schemas are needed to justify this release. | These are explicitly future exploration above the current library, not release requirements. |
+
+Working method clarified by the user: inspect code for verifiable answers, use
+questions to uncover intent and experience, and synthesize recommendations rather
+than asking the user to design the README or API on the agent's behalf. Simulated
+reader reactions are hypotheses, not user research. The user has not authorized
+private outreach or public posting through this discussion.
 
 ## Important unresolved hypotheses
 

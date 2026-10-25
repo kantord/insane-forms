@@ -35,7 +35,7 @@ const meta: Meta = {
 }
 export default meta
 
-/** The form on react-hook-form, via the `insane-forms/react-hook-form` wrapper. */
+/** The form on react-hook-form, via the repository's reference wrapper. */
 export const ReactHookForm: StoryObj = {
   render: () => (
     <ZodForm

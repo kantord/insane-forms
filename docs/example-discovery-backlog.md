@@ -74,6 +74,10 @@ not a general conditional-field policy.
 For each slice, state the competing behaviors, the task in familiar terms, the
 trigger sequence, visible outcome, consumer code required, and unresolved policy.
 Add reproducible assertions and clearly identify characterization of a known gap.
+Add generated value/schema cases and model-based action sequences alongside the
+hand-written specimens, using the shared TEST-01 infrastructure. The purpose is
+to discover failures whose exact data or operation order we did not think of in
+advance, then make minimized examples inspectable in this same example space.
 Prefer extending the existing examples and explorer; avoid a parallel prototype
 framework. Only after examining these specimens should a core policy/interface
 be proposed, tested against them, and adopted.
